@@ -1,0 +1,5 @@
+tool_call:
+  tool_name: "brave_search"
+  arguments:
+    query: "Who won NBA in 2024?"
+end_of_message: True

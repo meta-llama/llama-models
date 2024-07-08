@@ -1,0 +1,10 @@
+{{ '<|start_header_id|>ipython<|end_header_id|>\n\n' -}}
+
+{% if status == "success" %}completed{% else %}failed{% endif %}
+{%- if stdout %}
+[stdout]{{ stdout }}[/stdout]
+{%- endif -%}
+{%- if stderr %}
+[stderr]{{ stderr }}[/stderr]
+{%- endif -%}
+<|eot_id|>
