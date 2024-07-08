@@ -15,7 +15,7 @@ This repository provides information on the models themselves and a minimal exam
 
 ## Llama Models 
 
-|            **Model **            |                                          **License**                                           |
+|            **Model**            |                                          **License**                                           |
 | :----------------------------------: | :--------------------------------------------------------------------------------------------: |
 |             Llama 2              | [Llama 2 Community License](..) |
 |             Llama 3            | [Llama 3 (4/18) Community License](..) |
