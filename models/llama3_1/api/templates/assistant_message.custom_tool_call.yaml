@@ -1,0 +1,6 @@
+tool_call:
+  tool_name: get_boiling_point
+  arguments:
+    liquid_name: Mercury
+    celsius: True
+end_of_message: True

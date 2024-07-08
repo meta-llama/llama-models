@@ -1,0 +1,39 @@
+{{ '<|start_header_id|>system<|end_header_id|>\n\n' -}}
+{% if builtin_tools or custom_tools -%}
+Environment: ipython
+{%- set builtin_tools = builtin_tools | reject('equalto', 'code_interpreter') | list -%}
+{%- if builtin_tools %}
+Tools: {{ builtin_tools | join(", ") }}
+{% endif -%}
+{% endif %}
+Cutting Knowledge Date: December 2023
+Today Date: {{ today }}
+<|eot_id|>
+{%- if custom_tools %}
+{{- '<|start_header_id|>user<|end_header_id|>\n\n' -}}
+
+You have access to the following functions:
+
+{% for t in custom_tools %}
+{#- manually setting up JSON because jinja sorts keys in unexpected ways -#}
+{%- set tname = t.tool_name -%}
+{%- set tdesc = t.description -%}
+{%- set tparams = t.parameters | tojson -%}
+Use the function '{{ tname }}' to '{{ tdesc }}':
+{"name": "{{tname}}", "description": "{{tdesc}}", "parameters": {{tparams}}}
+
+{% endfor -%}
+Think very carefully before calling functions.
+If a you choose to call a function ONLY reply in the following format with no prefix or suffix:
+
+<function=example_function_name>{"example_name": "example_value"}</function>
+
+Reminder:
+- If looking for real time information use relevant functions before falling back to brave_search
+- Function calls MUST follow the specified format, start with <function= and end with </function>
+- Required parameters MUST be specified
+- Only call one function at a time
+- Put the entire function call reply on one line
+<|eot_id|>
+{%- endif -%}
+{{ additional_instructions -}}

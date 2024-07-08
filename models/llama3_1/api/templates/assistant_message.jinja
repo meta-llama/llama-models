@@ -1,0 +1,14 @@
+{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' -}}
+
+{%- set builtins = ["brave_search", "wolfram_alpha", "photogen"] -%}
+{%- if tool_call -%}
+<|python_tag|>
+{%- if tool_call.tool_name in builtins -%}
+{{ tool_call.tool_name }}.call(query="{{ tool_call.arguments['query'] }}")
+{%- else -%}
+<function="{{ tool_call.tool_name }}">{{ tool_call.arguments | tojson }}</function>
+{%- endif -%}
+{%- else -%}
+{{ content }}
+{%- endif -%}
+{%- if end_of_message %}<|eom_id|>{% else %}<|eot_id|>{% endif %}

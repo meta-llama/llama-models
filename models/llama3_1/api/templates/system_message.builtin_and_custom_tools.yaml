@@ -1,0 +1,24 @@
+builtin_tools: ["brave_search", "wolfram_alpha"]
+custom_tools:
+  - tool_name: get_boiling_point
+    description: Get the boiling point of a liquid
+    parameters:
+      - liquid_name:
+        - type: string
+        - description: name of the liquid
+        - required: True
+      - celsius:
+        - type: boolean
+        - description: whether to return the boiling point in celsius
+        - required: False
+  - tool_name: trending_songs
+    description: Returns the trending songs on a Music site
+    parameters:
+      - country:
+          type: string
+          description: The country to return trending songs for
+          required: True
+      - n:
+          type: int
+          description: The number of songs to return
+          required: False
