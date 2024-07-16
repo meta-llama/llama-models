@@ -15,11 +15,11 @@ This repository provides information on the models themselves and a minimal exam
 
 ## Llama Models 
 
-|            **Model**                 | **Launch date**                      | **Model sizes**                      | **Tokenizer**                       |                                         **License**                                            |
-| :----------------------------------: | :----------------------------------: | :----------------------------------: |:----------------------------------: | :--------------------------------------------------------------------------------------------: |
-|             Llama 2                  |                                      |                                      |                                     | [Llama 2 Community License](..) |
-|             Llama 3                  |                                      |                                      |                                     |  [Llama 3 (4/18) Community License](..) |
-|             Llama 3.1                |                                      |                                      |                                     |  [Llama 3.1 (7/23) Community License](..) |
+|            **Model**                 | **Launch date**                      | **Model sizes**                      | **Tokenizer**                      |  **Acceptable use policy**   |                                         **License**                                            |
+| :----------------------------------: | :----------------------------------: | :----------------------------------: |:----------------------------------:| :----------------------------------:| :--------------------------------------------------------------------------------------------: |
+|             Llama 2                  |                                      |                                      |                                    | | [Llama 2 Community License](..) |
+|             Llama 3                  |                                      |                                      |                                    | |  [Llama 3 (4/18/24) Community License](..) |
+|             Llama 3.1                |                                      |                                      |                                    | |  [Llama 3.1 (7/23/24) Community License](..) |
 
 See also the accompanying [Acceptable Use Policy](USE_POLICY.md)
 
