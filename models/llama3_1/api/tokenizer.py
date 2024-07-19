@@ -12,6 +12,7 @@ from typing import (
     Iterator,
     List,
     Literal,
+    Optional,
     Sequence,
     Union,
 )
@@ -21,6 +22,16 @@ import tiktoken
 from tiktoken.load import load_tiktoken_bpe
 
 logger = getLogger(__name__)
+
+
+# The tiktoken tokenizer can handle <=400k chars without
+# pyo3_runtime.PanicException.
+TIKTOKEN_MAX_ENCODE_CHARS = 400_000
+
+# https://github.com/openai/tiktoken/issues/195
+# Here we iterate over subsequences and split if we exceed the limit
+# of max consecutive non-whitespace or whitespace characters.
+MAX_NO_WHITESPACES_CHARS = 25_000
 
 
 class Tokenizer:
@@ -93,7 +104,7 @@ class Tokenizer:
         *,
         bos: bool,
         eos: bool,
-        allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),
+        allowed_special: Optional[Union[Literal["all"], AbstractSet[str]]] = None,
         disallowed_special: Union[Literal["all"], Collection[str]] = (),
     ) -> List[int]:
         """
@@ -117,16 +128,9 @@ class Tokenizer:
         - Setting `allowed_special` to "all" will treat all text corresponding
           to special tokens to be encoded as special tokens.
         """
+        if allowed_special is None:
+            allowed_special = set()
         assert type(s) is str
-
-        # The tiktoken tokenizer can handle <=400k chars without
-        # pyo3_runtime.PanicException.
-        TIKTOKEN_MAX_ENCODE_CHARS = 400_000
-
-        # https://github.com/openai/tiktoken/issues/195
-        # Here we iterate over subsequences and split if we exceed the limit
-        # of max consecutive non-whitespace or whitespace characters.
-        MAX_NO_WHITESPACES_CHARS = 25_000
 
         substrs = (
             substr

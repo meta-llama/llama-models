@@ -4,12 +4,12 @@
 import os
 from unittest import TestCase
 
-from models.llama3.chat_format import ChatFormat
-from models.llama3.datatypes import Message
-from models.llama3.tokenizer import Tokenizer
+from models.llama3_1.api.chat_format import ChatFormat
+from models.llama3_1.api.datatypes import Message
+from models.llama3_1.api.tokenizer import Tokenizer
 
 
-# TOKENIZER_PATH=<tokenizer_path> python -m unittest models/llama3/test_tokenizer.py
+# TOKENIZER_PATH=<tokenizer_path> python -m unittest models/llama3_1/api/test_tokenizer.py
 
 
 class TokenizerTests(TestCase):
