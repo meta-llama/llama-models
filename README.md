@@ -11,18 +11,18 @@
 # Llama Models
 Llama is an accessible, open large language model (LLM) designed for developers, researchers, and businesses to build, experiment, and responsibly scale their generative AI ideas. Part of a foundational system, it serves as a bedrock for innovation in the global community. A few key aspects:
 1. **Open access**: Easy accessibility to cutting-edge large language models, fostering collaboration and advancements among developers, researchers, and organizations
-2. **Broad ecosystem**: Llama models have been downloaded hundreds of millions of times, there are thousands of community projects built on Llama and platform support is broad from cloud providers to startups - the world is building with Llama! 
-3. **Trust & safety**: Llama models are part of a comprehensive approach to trust and safety, releasing models and tools that are designed to enable community collaboration and encourage the standardization of the development and usage of trust and safety tools for generative AI 
+2. **Broad ecosystem**: Llama models have been downloaded hundreds of millions of times, there are thousands of community projects built on Llama and platform support is broad from cloud providers to startups - the world is building with Llama!
+3. **Trust & safety**: Llama models are part of a comprehensive approach to trust and safety, releasing models and tools that are designed to enable community collaboration and encourage the standardization of the development and usage of trust and safety tools for generative AI
 
-Our mission is to empower individuals and industry through this opportunity while fostering an environment of discovery and ethical AI advancements. The model weights are licensed for researchers and commercial entities, upholding the principles of openness. 
+Our mission is to empower individuals and industry through this opportunity while fostering an environment of discovery and ethical AI advancements. The model weights are licensed for researchers and commercial entities, upholding the principles of openness.
 
-## Llama Models 
+## Llama Models
 
-|            **Model**                 | **Launch date**                      | **Model sizes**                      |Context Length| **Tokenizer**                      |  **Acceptable use policy**   |                                         **License**                                            |   **Model Card**   |
-| :----------------------------------: | :----------------------------------: | :----------------------------------: | :----------------------------------:|:----------------------------------:| :----------------------------------:| :--------------------------------------------------------------------------------------------: | :----------------------------------: |
-|             Llama 2                  |      7/18/2023                                |    7B, 13B, 70B                   |4K               |  Sentencepiece                                  | [Llama2 AUP](https://github.com/meta-llama/llama-models/blob/main/AUP/LLAMA2_USE_POLICY.md) | [Llama 2 CLA](https://github.com/meta-llama/llama-models/blob/main/License/Llama2.txt) | [Link](https://github.com/meta-llama/llama-models/blob/main/Model%20Cards/Llama2.md) |
-|             Llama 3                  |      4/18/2023                                |                  8B, 70B             |8K       |    TikToken-based                                | [Llama3 AUP](https://github.com/meta-llama/llama-models/blob/main/AUP/LLAMA3_USE_POLICY.md) |  [Llama 3 CLA](https://github.com/meta-llama/llama-models/blob/main/License/Llama3.txt) | [Link](https://github.com/meta-llama/llama-models/blob/main/Model%20Cards/Llama3.md) |
-|             Llama 3.1                |      7/23/2024                                |                 8B, 70B, 405B           |128K  |    TikToken-based                                |[Llama3.1 AUP](https://github.com/meta-llama/llama-models/blob/main/AUP/LLAMA3.1_USE_POLICY.md) |  [Llama 3.1 CLA](https://github.com/meta-llama/llama-models/blob/main/License/Llama3.1.txt) | [Link](https://github.com/meta-llama/llama-models/blob/main/Model%20Cards/Llama3.1.md) |
+|  **Model** | **Launch date** | **Model sizes** | **Context Length** | **Tokenizer** | **Acceptable use policy**  |  **License** | **Model Card** |
+| :----: | :----: | :----: | :----:|:----:|:----:|:----:|:----:|
+| Llama 2 | 7/18/2023 | 7B, 13B, 70B | 4K | Sentencepiece | [Use Policy](meta-llama/llama2/MODEL_CARD.md) | [License](meta-llama/llama2/LICENSE) | [Model Card](meta-llama/llama2/MODEL_CARD.md) |
+| Llama 3 | 4/18/2024 | 8B, 70B | 8K | TikToken-based | [Use Policy](meta-llama/llama3/MODEL_CARD.md) | [License](meta-llama/llama3/LICENSE) | [Model Card](meta-llama/llama3/MODEL_CARD.md) |
+| Llama 3.1 | 7/23/2024 | 8B, 70B, 405B | 128K | TikToken-based | [Use Policy](meta-llama/llama3.1/MODEL_CARD.md) | [License](meta-llama/llama3.1/LICENSE) | [Model Card](meta-llama/llama3.1/MODEL_CARD.md) |
 
 ## Download
 
