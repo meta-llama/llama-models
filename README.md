@@ -20,9 +20,9 @@ Our mission is to empower individuals and industry through this opportunity whil
 
 |  **Model** | **Launch date** | **Model sizes** | **Context Length** | **Tokenizer** | **Acceptable use policy**  |  **License** | **Model Card** |
 | :----: | :----: | :----: | :----:|:----:|:----:|:----:|:----:|
-| Llama 2 | 7/18/2023 | 7B, 13B, 70B | 4K | Sentencepiece | [Use Policy](meta-llama/llama2/MODEL_CARD.md) | [License](meta-llama/llama2/LICENSE) | [Model Card](meta-llama/llama2/MODEL_CARD.md) |
-| Llama 3 | 4/18/2024 | 8B, 70B | 8K | TikToken-based | [Use Policy](meta-llama/llama3/MODEL_CARD.md) | [License](meta-llama/llama3/LICENSE) | [Model Card](meta-llama/llama3/MODEL_CARD.md) |
-| Llama 3.1 | 7/23/2024 | 8B, 70B, 405B | 128K | TikToken-based | [Use Policy](meta-llama/llama3.1/MODEL_CARD.md) | [License](meta-llama/llama3.1/LICENSE) | [Model Card](meta-llama/llama3.1/MODEL_CARD.md) |
+| Llama 2 | 7/18/2023 | 7B, 13B, 70B | 4K | Sentencepiece | [Use Policy](meta-llama/llama-models/models/llama2/MODEL_CARD.md) | [License](meta-llama/llama-models/models/llama2/LICENSE) | [Model Card](meta-llama/llama-models/models/llama2/MODEL_CARD.md) |
+| Llama 3 | 4/18/2024 | 8B, 70B | 8K | TikToken-based | [Use Policy](meta-llama/llama-models/models/llama3/MODEL_CARD.md) | [License](meta-llama/llama-models/models/llama3/LICENSE) | [Model Card](meta-llama/llama-models/models/llama3/MODEL_CARD.md) |
+| Llama 3.1 | 7/23/2024 | 8B, 70B, 405B | 128K | TikToken-based | [Use Policy](meta-llama/llama-models/models/llama3_1/MODEL_CARD.md) | [License](meta-llama/llama-models/models/llama3_1/LICENSE) | [Model Card](meta-llama/llama-models/models/llama3_1/MODEL_CARD.md) |
 
 ## Download
 
