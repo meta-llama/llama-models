@@ -51,7 +51,7 @@ setup(
     ],
     python_requires=">=3.10",
     install_requires=[],
-    extra_requires=extras_require,
+    extras_require=extras_require,
     include_package_data=True,
     package_data={
         "llama2": ["LICENSE", "requirements.txt"],
