@@ -324,7 +324,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>81.6
    </td>
-   <td><strong>85.9</strong>
+   <td>85.9
    </td>
   </tr>
   <tr>
@@ -436,7 +436,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>79.6
    </td>
-   <td><strong>84.8</strong>
+   <td>84.8
    </td>
   </tr>
 </table>
@@ -468,7 +468,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
-   <td rowspan="3" >General
+   <td rowspan="4" >General
    </td>
    <td>MMLU
    </td>
@@ -496,11 +496,11 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>65.3
    </td>
-   <td>72.7
+   <td>73.0
    </td>
    <td>80.9
    </td>
-   <td>85.9
+   <td>86.0
    </td>
    <td>88.6
    </td>
@@ -524,6 +524,24 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
+   <td>IFEval
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>76.8
+   </td>
+   <td>80.4
+   </td>
+   <td>82.9
+   </td>
+   <td>87.5
+   </td>
+   <td>88.6
+   </td>
+  </tr>
+  <tr>
    <td rowspan="3" >Reasoning
    </td>
    <td>ARC-C
@@ -540,7 +558,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>94.8
    </td>
-   <td><strong>96.9</strong>
+   <td>96.9
    </td>
   </tr>
   <tr>
@@ -577,26 +595,6 @@ In this section, we report the results for Llama 3.1 models on standard automati
    <td>58.1
    </td>
    <td>56.7
-   </td>
-  </tr>
-  <tr>
-   <td>Steerability
-   </td>
-   <td>IFEval
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>76.8
-   </td>
-   <td>80.4
-   </td>
-   <td>82.9
-   </td>
-   <td>87.5
-   </td>
-   <td><strong>88.6</strong>
    </td>
   </tr>
   <tr>
@@ -654,7 +652,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>95.1
    </td>
-   <td><strong>96.8</strong>
+   <td>96.8
    </td>
   </tr>
   <tr>
@@ -746,7 +744,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>56.7
    </td>
-   <td><strong>58.7</strong>
+   <td>58.7
    </td>
   </tr>
   <tr>
