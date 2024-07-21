@@ -83,7 +83,7 @@ The Meta Llama 3.1 collection of multilingual large language models (LLMs) is a 
 
 **Status:** This is a static model trained on an offline dataset. Future versions of the tuned models will be released as we improve model safety with community feedback.
 
-**License** A custom commercial license, the Llama 3.1 Community License, is available at: [https://llama.meta.com/llama3.1/license](https://llama.meta.com/llama3/license)
+**License:** A custom commercial license, the Llama 3.1 Community License, is available at: [https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/LICENSE](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/LICENSE)
 
 Where to send questions or comments about the model Instructions on how to provide feedback or comments on the model can be found in the model [README](https://github.com/meta-llama/llama3). For more technical information about generation parameters and recipes for how to use Llama 3.1 in applications, please go [here](https://github.com/meta-llama/llama-recipes). 
 
