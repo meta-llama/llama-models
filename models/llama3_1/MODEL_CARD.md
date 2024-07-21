@@ -75,7 +75,7 @@ The Meta Llama 3.1 collection of multilingual large language models (LLMs) is a 
 </table>
 
 
-**Supported languages: **English, German, French, Indonesian, Italian, Portuguese, Hindi, Spanish, Thai, and Vietnamese.
+**Supported languages: **English, German, French, Italian, Portuguese, Hindi, Spanish, and Thai.
 
 **Llama 3.1 family of models**. Token counts refer to pretraining data only. All model versions use Grouped-Query Attention (GQA) for improved inference scalability.
 
@@ -94,7 +94,7 @@ Where to send questions or comments about the model Instructions on how to provi
 
 **Out-of-scope** Use in any manner that violates applicable laws or regulations (including trade compliance laws). Use in any other way that is prohibited by the Acceptable Use Policy and Llama 3.1 Community License. Use in languages beyond those explicitly referenced as supported in this model card**.
 
-**<span style="text-decoration:underline;">Note</span>: Llama 3.1 has been trained on a broader collection of languages than the 10 supported languages. Developers may fine-tune Llama 3.1 models for languages beyond the 10 supported languages provided they comply with the Llama 3.1 Community License and the Acceptable Use Policy and in such cases are responsible for ensuring that any uses of Llama 3.1 in additional languages is done in a safe and responsible manner.
+**<span style="text-decoration:underline;">Note</span>: Llama 3.1 has been trained on a broader collection of languages than the 10 supported languages. Developers may fine-tune Llama 3.1 models for languages beyond the 8 supported languages provided they comply with the Llama 3.1 Community License and the Acceptable Use Policy and in such cases are responsible for ensuring that any uses of Llama 3.1 in additional languages is done in a safe and responsible manner.
 
 
 ## Hardware and Software
