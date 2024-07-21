@@ -46,7 +46,7 @@ setup(
     url="https://github.com/meta-llama/llama-models",
     #license=read_license(),
     #packages=find_packages(where="models"),
-    package_dir={ "": "models"},
+    package_dir={ "llama_models": "models"},
     classifiers=[
     ],
     python_requires=">=3.10",
