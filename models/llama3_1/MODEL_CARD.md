@@ -846,26 +846,6 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
-   <td>Indonesian
-   </td>
-   <td>58.04
-   </td>
-   <td>79.2
-   </td>
-   <td>83.56
-   </td>
-  </tr>
-  <tr>
-   <td>Vietnamese
-   </td>
-   <td>56.05
-   </td>
-   <td>76.5
-   </td>
-   <td>81.47
-   </td>
-  </tr>
-  <tr>
    <td>Hindi
    </td>
    <td>50.88
@@ -931,7 +911,7 @@ Note that this release introduces new capabilities, including a longer context w
 
 **Tool-use**: Just like in standard software development, developers are responsible for the integration of the LLM with the tools and services of their choice. They should define a clear policy for their use case and assess the integrity of the third party services they use to be aware of the safety and security limitations when using this capability. Refer to the Responsible Use Guide for best practices on the safe deployment of the third party safeguards. 
 
-**Multilinguality**:** **Llama 3.1 supports 9 languages in addition to English: French, German, Hindi, Indonesian, Italian, Portuguese, Spanish, Thai, Vietnamese. Llama may be able to output text in other languages than those that meet performance thresholds for safety and helpfulness. We strongly discourage developers from using this model to converse in non-supported languages without implementing finetuning and system controls in alignment with their policies and the best practices shared in the Responsible Use Guide. 
+**Multilinguality**:** **Llama 3.1 supports 7 languages in addition to English: French, German, Hindi, Italian, Portuguese, Spanish, and Thai. Llama may be able to output text in other languages than those that meet performance thresholds for safety and helpfulness. We strongly discourage developers from using this model to converse in non-supported languages without implementing finetuning and system controls in alignment with their policies and the best practices shared in the Responsible Use Guide. 
 
 
 ### Evaluations
