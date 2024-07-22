@@ -12,7 +12,7 @@ for MODEL in ${ALL_MODELS_LIST//,/ }
 do
     printf " -  ${MODEL}\n"
 done
-read -p "Choose anyone model to download: " SELECTED_MODEL
+read -p "Choose the model to download: " SELECTED_MODEL
 printf "\n Selected model: ${SELECTED_MODEL} \n"
 
 SELECTED_MODELS=""
@@ -42,7 +42,7 @@ TARGET_FOLDER="."             # where all files should end up
 mkdir -p ${TARGET_FOLDER}
 
 if [[ $SELECTED_MODELS == "" ]]; then
-    SELECTED_MODELS=${ALL_MODELS}
+    SELECTED_MODELS=${MODEL_LIST}
 fi
 
 printf "Downloading LICENSE and Acceptable Usage Policy\n"
