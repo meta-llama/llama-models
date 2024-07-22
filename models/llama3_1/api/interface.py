@@ -173,6 +173,54 @@ def sample_custom_tools() -> List[ToolDefinition]:
     ]
 
 
+def jin():
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader("api/templates"))
+    template = env.get_template("system_message.jinja")
+
+    current_date = datetime.now().strftime("%d %B %Y")
+    context = {
+        'builtin_tools': ["brave_search", "code_interpreter"],
+        "custom_tools": [t.dict() for t in sample_custom_tools()],
+        "today": current_date,
+    }
+    cprint("System message", "yellow")
+    cprint("-" * 100, "yellow")
+    print(template.render(context))
+
+    cprint("User message", "yellow")
+    cprint("-" * 100, "yellow")
+    context = {
+        "content": "Tell me a story"
+    }
+    print(env.get_template("user_message.jinja").render(context))
+
+    cprint("Tool response message", "yellow")
+    cprint("-" * 100, "yellow")
+    context = {
+        "is_builtin_tool": True,
+        "status": "success",
+        "stdout": "The top 100 most popular songs in the US are: Foo, bar and baz",
+        # "stderr": "Oops",
+    }
+    print(env.get_template("tool_message.jinja").render(context))
+
+    cprint("Tool call", "yellow")
+    cprint("-" * 100, "yellow")
+    context = {
+        "content": "Hello how are you doing today? How can I help you?",
+        "end_of_message": True,
+        "tool_call": {
+            "tool_name": "trending_songs",
+            "arguments": {
+                "query": "What are the top 100 most popular songs in the US?"
+            },
+        }
+    }
+    print(env.get_template("assistant_message.jinja").render(context))
+
+
 def main(tokenizer_path: str):
     llama = LLama3_1_Interface(tokenizer_path)
 
@@ -211,4 +259,4 @@ def main(tokenizer_path: str):
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    fire.Fire(jin)

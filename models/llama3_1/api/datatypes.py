@@ -170,3 +170,38 @@ Message = Annotated[
     ],
     Field(discriminator="role"),
 ]
+
+
+# This enum represents the format in which weights are specified
+# This does not necessarily always equal what quantization is desired
+# at runtime since there can be on-the-fly conversions done
+@json_schema_type
+class CheckpointQuantizationFormat(Enum):
+    # default format
+    bf16 = "bf16"
+
+    # used for enabling fp8_rowwise inference, some weights are bf16
+    fp8_mixed = "fp8_mixed"
+
+
+@json_schema_type
+class ModelSKU(Enum):
+    llama3_1_8b = "llama3_1_8b"
+    llama3_1_70b = "llama3_1_70b"
+    llama3_1_405b = "llama3_1_405b"
+    llama3_1_405b_fp8 = "llama3_1_405b_fp8"
+
+    llama3_1_8b_instruct = "llama3_1_8b_instruct"
+    llama3_1_70b_instruct = "llama3_1_70b_instruct"
+    llama3_1_405b_instruct = "llama3_1_405b_instruct"
+    llama3_1_405b_instruct_fp8 = "llama3_1_405b_instruct_fp8"
+
+
+@json_schema_type
+class ModelDefinition(BaseModel):
+    sku: ModelSKU
+    description_markdown: str
+    max_seq_length: int
+    model_parallel_size: int
+    quantization_format: Optional[CheckpointQuantizationFormat] = None
+    model_args_json: str
