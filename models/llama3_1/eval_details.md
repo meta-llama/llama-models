@@ -30,7 +30,7 @@ We use the Arc-Challenge subset from the Arc benchmark. For the pre-trained mode
 
 ### GPQA
 
-For post-trained models, we use 0-shot config with CoT prompt and report exact match scores over the possible options using the main set. Max generation length is 2048 tokens.
+For post-trained models, we use 0-shot config with and without CoT prompt and report exact match scores over the possible options using the main set. Max generation length is 96 tokens when not using CoT prompt and 2048 tokens when using the CoT prompt.
 
 
 ### AGIEval English
