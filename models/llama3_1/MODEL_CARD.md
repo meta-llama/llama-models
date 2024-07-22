@@ -237,7 +237,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
-   <td>MMLU PRO (CoT)
+   <td>MMLU-Pro (CoT)
    </td>
    <td>5
    </td>
@@ -505,7 +505,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
-   <td>MMLU PRO (CoT)
+   <td>MMLU-Pro (CoT)
    </td>
    <td>5
    </td>
@@ -517,7 +517,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>63.4
    </td>
-   <td>65.1
+   <td>66.4
    </td>
    <td>73.3
    </td>
@@ -541,7 +541,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
-   <td rowspan="3" >Reasoning
+   <td rowspan="2" >Reasoning
    </td>
    <td>ARC-C
    </td>
@@ -576,24 +576,6 @@ In this section, we report the results for Llama 3.1 models on standard automati
    <td>41.7
    </td>
    <td>50.7
-   </td>
-  </tr>
-  <tr>
-   <td>MuSR
-   </td>
-   <td>0
-   </td>
-   <td>correct
-   </td>
-   <td>56.3
-   </td>
-   <td>45.7
-   </td>
-   <td>55.1
-   </td>
-   <td>58.1
-   </td>
-   <td>56.7
    </td>
   </tr>
   <tr>
@@ -717,7 +699,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>acc
    </td>
-   <td>83.6
+   <td>48.3
    </td>
    <td>82.6
    </td>
@@ -729,19 +711,19 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
-   <td>Berkeley Function Calling
+   <td>BFCL
    </td>
    <td>0
    </td>
    <td>acc
    </td>
-   <td>76.1
+   <td>60.3
    </td>
    <td>76.1
    </td>
    <td>83.0
    </td>
-   <td>85.1
+   <td>84.8
    </td>
    <td>88.5
    </td>
@@ -753,7 +735,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>acc
    </td>
-   <td>8.8
+   <td>1.7
    </td>
    <td>8.2
    </td>
@@ -771,7 +753,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>macro_avg/acc
    </td>
-   <td>37.6
+   <td>18.1
    </td>
    <td>38.5
    </td>
