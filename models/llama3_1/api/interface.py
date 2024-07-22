@@ -1,5 +1,8 @@
+import glob
 import json
+import os
 from datetime import datetime
+from pathlib import Path
 
 from typing import List, Optional
 
@@ -19,6 +22,8 @@ from .datatypes import (
     ToolParamDefinition,
 )
 from .tokenizer import Tokenizer
+
+THIS_DIR = Path(__file__).parent
 
 
 class LLama3_1_Interface:
@@ -173,52 +178,51 @@ def sample_custom_tools() -> List[ToolDefinition]:
     ]
 
 
-def jin():
+TEMPLATES = {}
+for role in ("system", "assistant", "tool", "user"):
+    for path in glob.glob(str(THIS_DIR / "templates" / f"{role}_message*.yaml")):
+        name = os.path.basename(path)
+        name = name.replace("_", "-").replace(".yaml", "").replace(".", "-")
+        TEMPLATES[name] = (role, path, f"{role}_message.jinja")
+
+
+def list_jinja_templates():
+    global TEMPLATES
+
+    for name in TEMPLATES.keys():
+        print(f"{name}")
+
+
+def render_jinja_template(name: str):
+    if name not in TEMPLATES:
+        raise ValueError(f"No template found for `{name}`")
+
+    import yaml
     from jinja2 import Environment, FileSystemLoader
 
-    env = Environment(loader=FileSystemLoader("api/templates"))
-    template = env.get_template("system_message.jinja")
+    tokenizer = Tokenizer(str(THIS_DIR / "tokenizer.model"))
+    special_tokens = list(tokenizer.special_tokens.values())
 
-    current_date = datetime.now().strftime("%d %B %Y")
-    context = {
-        'builtin_tools': ["brave_search", "code_interpreter"],
-        "custom_tools": [t.dict() for t in sample_custom_tools()],
-        "today": current_date,
-    }
-    cprint("System message", "yellow")
-    cprint("-" * 100, "yellow")
-    print(template.render(context))
+    role, input_path, jinja_template = TEMPLATES[name]
 
-    cprint("User message", "yellow")
-    cprint("-" * 100, "yellow")
-    context = {
-        "content": "Tell me a story"
-    }
-    print(env.get_template("user_message.jinja").render(context))
+    env = Environment(loader=FileSystemLoader(THIS_DIR / "templates"))
+    template = env.get_template(jinja_template)
 
-    cprint("Tool response message", "yellow")
-    cprint("-" * 100, "yellow")
-    context = {
-        "is_builtin_tool": True,
-        "status": "success",
-        "stdout": "The top 100 most popular songs in the US are: Foo, bar and baz",
-        # "stderr": "Oops",
-    }
-    print(env.get_template("tool_message.jinja").render(context))
+    with open(input_path, "r") as f:
+        context = yaml.safe_load(f)
+        context["today"] = datetime.now().strftime("%d %B %Y")
 
-    cprint("Tool call", "yellow")
-    cprint("-" * 100, "yellow")
-    context = {
-        "content": "Hello how are you doing today? How can I help you?",
-        "end_of_message": True,
-        "tool_call": {
-            "tool_name": "trending_songs",
-            "arguments": {
-                "query": "What are the top 100 most popular songs in the US?"
-            },
-        }
-    }
-    print(env.get_template("assistant_message.jinja").render(context))
+        output = template.render(context)
+        tokens = tokenizer.encode(output, allowed_special="all", bos=False, eos=False)
+
+        cprint(name, "green")
+        cprint("=" * 80, "green")
+        for t in tokens:
+            if t in special_tokens:
+                cprint(tokenizer.decode([t]), "yellow", end="")
+            else:
+                print(tokenizer.decode([t]), end="")
+        print("\n")
 
 
 def main(tokenizer_path: str):
