@@ -6,7 +6,6 @@ from pathlib import Path
 
 from typing import List, Optional
 
-import fire
 from termcolor import colored, cprint
 
 from .chat_format import ChatFormat
@@ -24,6 +23,13 @@ from .datatypes import (
 from .tokenizer import Tokenizer
 
 THIS_DIR = Path(__file__).parent
+
+TEMPLATES = {}
+for role in ("system", "assistant", "tool", "user"):
+    for path in glob.glob(str(THIS_DIR / "templates" / f"{role}_message*.yaml")):
+        name = os.path.basename(path)
+        name = name.replace("_", "-").replace(".yaml", "").replace(".", "-")
+        TEMPLATES[name] = (role, path, f"{role}_message.jinja")
 
 
 class LLama3_1_Interface:
@@ -141,51 +147,6 @@ def get_parameters_string(tooldef: ToolDefinition) -> str:
     )
 
 
-def sample_custom_tools() -> List[ToolDefinition]:
-    return [
-        ToolDefinition(
-            tool_name="get_boiling_point",
-            description="Returns the boiling point of a liquid",
-            parameters={
-                "liquid_name": ToolParamDefinition(
-                    param_type="string",
-                    description="The name of the liquid",
-                    required=True,
-                ),
-                "celcius": ToolParamDefinition(
-                    param_type="boolean",
-                    description="Whether to return the boiling point in Celcius",
-                    required=False,
-                ),
-            },
-        ),
-        ToolDefinition(
-            tool_name="trending_songs",
-            description="Returns the trending songs on a Music site",
-            parameters={
-                "country": ToolParamDefinition(
-                    param_type="string",
-                    description="The country to return trending songs for",
-                    required=True,
-                ),
-                "n": ToolParamDefinition(
-                    param_type="int",
-                    description="The number of songs to return",
-                    required=False,
-                ),
-            },
-        ),
-    ]
-
-
-TEMPLATES = {}
-for role in ("system", "assistant", "tool", "user"):
-    for path in glob.glob(str(THIS_DIR / "templates" / f"{role}_message*.yaml")):
-        name = os.path.basename(path)
-        name = name.replace("_", "-").replace(".yaml", "").replace(".", "-")
-        TEMPLATES[name] = (role, path, f"{role}_message.jinja")
-
-
 def list_jinja_templates():
     global TEMPLATES
 
@@ -223,44 +184,3 @@ def render_jinja_template(name: str):
                 print(decoded, end="")
 
         print("")
-
-
-def main(tokenizer_path: str):
-    llama = LLama3_1_Interface(tokenizer_path)
-
-    system_message = llama.recommended_system_message(
-        builtin_tools=[],
-        custom_tools=[],
-    )
-    cprint("Default system prompt", "green")
-    print(llama.get_message_as_str_tokens(system_message))
-    print("\n")
-
-    cprint("System prompt with all builtin tools", "green")
-    system_message = llama.recommended_system_message(
-        builtin_tools=[
-            BuiltinTool.brave_search,
-            BuiltinTool.wolfram_alpha,
-            BuiltinTool.photogen,
-            BuiltinTool.code_interpreter,
-        ],
-        custom_tools=[],
-    )
-    print(llama.get_message_as_str_tokens(system_message))
-    print("\n")
-
-    cprint("System prompt with only custom tools", "green")
-    system_message = llama.recommended_system_message(
-        builtin_tools=[],
-        custom_tools=sample_custom_tools(),
-    )
-    print(llama.get_message_as_str_tokens(system_message))
-    print("\n")
-
-    cprint("Sample builtin tool call from model", "green")
-    print(llama.get_message_as_str_tokens(llama.get_sample_builtin_tool_call_message()))
-    print("\n")
-
-
-if __name__ == "__main__":
-    fire.Fire(jin)

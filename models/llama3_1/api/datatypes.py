@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -185,23 +185,31 @@ class CheckpointQuantizationFormat(Enum):
 
 
 @json_schema_type
+class ModelFamily(Enum):
+    llama3_1 = "llama3_1"
+
+
+@json_schema_type
 class ModelSKU(Enum):
     llama3_1_8b = "llama3_1_8b"
     llama3_1_70b = "llama3_1_70b"
-    llama3_1_405b = "llama3_1_405b"
-    llama3_1_405b_fp8 = "llama3_1_405b_fp8"
+    llama3_1_405b_fp8_mp8 = "llama3_1_405b_fp8_mp8"
+    llama3_1_405b_bf16_mp8 = "llama3_1_405b_bf16_mp8"
+    llama3_1_405b_bf16_mp16 = "llama3_1_405b_bf16_mp16"
 
     llama3_1_8b_instruct = "llama3_1_8b_instruct"
     llama3_1_70b_instruct = "llama3_1_70b_instruct"
-    llama3_1_405b_instruct = "llama3_1_405b_instruct"
-    llama3_1_405b_instruct_fp8 = "llama3_1_405b_instruct_fp8"
+    llama3_1_405b_instruct_fp8_mp8 = "llama3_1_405b_instruct_fp8_mp8"
+    llama3_1_405b_instruct_bf16_mp8 = "llama3_1_405b_instruct_bf16_mp8"
+    llama3_1_405b_instruct_bf16_mp16 = "llama3_1_405b_instruct_bf16_mp16"
 
 
 @json_schema_type
 class ModelDefinition(BaseModel):
+    family: ModelFamily
     sku: ModelSKU
     description_markdown: str
     max_seq_length: int
     model_parallel_size: int
     quantization_format: Optional[CheckpointQuantizationFormat] = None
-    model_args_json: str
+    model_args: Dict[str, Any]
