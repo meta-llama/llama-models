@@ -172,7 +172,7 @@ For pre-trained models, we use the same 8-shot config with CoT prompt as in [Wei
 
 ### Berkeley Function Calling Leaderboard (BFCL)
 
-Benchmark results were achieved by running the open source evaluation repository [ShishirPatil/gorilla](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard) on commit 7bef000.
+Benchmark results were achieved by running the open source evaluation repository [ShishirPatil/gorilla](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard) on commit 7bef000 without any further changes.
 
 
 ### Nexus
@@ -182,8 +182,7 @@ We use the [open-source ](https://github.com/nexusflowai/NexusRaven)prompt and e
 
 ### API Bank
 
-We use a custom 0-shot prompt and eval function to reduce the number of false negatives. More specifically, we discovered inaccuracies in the benchmark that lead to a large fraction of false negatives when evaluating LLMs. To address this issue, we make two major improvements to the existing benchmark. First, we correct and complete ground truth answers that were initially incorrect or incomplete (e.g. they did not contain all valid solutions). Second, we enhance the evaluation metric to better capture the function call correctness. Certain keyword arguments have a unique ground truth value while others accept any string with the same semantic meaning as the reference value. Hence, we split keyword arguments into two groups and use exact match for the former and ROUGE score for the latter.
-
+We use a 0-shot config with a custom prompt and parsing function to reduce the incidence of false negatives. We also modify the dataset by correcting and completing the ground truth answers that were initially incorrect or incomplete. Second, we improve the evaluation metric to better assess function call correctness by splitting keyword arguments into two groups. We use exact match for keyword arguments that have a unique ground truth, and ROUGE score for those that accept any string with the same semantic meaning as the reference value.
 
 ### Gorilla API Bench
 
