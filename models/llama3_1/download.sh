@@ -6,7 +6,7 @@
 set -e
 
 read -p "Enter the URL from email: " PRESIGNED_URL
-ALL_MODELS="meta-llama-3.1-405b-instruct-mp16,meta-llama-3.1-405b-instruct-mp8,meta-llama-3.1-405b-instruct,meta-llama-3.1-405b-mp16,meta-llama-3.1-405b-mp8,meta-llama-3.1-405b,meta-llama-3.1-70b-instruct,meta-llama-3.1-70b,meta-llama-3.1-8b-instruct,meta-llama-3.1-8b,meta-llama-guard-3-8b-int8-hf,meta-llama-guard-3-8b,prompt-guard"
+ALL_MODELS="meta-llama-3.1-405b-instruct-mp16,meta-llama-3.1-405b-instruct-mp8,meta-llama-3.1-405b-instruct-fb8,meta-llama-3.1-405b-mp16,meta-llama-3.1-405b-mp8,meta-llama-3.1-405b-fp8,meta-llama-3.1-70b-instruct,meta-llama-3.1-70b,meta-llama-3.1-8b-instruct,meta-llama-3.1-8b,meta-llama-guard-3-8b-int8-hf,meta-llama-guard-3-8b,prompt-guard"
 printf "\n **** Available models to download: ***\n"
 for MODEL in ${ALL_MODELS//,/ }
 do
@@ -35,7 +35,7 @@ do
     elif [[ $m == "meta-llama-3.1-405b-instruct-mp8" ]]; then
         PTH_FILE_COUNT=7
         MODEL_PATH="Meta-Llama-3.1-405B-Instruct-MP8"
-    elif [[ $m == "meta-llama-3.1-405b-instruct" ]]; then
+    elif [[ $m == "meta-llama-3.1-405b-instruct-fp8" ]]; then
         PTH_FILE_COUNT=7
         MODEL_PATH="Meta-Llama-3.1-405B-Instruct"
         ADDITIONAL_FILES="fp8_scales_0.pt,fp8_scales_1.pt,fp8_scales_2.pt,fp8_scales_3.pt,fp8_scales_4.pt,fp8_scales_5.pt,fp8_scales_6.pt,fp8_scales_7.pt"
@@ -46,7 +46,7 @@ do
     elif [[ $m == "meta-llama-3.1-405b-mp8" ]]; then
         PTH_FILE_COUNT=7
         MODEL_PATH="Meta-Llama-3.1-405B-MP8"
-    elif [[ $m == "meta-llama-3.1-405b" ]]; then
+    elif [[ $m == "meta-llama-3.1-405b-fp8" ]]; then
         PTH_FILE_COUNT=7
         MODEL_PATH="Meta-Llama-3.1-405B"
     elif [[ $m == "meta-llama-3.1-70b-instruct" ]]; then
