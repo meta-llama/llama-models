@@ -188,10 +188,9 @@ The methodology used to determine training energy use and greenhouse gas emissio
 **Data Freshness:** The pretraining data has a cutoff of December 2023.
 
 
-## Benchmarks - English Text
+## Benchmark scores
 
 In this section, we report the results for Llama 3.1 models on standard automatic benchmarks. For all the evaluations, we use our internal evaluations library. 
-
 
 ### Base pretrained models
 
@@ -769,10 +768,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
   </tr>
 </table>
 
-
-
-## Multilingual benchmarks
-
+#### Multilingual benchmarks
 
 <table>
   <tr>
