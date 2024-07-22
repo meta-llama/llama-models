@@ -641,11 +641,11 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>pass@1
    </td>
-   <td>
+   <td>-
    </td>
    <td>50.8
    </td>
-   <td>
+   <td>-
    </td>
    <td>65.5
    </td>
@@ -659,11 +659,11 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>pass@1
    </td>
-   <td>
+   <td>-
    </td>
    <td>52.4
    </td>
-   <td>
+   <td>-
    </td>
    <td>62.0
    </td>
@@ -785,21 +785,21 @@ In this section, we report the results for Llama 3.1 models on standard automati
   <tr>
    <td>Multilingual
    </td>
-   <td>Multilingual MGSM
+   <td>Multilingual MGSM (CoT)
    </td>
-   <td>8
+   <td>0
    </td>
    <td>em
    </td>
    <td>-
    </td>
-   <td>68.2
+   <td>68.9
    </td>
    <td>-
    </td>
-   <td>85.6
+   <td>86.9
    </td>
-   <td>90.3
+   <td>91.6
    </td>
   </tr>
 </table>
