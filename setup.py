@@ -47,8 +47,7 @@ setup(
     #license=read_license(),
     #packages=find_packages(where="models"),
     package_dir={ "llama_models": "models"},
-    classifiers=[
-    ],
+    classifiers=[],
     python_requires=">=3.10",
     install_requires=[],
     extras_require=extras_require,
