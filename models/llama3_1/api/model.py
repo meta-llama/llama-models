@@ -12,7 +12,7 @@ from fairscale.nn.model_parallel.layers import (
     RowParallelLinear,
     VocabParallelEmbedding,
 )
-from models.llama3_1.api.args import ModelArgs
+from .args import ModelArgs
 from torch import nn
 
 

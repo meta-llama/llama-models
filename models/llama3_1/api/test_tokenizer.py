@@ -4,9 +4,9 @@
 import os
 from unittest import TestCase
 
-from models.llama3_1.api.chat_format import ChatFormat
-from models.llama3_1.api.datatypes import Message
-from models.llama3_1.api.tokenizer import Tokenizer
+from .chat_format import ChatFormat
+from .datatypes import SystemMessage, UserMessage
+from .tokenizer import Tokenizer
 
 
 # TOKENIZER_PATH=<tokenizer_path> python -m unittest models/llama3_1/api/test_tokenizer.py
@@ -38,38 +38,32 @@ class TokenizerTests(TestCase):
         )
 
     def test_encode_message(self):
-        message = Message(
-            role="user",
+        message = UserMessage(
             content="This is a test sentence.",
         )
         self.assertEqual(
             self.format.encode_message(message),
-            (
-                [
-                    128006,  # <|start_header_id|>
-                    882,  # "user"
-                    128007,  # <|end_of_header|>
-                    271,  # "\n\n"
-                    2028,
-                    374,
-                    264,
-                    1296,
-                    11914,
-                    13,  # This is a test sentence.
-                    128009,  # <|eot_id|>
-                ],
-                [],
-            ),
+            [
+                128006,  # <|start_header_id|>
+                882,  # "user"
+                128007,  # <|end_of_header|>
+                271,  # "\n\n"
+                2028,
+                374,
+                264,
+                1296,
+                11914,
+                13,  # This is a test sentence.
+                128009,  # <|eot_id|>
+            ]
         )
 
     def test_encode_dialog(self):
         messages = [
-            Message(
-                role="system",
+            SystemMessage(
                 content="This is a test sentence.",
             ),
-            Message(
-                role="user",
+            UserMessage(
                 content="This is a response.",
             ),
         ]
