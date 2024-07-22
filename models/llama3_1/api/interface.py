@@ -215,14 +215,14 @@ def render_jinja_template(name: str):
         output = template.render(context)
         tokens = tokenizer.encode(output, allowed_special="all", bos=False, eos=False)
 
-        cprint(name, "green")
-        cprint("=" * 80, "green")
         for t in tokens:
+            decoded = tokenizer.decode([t])
             if t in special_tokens:
-                cprint(tokenizer.decode([t]), "yellow", end="")
+                cprint(decoded, "yellow", end="")
             else:
-                print(tokenizer.decode([t]), end="")
-        print("\n")
+                print(decoded, end="")
+
+        print("")
 
 
 def main(tokenizer_path: str):
