@@ -78,7 +78,6 @@ do
         TOKENIZER_MODEL=0
     fi
 
-
     printf "\n***Downloading ${MODEL_PATH}***\n"
     mkdir -p ${TARGET_FOLDER}"/${MODEL_PATH}"
 
@@ -88,11 +87,13 @@ do
     fi
 
 
-    for s in $(seq -f "0%g" 0 ${PTH_FILE_COUNT})
-    do
-        printf "Downloading consolidated.${s}.pth\n"
-        wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
-    done
+    if [[ $PTH_FILE_COUNT -ge 0 ]]; then
+        for s in $(seq -f "0%g" 0 ${PTH_FILE_COUNT})
+        do
+            printf "Downloading consolidated.${s}.pth\n"
+            wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+        done
+    fi
 
     for ADDITIONAL_FILE in ${ADDITIONAL_FILES//,/ }
     do
