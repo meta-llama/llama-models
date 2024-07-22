@@ -2,6 +2,7 @@ import json
 import re
 from typing import Optional, Tuple
 
+from .datatypes import BuiltinTool, ToolCall
 
 BUILTIN_TOOL_PATTERN = r'\b(?P<tool_name>\w+)\.call\(query="(?P<query>[^"]*)"\)'
 CUSTOM_TOOL_CALL_PATTERN = re.compile(
@@ -68,3 +69,21 @@ class ToolUtils:
                 return None
         else:
             return None
+
+    @staticmethod
+    def encode_tool_call(t: ToolCall) -> str:
+        if t.tool_name == BuiltinTool.brave_search:
+            q = t.arguments["query"]
+            return f'brave_search.call(query="{q}")'
+        elif t.tool_name == BuiltinTool.wolfram_alpha:
+            q = t.arguments["query"]
+            return f'wolfram_alpha.call(query="{q}")'
+        elif t.tool_name == BuiltinTool.photogen:
+            q = t.arguments["query"]
+            return f'photogen.call(query="{q}")'
+        elif t.tool_name == BuiltinTool.code_interpreter:
+            return t.arguments["code"]
+        else:
+            fname = t.tool_name
+            args = json.dumps(t.arguments)
+            return f"<function={fname}>{args}</function>"

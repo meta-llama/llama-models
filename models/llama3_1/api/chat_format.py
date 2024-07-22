@@ -51,28 +51,10 @@ class ChatFormat:
 
         _process_content(message.content)
 
-        # process tool calls
         if isinstance(message, CompletionMessage):
             for t in message.tool_calls:
-                content = None
-                if t.tool_name == BuiltinTool.brave_search:
-                    q = t.arguments["query"]
-                    content = f'brave_search.call(query="{q}")'
-                elif t.tool_name == BuiltinTool.wolfram_alpha:
-                    q = t.arguments["query"]
-                    content = f'wolfram_alpha.call(query="{q}")'
-                elif t.tool_name == BuiltinTool.photogen:
-                    q = t.arguments["query"]
-                    content = f'photogen.call(query="{q}")'
-                elif t.tool_name == BuiltinTool.code_interpreter:
-                    content = t.arguments["code"]
-                else:
-                    fname = t.tool_name
-                    args = json.dumps(t.arguments)
-                    content = f"<function={fname}>{args}</function>"
-
-                if content is not None:
-                    _process_content(content)
+                content = ToolUtils.encode_tool_call(t)
+                _process_content(content)
 
         eom = False
         if isinstance(message, CompletionMessage):
