@@ -6,13 +6,38 @@
 set -e
 
 read -p "Enter the URL from email: " PRESIGNED_URL
-ALL_MODELS="meta-llama-3.1-405b-instruct-mp16,meta-llama-3.1-405b-instruct-mp8,meta-llama-3.1-405b-instruct-fb8,meta-llama-3.1-405b-mp16,meta-llama-3.1-405b-mp8,meta-llama-3.1-405b-fp8,meta-llama-3.1-70b-instruct,meta-llama-3.1-70b,meta-llama-3.1-8b-instruct,meta-llama-3.1-8b,meta-llama-guard-3-8b-int8-hf,meta-llama-guard-3-8b,prompt-guard"
-printf "\n **** Available models to download: ***\n"
-for MODEL in ${ALL_MODELS//,/ }
+ALL_MODELS_LIST="meta-llama-3.1-405b,meta-llama-3.1-70b,meta-llama-3.1-8b,meta-llama-guard-3-8b,prompt-guard"
+printf "\n **** Model list ***\n"
+for MODEL in ${ALL_MODELS_LIST//,/ }
 do
     printf " -  ${MODEL}\n"
 done
-read -p "Enter the list of models to download without spaces or press Enter for all: " SELECTED_MODELS
+read -p "Choose anyone model to download: " SELECTED_MODEL
+printf "\n Selected model: ${SELECTED_MODEL} \n"
+
+SELECTED_MODELS=""
+if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
+    MODEL_LIST="meta-llama-3.1-405b-instruct-mp16,meta-llama-3.1-405b-instruct-mp8,meta-llama-3.1-405b-instruct-fb8,meta-llama-3.1-405b-mp16,meta-llama-3.1-405b-mp8,meta-llama-3.1-405b-fp8"
+elif [[ $SELECTED_MODEL == "meta-llama-3.1-70b" ]]; then
+    MODEL_LIST="meta-llama-3.1-70b-instruct,meta-llama-3.1-70b"
+elif [[ $SELECTED_MODEL == "meta-llama-3.1-8b" ]]; then
+    MODEL_LIST="meta-llama-3.1-8b-instruct,meta-llama-3.1-8b"
+elif [[ $SELECTED_MODEL == "meta-llama-guard-3-8b" ]]; then
+    MODEL_LIST="meta-llama-guard-3-8b-int8-hf,meta-llama-guard-3-8b"
+elif [[ $SELECTED_MODEL == "prompt-guard" ]]; then
+    SELECTED_MODELS="prompt-guard"
+    MODEL_LIST=""
+fi
+
+if [[ -z "$SELECTED_MODELS" ]]; then
+    printf "\n **** Available models to download: ***\n"
+    for MODEL in ${MODEL_LIST//,/ }
+    do
+        printf " -  ${MODEL}\n"
+    done
+    read -p "Enter the list of models to download without spaces or press Enter for all: " SELECTED_MODELS
+fi
+
 TARGET_FOLDER="."             # where all files should end up
 mkdir -p ${TARGET_FOLDER}
 
@@ -101,7 +126,8 @@ do
         wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/${ADDITIONAL_FILE}"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/${ADDITIONAL_FILE}"
     done
 
-    if [[ $m != "prompt-guard"   &&  $m != "meta-llama-guard-3-8b-int8-hf" ]]; then
+    if [[ $m != "prompt-guard" &&  $m != "meta-llama-guard-3-8b-int8-hf" ]]; then
+        printf "Downloading params.json...\n"
         wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/params.json"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/params.json"
     fi
 done
