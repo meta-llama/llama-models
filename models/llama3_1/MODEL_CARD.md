@@ -597,7 +597,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
   </tr>
   <tr>
-   <td rowspan="2" >Code
+   <td rowspan="4" >Code
    </td>
    <td>HumanEval
    </td>
@@ -632,6 +632,42 @@ In this section, we report the results for Llama 3.1 models on standard automati
    <td>86.0
    </td>
    <td>88.6
+   </td>
+  </tr>
+  <tr>
+   <td>Multipl-E HumanEval
+   </td>
+   <td>0
+   </td>
+   <td>pass@1
+   </td>
+   <td>
+   </td>
+   <td>50.8
+   </td>
+   <td>
+   </td>
+   <td>65.5
+   </td>
+   <td>75.2
+   </td>
+  </tr>
+  <tr>
+   <td>Multipl-E MBPP
+   </td>
+   <td>0
+   </td>
+   <td>pass@1
+   </td>
+   <td>
+   </td>
+   <td>52.4
+   </td>
+   <td>
+   </td>
+   <td>62.0
+   </td>
+   <td>65.7
    </td>
   </tr>
   <tr>
