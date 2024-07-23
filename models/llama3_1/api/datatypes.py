@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from strong_typing.schema import json_schema_type
 from typing_extensions import Annotated
 
-
+@json_schema_type
 class Role(Enum):
     system = "system"
     user = "user"
@@ -31,14 +31,9 @@ class URL(BaseModel):
         return self.uri
 
 
-@json_schema_type
-class Checkpoint(BaseModel):
-    iters: int
-    path: URL
-    epoch: int
-
-
-@json_schema_type
+@json_schema_type(
+    schema={"description": "The type of the model. This is used to determine the model family and SKU."}
+)
 class PretrainedModel(Enum):
     llama3_8b = "llama3_8b"
     llama3_70b = "llama3_70b"
@@ -89,7 +84,7 @@ InterleavedTextAttachment = Union[
 ]
 
 
-# TODO: we need to document the parameters for the tool calls
+@json_schema_type
 class BuiltinTool(Enum):
     brave_search = "brave_search"
     wolfram_alpha = "wolfram_alpha"
@@ -182,10 +177,11 @@ Message = Annotated[
 ]
 
 
-# This enum represents the format in which weights are specified
-# This does not necessarily always equal what quantization is desired
-# at runtime since there can be on-the-fly conversions done
-@json_schema_type
+@json_schema_type(
+    schema={
+        "description": "The format in which weights are specified. This does not necessarily always equal what quantization is desired at runtime since there can be on-the-fly conversions done.",
+    }
+)
 class CheckpointQuantizationFormat(Enum):
     # default format
     bf16 = "bf16"
@@ -214,7 +210,9 @@ class ModelSKU(Enum):
     llama3_1_405b_instruct_bf16_mp16 = "llama3_1_405b_instruct_bf16_mp16"
 
 
-@json_schema_type
+@json_schema_type(
+    schema={"description": "The model family and SKU of the model along with other parameters corresponding to the model."}
+)
 class ModelDefinition(BaseModel):
     family: ModelFamily
     sku: ModelSKU
