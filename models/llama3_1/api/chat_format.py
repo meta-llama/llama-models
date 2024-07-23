@@ -1,4 +1,3 @@
-import json
 import uuid
 
 from dataclasses import dataclass
@@ -101,9 +100,6 @@ class ChatFormat:
         tool_name = None
         tool_arguments = {}
 
-        # custom tool stuff can come with our without the python tag 🤬
-        # TODO(ashwin): formalize the tool format
-
         custom_tool_info = ToolUtils.maybe_extract_custom_tool_call(content)
         if custom_tool_info is not None:
             tool_name, tool_arguments = custom_tool_info
@@ -122,7 +118,8 @@ class ChatFormat:
                 tool_arguments = {
                     "query": query,
                 }
-                tool_name = BuiltinTool[tool_name]
+                if tool_name in BuiltinTool.__members__:
+                    tool_name = BuiltinTool[tool_name]
             elif ipython:
                 tool_name = BuiltinTool.code_interpreter
                 tool_arguments = {
