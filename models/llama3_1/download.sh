@@ -24,7 +24,7 @@ printf "\n Selected model: ${SELECTED_MODEL} \n"
 
 SELECTED_MODELS=""
 if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
-    MODEL_LIST="meta-llama-3.1-405b-instruct-mp16,meta-llama-3.1-405b-instruct-mp8,meta-llama-3.1-405b-instruct-fb8,meta-llama-3.1-405b-mp16,meta-llama-3.1-405b-mp8,meta-llama-3.1-405b-fp8"
+    MODEL_LIST="meta-llama-3.1-405b-instruct-mp16,meta-llama-3.1-405b-instruct-mp8,meta-llama-3.1-405b-instruct-fp8,meta-llama-3.1-405b-mp16,meta-llama-3.1-405b-mp8,meta-llama-3.1-405b-fp8"
 elif [[ $SELECTED_MODEL == "meta-llama-3.1-70b" ]]; then
     MODEL_LIST="meta-llama-3.1-70b-instruct,meta-llama-3.1-70b"
 elif [[ $SELECTED_MODEL == "meta-llama-3.1-8b" ]]; then
