@@ -59,6 +59,9 @@ class SamplingStrategy(Enum):
 @json_schema_type
 class SamplingParams(BaseModel):
     strategy: SamplingStrategy = SamplingStrategy.greedy
+
+    # TODO: inference code for model parallel seems to get into desync
+    # when temperature is 1.0
     temperature: Optional[float] = 0.0
     top_p: Optional[float] = 0.95
     top_k: Optional[int] = 0
