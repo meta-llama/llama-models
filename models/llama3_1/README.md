@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Llama_Repo.jpeg" width="400"/>
+  <img src="/Llama_Repo.jpeg" width="400"/>
 </p>
 
 <p align="center">
