@@ -65,6 +65,10 @@ huggingface-cli download meta-llama/Meta-Llama-3.1-8B-Instruct --include "origin
   )
   ```
 
+## Installations
+
+You can install this repository as a [package](https://pypi.org/project/llama-models/) by just doing `pip install llama-models`
+
 ## Responsible Use
 
 Llama models are a new technology that carries potential risks with use. Testing conducted to date has not — and could not — cover all scenarios.
