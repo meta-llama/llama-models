@@ -1,4 +1,11 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# top-level folder for each specific model found within the models/ directory at
+# the top-level of this source tree.
+
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 import os
@@ -55,7 +62,7 @@ class TokenizerTests(TestCase):
                 11914,
                 13,  # This is a test sentence.
                 128009,  # <|eot_id|>
-            ]
+            ],
         )
 
     def test_encode_dialog(self):

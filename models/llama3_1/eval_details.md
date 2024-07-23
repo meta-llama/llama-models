@@ -40,7 +40,7 @@ For pre-trained models, we use the default few-shot and prompt settings as speci
 
 ### IFEval
 
-For post-trained models, we use the default settings as specified [here](https://arxiv.org/pdf/2311.07911). We compute the prompt level scores and instruction level strict and loose accuracy. We then report the average across all the scores. 
+For post-trained models, we use the default settings as specified [here](https://arxiv.org/pdf/2311.07911). We compute the prompt level scores and instruction level strict and loose accuracy. We then report the average across all the scores.
 
 
 ### HumanEval/HumanEval+
@@ -85,7 +85,7 @@ For pre-trained models, for each validation example, we draw 3 random few-shot e
 
 ### GSM8K
 
-For both pre-trained and post-trained models, we use the same 8-shot config with CoT prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf) (maj@1). The maximum generation length is 1024 tokens. 
+For both pre-trained and post-trained models, we use the same 8-shot config with CoT prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf) (maj@1). The maximum generation length is 1024 tokens.
 
 
 ### RACE
@@ -142,7 +142,7 @@ For post-trained models, we use an 0-shot config with CoT prompt and report exac
 
 ### Multilingual MMLU
 
-For post-trained models, we use a 5-shot config. We run this as a generative task. Maximum generation length is 10 tokens. The scores are individually reported for each and averaged over the seven non-english languages that Llama models support (Portuguese, Spanish, Italian, German, French, Hindi, Thai). 
+For post-trained models, we use a 5-shot config. We run this as a generative task. Maximum generation length is 10 tokens. The scores are individually reported for each and averaged over the seven non-english languages that Llama models support (Portuguese, Spanish, Italian, German, French, Hindi, Thai).
 
 
 ### Multipl-E HumanEval and Multipl-E MBPP
@@ -167,7 +167,7 @@ For pre-trained models, we use a 5-shot config and report exact match scores. We
 
 ### GSM Plus
 
-For pre-trained models, we use the same 8-shot config with CoT prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf) (maj@1). The maximum generation length is 512 tokens. 
+For pre-trained models, we use the same 8-shot config with CoT prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf) (maj@1). The maximum generation length is 512 tokens.
 
 
 ### Berkeley Function Calling Leaderboard (BFCL)
@@ -177,7 +177,7 @@ Benchmark results were achieved by running the open source evaluation repository
 
 ### Nexus
 
-We use the [open-source ](https://github.com/nexusflowai/NexusRaven)prompt and evaluation function followed by the[ open source notebook](https://github.com/nexusflowai/NexusRaven-V2/blob/master/evaluation_notebook/GPT4_Evaluation/Benchmark_GPT4.ipynb) to compute the scores. 
+We use the [open-source ](https://github.com/nexusflowai/NexusRaven)prompt and evaluation function followed by the[ open source notebook](https://github.com/nexusflowai/NexusRaven-V2/blob/master/evaluation_notebook/GPT4_Evaluation/Benchmark_GPT4.ipynb) to compute the scores.
 
 
 ### API Bank
