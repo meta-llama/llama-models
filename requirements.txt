@@ -1,7 +1,8 @@
-fairscale
+blobfile
 jinja2
 json-strong-typing
-tiktoken
 torch
+tiktoken
+fairscale
 pydantic==1.10.13
 pydantic_core==2.18.2
