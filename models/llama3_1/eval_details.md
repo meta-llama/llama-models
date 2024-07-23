@@ -30,7 +30,7 @@ We use the Arc-Challenge subset from the Arc benchmark. For the pre-trained mode
 
 ### GPQA
 
-For post-trained models, we use 0-shot config with CoT prompt and report exact match scores over the possible options using the main set. Max generation length is 2048 tokens.
+For post-trained models, we use 0-shot config with and without CoT prompt and report exact match scores over the possible options using the main set. Max generation length is 96 tokens when not using CoT prompt and 2048 tokens when using the CoT prompt.
 
 
 ### AGIEval English
@@ -189,4 +189,4 @@ We use a 0-shot config with a custom prompt and parsing function to reduce the i
 For post-trained models, we use the same 0-shot prompt and evaluation function as proposed in the [original paper](https://arxiv.org/abs/2305.15334). Just like the [open-source](https://github.com/ShishirPatil/gorilla) implementation, we compare the domains of the retrieved API call from the API database with the ground truth. If the domain of the retrieved API is the same as the ground truth and the API exists in the database, it is considered a success. All other scenarios are considered failures.
 
 ### TriviaQA-WIKI
-For TrivialQA, we evaluate on the Wiki validation set, use 5-shot config and compute average exact match. We run this as a generative task.
+For TrivialQA, we evaluate on the Wiki validation set, use 5-shot config and compute average exact match. We run this as a generative task. Maximum generation length is 24 tokens.
