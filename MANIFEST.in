@@ -1,3 +1,4 @@
+include requirements.txt
 include models/llama3_1/api/templates
 include models/llama3_1/api/templates/assistant_message.jinja
 include models/llama3_1/api/templates/user_message.jinja
