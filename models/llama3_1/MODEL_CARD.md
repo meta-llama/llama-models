@@ -190,7 +190,7 @@ The methodology used to determine training energy use and greenhouse gas emissio
 
 ## Benchmark scores
 
-In this section, we report the results for Llama 3.1 models on standard automatic benchmarks. For all the evaluations, we use our internal evaluations library.
+In this section, we report the results for Llama 3.1 models on standard automatic benchmarks. For all the evaluations, we use our internal evaluations library. Details of our evals can be found [here](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/eval_details.md). We are also releasing the raw data generated as part of our evals which can be found [here](https://huggingface.co/meta-llama).
 
 ### Base pretrained models
 
