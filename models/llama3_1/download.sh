@@ -55,7 +55,7 @@ fi
 if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
     printf "\nModel requires significant storage and computational resources, occupying approximately 750GB of disk storage space and necessitating two nodes on MP16 for inferencing.\n"
     read -p "Enter Y to continue: " ACK
-    if [[ $ACK != 'Y' ]]; then
+    if [[ $ACK != 'Y' && $ACK != 'y' ]]; then
         printf "Exiting..."
         exit 1
     fi
@@ -123,7 +123,6 @@ do
         printf "Downloading tokenizer\n"
         wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/tokenizer.model"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/tokenizer.model"
     fi
-
 
     if [[ $PTH_FILE_COUNT -ge 0 ]]; then
         for s in $(seq -f "0%g" 0 ${PTH_FILE_COUNT})
