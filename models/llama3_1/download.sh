@@ -125,7 +125,7 @@ do
     fi
 
     if [[ $PTH_FILE_COUNT -ge 0 ]]; then
-        for s in $(seq -f "0%g" 0 ${PTH_FILE_COUNT})
+        for s in $(seq -f "%02g" 0 ${PTH_FILE_COUNT})
         do
             printf "Downloading consolidated.${s}.pth\n"
             wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
