@@ -45,6 +45,15 @@ if [[ $SELECTED_MODELS == "" ]]; then
     SELECTED_MODELS=${MODEL_LIST}
 fi
 
+if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
+    printf "\nModel requires significant storage and computational resources, occupying approximately 750GB of disk storage space and necessitating two nodes on MP16 for inferencing.\n"
+    read -p "Enter Y to continue: " ACK
+    if [[ $ACK != 'Y' ]]; then
+        printf "Exiting..."
+        exit 1
+    fi
+fi
+
 printf "Downloading LICENSE and Acceptable Usage Policy\n"
 wget --continue ${PRESIGNED_URL/'*'/"LICENSE"} -O ${TARGET_FOLDER}"/LICENSE"
 wget --continue ${PRESIGNED_URL/'*'/"USE_POLICY.md"} -O ${TARGET_FOLDER}"/USE_POLICY.md"
@@ -67,7 +76,6 @@ do
     elif [[ $m == "meta-llama-3.1-405b-mp16" ]]; then
         PTH_FILE_COUNT=15
         MODEL_PATH="Meta-Llama-3.1-405B-MP16"
-        ADDITIONAL_FILES="enablement_code.zip"
     elif [[ $m == "meta-llama-3.1-405b-mp8" ]]; then
         PTH_FILE_COUNT=7
         MODEL_PATH="Meta-Llama-3.1-405B-MP8"
@@ -80,14 +88,12 @@ do
     elif [[ $m == "meta-llama-3.1-70b" ]]; then
         PTH_FILE_COUNT=7
         MODEL_PATH="Meta-Llama-3.1-70B"
-        ADDITIONAL_FILES="enablement_code.zip"
     elif [[ $m == "meta-llama-3.1-8b-instruct" ]]; then
         PTH_FILE_COUNT=0
         MODEL_PATH="Meta-Llama-3.1-8B-Instruct"
     elif [[ $m == "meta-llama-3.1-8b" ]]; then
         PTH_FILE_COUNT=0
         MODEL_PATH="Meta-Llama-3.1-8B"
-        ADDITIONAL_FILES="enablement_code.zip"
     elif [[ $m == "meta-llama-guard-3-8b-int8-hf" ]]; then
         PTH_FILE_COUNT=-1
         MODEL_PATH="Meta-Llama-Guard-3-8B-INT8-HF"
