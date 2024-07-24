@@ -101,7 +101,7 @@ Where to send questions or comments about the model Instructions on how to provi
 
 **Training Factors** We used custom training libraries, Meta's custom built GPU cluster, and production infrastructure for pretraining. Fine-tuning, annotation, and evaluation were also performed on production infrastructure.
 
-**Training Energy Use **Training utilized a cumulative of** 39.3**M GPU hours of computation on H100-80GB (TDP of 700W) type hardware, per the table below. Training time is the total GPU time required for training each model and power consumption is the peak power capacity per GPU device used, adjusted for power usage efficiency.
+**Training Energy Use** Training utilized a cumulative of **39.3**M GPU hours of computation on H100-80GB (TDP of 700W) type hardware, per the table below. Training time is the total GPU time required for training each model and power consumption is the peak power capacity per GPU device used, adjusted for power usage efficiency.
 
 
 **Training Greenhouse Gas Emissions** Estimated total location-based greenhouse gas emissions were **11,390** tons CO2eq for training. Since 2020, Meta has maintained net zero greenhouse gas emissions in its global operations and matched 100% of its electricity use with renewable energy, therefore the total market-based greenhouse gas emissions for training were 0 tons CO2eq.
@@ -190,7 +190,7 @@ The methodology used to determine training energy use and greenhouse gas emissio
 
 ## Benchmark scores
 
-In this section, we report the results for Llama 3.1 models on standard automatic benchmarks. For all the evaluations, we use our internal evaluations library. Details of our evals can be found [here](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/eval_details.md). We are also releasing the raw data generated as part of our evals which can be found [here](https://huggingface.co/meta-llama).
+In this section, we report the results for Llama 3.1 models on standard automatic benchmarks. For all the evaluations, we use our internal evaluations library. Details of our evals can be found [here](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/eval_details.md). We are also releasing the raw data generated as part of our evals which can be found [here](https://huggingface.co/meta-llama) in the dataset sections.
 
 ### Base pretrained models
 
@@ -796,11 +796,11 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td><strong>Language</strong>
    </td>
-   <td><strong>Llama 3.1 8B</strong>
+   <td><strong>Llama 3.1 8B Instruct</strong>
    </td>
-   <td><strong>Llama 3.1 70B</strong>
+   <td><strong>Llama 3.1 70B Instruct</strong>
    </td>
-   <td><strong>Llama 3.1 405B</strong>
+   <td><strong>Llama 3.1 405B Instruct</strong>
    </td>
   </tr>
   <tr>
@@ -943,7 +943,7 @@ We partnered early with subject-matter experts in critical risk areas to underst
 
 We specifically focused our efforts on mitigating the following critical risk areas:
 
-**1- CBRNE (Chemical, Biological, Radiological, Nuclear, and Explosive materials) helpfulness**
+**1. CBRNE (Chemical, Biological, Radiological, Nuclear, and Explosive materials) helpfulness**
 
 To assess risks related to proliferation of chemical and biological weapons, we performed uplift testing designed to assess whether use of Llama 3.1 models could meaningfully increase the capabilities of malicious actors to plan or carry out attacks using these types of weapons.
 
@@ -958,7 +958,7 @@ Our cyber attack uplift study investigated whether LLMs can enhance human capabi
 
 Our attack automation study focused on evaluating the capabilities of LLMs when used as autonomous agents in cyber offensive operations, specifically in the context of ransomware attacks. This evaluation was distinct from previous studies that considered LLMs as interactive assistants. The primary objective was to assess whether these models could effectively function as independent agents in executing complex cyber-attacks without human intervention.
 
-Our study of Llama-3.1-405B’s social engineering uplift for cyber attackers was conducted to assess the effectiveness of AI models in aiding cyber threat actors in spear phishing campaigns. Please read our Llama 3.1 Cyber security whitepaper to learn more.
+Our study of Llama 3.1 405B’s social engineering uplift for cyber attackers was conducted to assess the effectiveness of AI models in aiding cyber threat actors in spear phishing campaigns. Please read our Llama 3.1 Cyber security whitepaper to learn more.
 
 
 ### Community
