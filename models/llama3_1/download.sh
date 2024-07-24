@@ -52,15 +52,6 @@ if [[ $SELECTED_MODELS == "" ]]; then
     SELECTED_MODELS=${MODEL_LIST}
 fi
 
-if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
-    printf "\nModel requires significant storage and computational resources, occupying approximately 750GB of disk storage space and necessitating two nodes on MP16 for inferencing.\n"
-    read -p "Enter Y to continue: " ACK
-    if [[ $ACK != 'Y' && $ACK != 'y' ]]; then
-        printf "Exiting..."
-        exit 1
-    fi
-fi
-
 printf "Downloading LICENSE and Acceptable Usage Policy\n"
 wget --continue ${PRESIGNED_URL/'*'/"LICENSE"} -O ${TARGET_FOLDER}"/LICENSE"
 wget --continue ${PRESIGNED_URL/'*'/"USE_POLICY.md"} -O ${TARGET_FOLDER}"/USE_POLICY.md"
@@ -70,24 +61,31 @@ do
 
     ADDITIONAL_FILES=""
     TOKENIZER_MODEL=1
+    PTH_FILE_CHUNK_COUNT=0
     if [[ $m == "meta-llama-3.1-405b-instruct-mp16" ]]; then
         PTH_FILE_COUNT=15
+        PTH_FILE_CHUNK_COUNT=2
         MODEL_PATH="Meta-Llama-3.1-405B-Instruct-MP16"
     elif [[ $m == "meta-llama-3.1-405b-instruct-mp8" ]]; then
         PTH_FILE_COUNT=7
+        PTH_FILE_CHUNK_COUNT=4
         MODEL_PATH="Meta-Llama-3.1-405B-Instruct-MP8"
     elif [[ $m == "meta-llama-3.1-405b-instruct-fp8" ]]; then
         PTH_FILE_COUNT=7
+        PTH_FILE_CHUNK_COUNT=3
         MODEL_PATH="Meta-Llama-3.1-405B-Instruct"
         ADDITIONAL_FILES="fp8_scales_0.pt,fp8_scales_1.pt,fp8_scales_2.pt,fp8_scales_3.pt,fp8_scales_4.pt,fp8_scales_5.pt,fp8_scales_6.pt,fp8_scales_7.pt"
     elif [[ $m == "meta-llama-3.1-405b-mp16" ]]; then
         PTH_FILE_COUNT=15
+        PTH_FILE_CHUNK_COUNT=2
         MODEL_PATH="Meta-Llama-3.1-405B-MP16"
     elif [[ $m == "meta-llama-3.1-405b-mp8" ]]; then
         PTH_FILE_COUNT=7
+        PTH_FILE_CHUNK_COUNT=4
         MODEL_PATH="Meta-Llama-3.1-405B-MP8"
     elif [[ $m == "meta-llama-3.1-405b-fp8" ]]; then
         PTH_FILE_COUNT=7
+        PTH_FILE_CHUNK_COUNT=3
         MODEL_PATH="Meta-Llama-3.1-405B"
     elif [[ $m == "meta-llama-3.1-70b-instruct" ]]; then
         PTH_FILE_COUNT=7
@@ -128,7 +126,20 @@ do
         for s in $(seq -f "%02g" 0 ${PTH_FILE_COUNT})
         do
             printf "Downloading consolidated.${s}.pth\n"
-            wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+            if [[ $PTH_FILE_CHUNK_COUNT -gt 0 ]]; then
+                start=0
+                chunk_size=27000000001
+                for chunk_count in $(seq 1 $PTH_FILE_CHUNK_COUNT)
+                do
+                    end=$((start+chunk_size-1))
+                    curl ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -o ${TARGET_FOLDER}"/${MODEL_PATH}/part.${chunk_count}.pth" -H "range: bytes=${start}-${end}"
+                    cat ${TARGET_FOLDER}"/${MODEL_PATH}/part.${chunk_count}.pth" >> ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+                    rm ${TARGET_FOLDER}"/${MODEL_PATH}/part.${chunk_count}.pth"
+                    start=$((end+1))
+                done
+            else
+                wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+            fi
         done
     fi
 
