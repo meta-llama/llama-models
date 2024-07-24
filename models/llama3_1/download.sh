@@ -52,15 +52,6 @@ if [[ $SELECTED_MODELS == "" ]]; then
     SELECTED_MODELS=${MODEL_LIST}
 fi
 
-if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
-    printf "\nModel requires significant storage and computational resources, occupying approximately 750GB of disk storage space and necessitating two nodes on MP16 for inferencing.\n"
-    read -p "Enter Y to continue: " ACK
-    if [[ $ACK != 'Y' && $ACK != 'y' ]]; then
-        printf "Exiting..."
-        exit 1
-    fi
-fi
-
 printf "Downloading LICENSE and Acceptable Usage Policy\n"
 wget --continue ${PRESIGNED_URL/'*'/"LICENSE"} -O ${TARGET_FOLDER}"/LICENSE"
 wget --continue ${PRESIGNED_URL/'*'/"USE_POLICY.md"} -O ${TARGET_FOLDER}"/USE_POLICY.md"
@@ -124,13 +115,24 @@ do
         wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/tokenizer.model"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/tokenizer.model"
     fi
 
+    if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
+        read -p "Please use the URLs below to download the consolidated pth files via browser. The links are also saved in consolidated_pth.txt. Enter to continue..."
+        link_file=${TARGET_FOLDER}"/${MODEL_PATH}/consolidated_pth.txt"
+        echo "Download links for consolidated pth files" > $link_file
+    fi
     if [[ $PTH_FILE_COUNT -ge 0 ]]; then
         for s in $(seq -f "%02g" 0 ${PTH_FILE_COUNT})
         do
-            printf "Downloading consolidated.${s}.pth\n"
-            wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+            if [[ $SELECTED_MODEL == "meta-llama-3.1-405b" ]]; then
+                echo ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} >> $link_file
+                echo "" >> $link_file
+            else
+                printf "Downloading consolidated.${s}.pth\n"
+                wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+            fi
         done
     fi
+    cat $link_file
 
     for ADDITIONAL_FILE in ${ADDITIONAL_FILES//,/ }
     do
