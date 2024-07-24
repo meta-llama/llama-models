@@ -128,7 +128,7 @@ do
         for s in $(seq -f "%02g" 0 ${PTH_FILE_COUNT})
         do
             printf "Downloading consolidated.${s}.pth\n"
-            wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+            wget --continue ${PRESIGNED_URL/'https://llama3-1.llamameta.net/*?Policy=eyJTdGF0ZW1lbnQiOlt7InVuaXF1ZV9oYXNoIjoiOGRqczVoaXkzc2ZyYWFiaTBubmptc3RlIiwiUmVzb3VyY2UiOiJodHRwczpcL1wvbGxhbWEzLTEubGxhbWFtZXRhLm5ldFwvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTcyMTg2NzMyNn19fV19&Signature=QUdyGsje7vxREyaEIDvIniueObod-qOd%7EvSUNHA8IZsUSL6H6f1R9bNStwakOSzXW0%7ELI16bSp3DtrX1veNAHyjWd%7EWi60nFPEv9XbqO%7Egso9Cl58b6XeOs6x5MPRXg4zjBE1CX-cO7WRjVhwozrIWj-jBAiKgGbFY3RD-kgbrRiRKBmsSqeveWTU1JzRDLd8ndR0vNG%7E02Yn5yE7Xgbc8rQOk1i8J%7EximbRquE3aT2I7ZIECsi-u0cnUdx7WGZRXqroPSBXxCAP3Eb5%7EitvUkR4PRvSi%7EjTWzK-z4GzqU4bRavcGMNfpjsLv7OIDlFmzdZPq6RM%7E3zHVz3hzlUdWw__&Key-Pair-Id=K15QRJLYKIFSLZ&Download-Request-ID=1395903485132505'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
         done
     fi
 
