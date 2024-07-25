@@ -6,7 +6,7 @@ This document contains some additional context on the settings and methodology f
 
 ## Language auto-eval benchmark notes:
 
-For a given benchmark, we strive to use consistent evaluation settings across all models, including external models. We make every effort to achieve optimal scores for external models, including addressing any model-specific parsing and tokenization requirements. Where the scores are lower for external models than self-reported scores on comparable or more conservative settings, we report the self-reported scores for external models. We are also releasing the data generated as part of evaluations with publicly available benchmarks which can be found on [huggingface here](https://huggingface.co/meta-llama).
+For a given benchmark, we strive to use consistent evaluation settings across all models, including external models. We make every effort to achieve optimal scores for external models, including addressing any model-specific parsing and tokenization requirements. Where the scores are lower for external models than self-reported scores on comparable or more conservative settings, we report the self-reported scores for external models. We are also releasing the data generated as part of evaluations with publicly available benchmarks which can be found on [Llama 3.1 Evals Huggingface collection](https://huggingface.co/collections/meta-llama/llama-31-evals-66a2c5a14c2093e58298ac7f).
 
 
 ### MMLU
