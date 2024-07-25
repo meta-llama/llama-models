@@ -32,6 +32,11 @@ Once your request is approved, you will receive a signed URL over email. Then, r
 
 Pre-requisites: Ensure you have `wget` and `md5sum` installed. Then run the script: `./download.sh`. `./download.sh`can be found inside the respective `models` directory. 
 
+If using windows, run `./download.ps1` powershell script. 
+If usig WSL2, before running `./download.sh`, run following commands -
+`tr -d '\r' < download.sh > download_unix.sh`
+`mv download_unix.sh download.sh` 
+
 Remember that the links expire after 24 hours and a certain amount of downloads. You can always re-request a link if you start seeing errors such as `403: Forbidden`.
 
 ### Access to Hugging Face
