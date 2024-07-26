@@ -17,15 +17,14 @@ CUSTOM_TOOL_CALL_PATTERN = re.compile(
 )
 
 
-def is_json(s):
-    try:
-        json.loads(s)
-    except json.JSONDecodeError:
-        return False
-    return True
-
-
 class ToolUtils:
+    @staticmethod
+    def is_json(s):
+        try:
+            json.loads(s)
+        except json.JSONDecodeError:
+            return False
+        return True
 
     @staticmethod
     def is_builtin_tool_call(message_body: str) -> bool:
@@ -45,8 +44,7 @@ class ToolUtils:
         else:
             return None
 
-    @staticmethod
-    def maybe_extract_custom_tool_call(message_body: str) -> Optional[Tuple[str, str]]:
+    def maybe_extract_custom_tool_call(self, message_body: str) -> Optional[Tuple[str, str]]:
         # NOTE: Custom function too calls are still experimental
         # Sometimes, response is of the form
         # {"type": "function", "name": "function_name", "parameters": {...}
@@ -64,7 +62,7 @@ class ToolUtils:
                 print(
                     "Exception while parsing json query for custom tool call", query, e
                 )
-        elif is_json(message_body):
+        elif self.is_json(message_body):
             response = json.loads(message_body)
             if ("type" in response and response["type"] == "function") or (
                 "name" in response
