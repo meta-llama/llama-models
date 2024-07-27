@@ -10,8 +10,8 @@
 
 # Llama Models
 
-![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-models) 
-![Discord](https://img.shields.io/discord/1257833999603335178) 
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-models)](https://pypi.org/project/llama-models/)
+[![Discord](https://img.shields.io/discord/1257833999603335178)](https://discord.gg/TZAAYNVtrU)
 
 
 Llama is an accessible, open large language model (LLM) designed for developers, researchers, and businesses to build, experiment, and responsibly scale their generative AI ideas. Part of a foundational system, it serves as a bedrock for innovation in the global community. A few key aspects:
