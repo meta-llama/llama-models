@@ -12,13 +12,15 @@
 # the root directory of this source tree.
 
 from setuptools import setup
-
+import io
 
 def read_requirements():
     with open("requirements.txt") as fp:
         content = fp.readlines()
     return [line.strip() for line in content if not line.startswith("#")]
 
+with io.open("README.md", encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
     name="llama_models",
@@ -26,7 +28,7 @@ setup(
     author="Meta Llama",
     author_email="llama-oss@meta.com",
     description="Llama models",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/meta-llama/llama-models",
     package_dir={"llama_models": "models"},
