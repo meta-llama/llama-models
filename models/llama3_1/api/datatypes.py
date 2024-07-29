@@ -213,6 +213,12 @@ class ModelSKU(Enum):
     llama3_1_405b_instruct_bf16_mp16 = "llama3_1_405b_instruct_bf16_mp16"
 
 
+@json_schema_type
+class HardwareRequirements(BaseModel):
+    memory_gb_per_gpu: int
+    gpu_count: int
+
+
 @json_schema_type(
     schema={
         "description": "The model family and SKU of the model along with other parameters corresponding to the model."
@@ -223,6 +229,7 @@ class ModelDefinition(BaseModel):
     sku: ModelSKU
     description_markdown: str
     max_seq_length: int
-    model_parallel_size: int
+    huggingface_id: Optional[str] = None
+    hardware_requirements: HardwareRequirements
     quantization_format: Optional[CheckpointQuantizationFormat] = None
     model_args: Dict[str, Any]
