@@ -264,3 +264,21 @@ def instruct_models() -> List[ModelDefinition]:
             },
         ),
     ]
+
+
+def llama_meta_folder_path(model: ModelDefinition) -> str:
+    if model.sku == ModelSKU.llama3_1_405b_bf16_mp16:
+        return "Meta-Llama-3.1-405B-MP16"
+    elif model.sku == ModelSKU.llama3_1_405b_bf16_mp8:
+        return "Meta-Llama-3.1-405B-MP8"
+    elif model.sku == ModelSKU.llama3_1_405b_fp8_mp8:
+        return "Meta-Llama-3.1-405B-FP8"
+    elif model.sku == ModelSKU.llama3_1_405b_instruct_bf16_mp16:
+        return "Meta-Llama-3.1-405B-Instruct-MP16"
+    elif model.sku == ModelSKU.llama3_1_405b_instruct_bf16_mp8:
+        return "Meta-Llama-3.1-405B-Instruct-MP8"
+    elif model.sku == ModelSKU.llama3_1_405b_instruct_fp8_mp8:
+        return "Meta-Llama-3.1-405B-Instruct-FP8"
+
+    path = model.huggingface_id.split("/")[-1]
+    return path
