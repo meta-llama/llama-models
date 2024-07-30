@@ -234,4 +234,5 @@ class ModelDefinition(BaseModel):
     quantization_format: CheckpointQuantizationFormat = (
         CheckpointQuantizationFormat.bf16
     )
+    recommended_sampling_params: Optional[SamplingParams] = None
     model_args: Dict[str, Any]

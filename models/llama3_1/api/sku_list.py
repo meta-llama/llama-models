@@ -13,6 +13,8 @@ from .datatypes import (
     ModelDefinition,
     ModelFamily,
     ModelSKU,
+    SamplingParams,
+    SamplingStrategy,
 )
 
 
@@ -22,6 +24,14 @@ VOCAB_SIZE = 128256
 
 def llama3_1_model_list() -> List[ModelDefinition]:
     return base_models() + instruct_models()
+
+
+def recommended_sampling_params() -> SamplingParams:
+    return SamplingParams(
+        strategy=SamplingStrategy.top_p,
+        temperature=1.0,
+        top_p=0.9,
+    )
 
 
 def base_models() -> List[ModelDefinition]:
@@ -36,6 +46,7 @@ def base_models() -> List[ModelDefinition]:
                 gpu_count=1,
                 memory_gb_per_gpu=20,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
                 "n_layers": 32,
@@ -59,6 +70,7 @@ def base_models() -> List[ModelDefinition]:
                 gpu_count=8,
                 memory_gb_per_gpu=20,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
                 "n_layers": 80,
@@ -82,6 +94,7 @@ def base_models() -> List[ModelDefinition]:
                 gpu_count=8,
                 memory_gb_per_gpu=120,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
                 "n_layers": 126,
@@ -106,6 +119,7 @@ def base_models() -> List[ModelDefinition]:
                 memory_gb_per_gpu=70,
             ),
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
                 "n_layers": 126,
@@ -129,6 +143,7 @@ def base_models() -> List[ModelDefinition]:
                 gpu_count=16,
                 memory_gb_per_gpu=70,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
                 "n_layers": 126,
@@ -157,6 +172,7 @@ def instruct_models() -> List[ModelDefinition]:
                 gpu_count=1,
                 memory_gb_per_gpu=20,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
                 "n_layers": 32,
@@ -180,6 +196,7 @@ def instruct_models() -> List[ModelDefinition]:
                 gpu_count=8,
                 memory_gb_per_gpu=20,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
                 "n_layers": 80,
@@ -203,6 +220,7 @@ def instruct_models() -> List[ModelDefinition]:
                 gpu_count=8,
                 memory_gb_per_gpu=120,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
                 "n_layers": 126,
@@ -227,6 +245,7 @@ def instruct_models() -> List[ModelDefinition]:
                 memory_gb_per_gpu=70,
             ),
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
                 "n_layers": 126,
@@ -250,6 +269,7 @@ def instruct_models() -> List[ModelDefinition]:
                 gpu_count=16,
                 memory_gb_per_gpu=70,
             ),
+            recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
                 "n_layers": 126,
