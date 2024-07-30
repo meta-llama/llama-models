@@ -292,13 +292,25 @@ def llama_meta_folder_path(model: ModelDefinition) -> str:
     elif model.sku == ModelSKU.llama3_1_405b_bf16_mp8:
         return "Meta-Llama-3.1-405B-MP8"
     elif model.sku == ModelSKU.llama3_1_405b_fp8_mp8:
-        return "Meta-Llama-3.1-405B-FP8"
+        return "Meta-Llama-3.1-405B"
     elif model.sku == ModelSKU.llama3_1_405b_instruct_bf16_mp16:
         return "Meta-Llama-3.1-405B-Instruct-MP16"
     elif model.sku == ModelSKU.llama3_1_405b_instruct_bf16_mp8:
         return "Meta-Llama-3.1-405B-Instruct-MP8"
     elif model.sku == ModelSKU.llama3_1_405b_instruct_fp8_mp8:
-        return "Meta-Llama-3.1-405B-Instruct-FP8"
+        return "Meta-Llama-3.1-405B-Instruct"
 
     path = model.huggingface_id.split("/")[-1]
     return path
+
+
+# Sadness because Cloudfront rejects our HEAD requests to find Content-Length
+def llama_meta_pth_size(model: ModelDefinition) -> int:
+    if model.sku == ModelSKU.llama3_1_405b_bf16_mp16:
+        return 51268302389
+    elif model.sku == ModelSKU.llama3_1_405b_bf16_mp8:
+        return 101470976045
+    elif model.sku == ModelSKU.llama3_1_405b_fp8_mp8:
+        return 60903742309
+
+    return 0
