@@ -11,7 +11,6 @@ from .datatypes import (
     CheckpointQuantizationFormat,
     HardwareRequirements,
     ModelDefinition,
-    ModelFamily,
     ModelSKU,
     SamplingParams,
     SamplingStrategy,
@@ -37,7 +36,6 @@ def recommended_sampling_params() -> SamplingParams:
 def base_models() -> List[ModelDefinition]:
     return [
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_8b,
             description_markdown="Llama 3.1 8b model",
             max_seq_length=CONTEXT_LENGTH,
@@ -61,7 +59,6 @@ def base_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_70b,
             description_markdown="Llama 3.1 70b model",
             huggingface_id="meta-llama/Meta-Llama-3.1-70B",
@@ -85,7 +82,6 @@ def base_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_405b_bf16_mp8,
             description_markdown="Llama 3.1 405b model (BF16 weights)",
             huggingface_id=None,
@@ -109,7 +105,6 @@ def base_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_405b_fp8_mp8,
             description_markdown="Llama 3.1 405b model (FP8 quantized)",
             max_seq_length=CONTEXT_LENGTH,
@@ -134,7 +129,6 @@ def base_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_405b_bf16_mp16,
             description_markdown="Llama 3.1 405b model (BF16 weights)",
             huggingface_id="meta-llama/Meta-Llama-3.1-405B",
@@ -163,7 +157,6 @@ def base_models() -> List[ModelDefinition]:
 def instruct_models() -> List[ModelDefinition]:
     return [
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_8b_instruct,
             description_markdown="Llama 3.1 8b instruct model",
             max_seq_length=CONTEXT_LENGTH,
@@ -187,7 +180,6 @@ def instruct_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_70b_instruct,
             description_markdown="Llama 3.1 70b instruct model",
             huggingface_id="meta-llama/Meta-Llama-3.1-70B-Instruct",
@@ -211,7 +203,6 @@ def instruct_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_405b_instruct_bf16_mp8,
             description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
             huggingface_id=None,
@@ -235,7 +226,6 @@ def instruct_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_405b_instruct_fp8_mp8,
             description_markdown="Llama 3.1 405b instruct model (FP8 quantized)",
             huggingface_id="meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
@@ -260,7 +250,6 @@ def instruct_models() -> List[ModelDefinition]:
             },
         ),
         ModelDefinition(
-            family=ModelFamily.llama3_1,
             sku=ModelSKU.llama3_1_405b_instruct_bf16_mp16,
             description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
             huggingface_id="meta-llama/Meta-Llama-3.1-405B-Instruct",
