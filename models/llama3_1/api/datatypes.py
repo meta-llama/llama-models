@@ -231,5 +231,7 @@ class ModelDefinition(BaseModel):
     max_seq_length: int
     huggingface_id: Optional[str] = None
     hardware_requirements: HardwareRequirements
-    quantization_format: Optional[CheckpointQuantizationFormat] = None
+    quantization_format: CheckpointQuantizationFormat = (
+        CheckpointQuantizationFormat.bf16
+    )
     model_args: Dict[str, Any]
