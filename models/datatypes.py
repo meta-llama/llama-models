@@ -33,7 +33,11 @@ class SamplingParams(BaseModel):
 
 @json_schema_type(
     schema={
-        "description": "The format in which weights are specified. This does not necessarily always equal what quantization is desired at runtime since there can be on-the-fly conversions done.",
+        "description": """
+The format in which weights are specified. This does not necessarily
+always equal what quantization is desired at runtime since there
+can be on-the-fly conversions done.
+""",
     }
 )
 class CheckpointQuantizationFormat(Enum):
@@ -41,22 +45,25 @@ class CheckpointQuantizationFormat(Enum):
     bf16 = "bf16"
 
     # used for enabling fp8_rowwise inference, some weights are bf16
-    fp8_mixed = "fp8_mixed"
+    fp8_mixed = "fp8-mixed"
 
 
 @json_schema_type
-class ModelSKU(Enum):
-    llama3_1_8b = "llama3_1_8b"
-    llama3_1_70b = "llama3_1_70b"
-    llama3_1_405b_fp8_mp8 = "llama3_1_405b_fp8_mp8"
-    llama3_1_405b_bf16_mp8 = "llama3_1_405b_bf16_mp8"
-    llama3_1_405b_bf16_mp16 = "llama3_1_405b_bf16_mp16"
+class ModelId(Enum):
+    # The ID, in str form, represents the tuple
+    # (model_family, parameters, is_instruct)
 
-    llama3_1_8b_instruct = "llama3_1_8b_instruct"
-    llama3_1_70b_instruct = "llama3_1_70b_instruct"
-    llama3_1_405b_instruct_fp8_mp8 = "llama3_1_405b_instruct_fp8_mp8"
-    llama3_1_405b_instruct_bf16_mp8 = "llama3_1_405b_instruct_bf16_mp8"
-    llama3_1_405b_instruct_bf16_mp16 = "llama3_1_405b_instruct_bf16_mp16"
+    # Llama 3.1 family
+    llama3_1_8b = "llama3.1-8B"
+    llama3_1_70b = "llama3.1-70B"
+    llama3_1_405b = "llama3.1-405B"
+    llama3_1_8b_instruct = "llama3.1-8B-instruct"
+    llama3_1_70b_instruct = "llama3.1-70B-instruct"
+    llama3_1_405b_instruct = "llama3.1-405B-instruct"
+
+    # Safety models
+    llama_guard_3_8b = "llama-guard-3-8B"
+    prompt_guard = "prompt-guard"
 
 
 @json_schema_type
@@ -70,8 +77,23 @@ class HardwareRequirements(BaseModel):
         "description": "The model family and SKU of the model along with other parameters corresponding to the model."
     }
 )
-class ModelDefinition(BaseModel):
-    sku: ModelSKU
+class ModelSKU(BaseModel):
+    model_id: ModelId
+
+    # The variant is a string representation of other parameters which helps
+    # uniquely identify the model. this typically includes the quantization
+    # format, model parallel size, etc.
+    @property
+    def variant(self) -> str:
+        return (
+            f"{self.quantization_format.value}-mp{self.hardware_requirements.gpu_count}"
+        )
+
+    # The SKU is uniquely identified by (model_id, variant) combo
+    @property
+    def sku_id(self) -> str:
+        return f"{self.model_id.value}-{self.variant}"
+
     description_markdown: str
     max_seq_length: int
     huggingface_id: Optional[str] = None
@@ -82,25 +104,6 @@ class ModelDefinition(BaseModel):
     recommended_sampling_params: Optional[SamplingParams] = None
     model_args: Dict[str, Any]
 
-
-# TODO: resolve these types against the model SKUs above
-@json_schema_type(
-    schema={
-        "description": "The type of the model. This is used to determine the model family and SKU."
-    }
-)
-class PretrainedModel(Enum):
-    llama3_8b = "llama3_8b"
-    llama3_70b = "llama3_70b"
-
-
-@json_schema_type
-class InstructModel(Enum):
-    llama3_8b_chat = "llama3_8b_chat"
-    llama3_70b_chat = "llama3_70b_chat"
-
-
-@json_schema_type
-class RewardModel(Enum):
-    llama3_70b_reward = "llama3_70b_reward"
-    llama3_405b_reward = "llama3_405b_reward"
+    @property
+    def is_instruct_model(self) -> bool:
+        return "instruct" in self.id.name
