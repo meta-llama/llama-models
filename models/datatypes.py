@@ -47,23 +47,24 @@ class CheckpointQuantizationFormat(Enum):
     # used for enabling fp8_rowwise inference, some weights are bf16
     fp8_mixed = "fp8-mixed"
 
+    int8 = "int8"
+
 
 @json_schema_type
-class ModelId(Enum):
-    # The ID, in str form, represents the tuple
-    # (model_family, parameters, is_instruct)
+class CoreModelId(Enum):
+    """Each of these models is a unique "SKU". These root models can be served in various garbs (especially by quantizing them)"""
 
     # Llama 3.1 family
-    llama3_1_8b = "llama3.1-8B"
-    llama3_1_70b = "llama3.1-70B"
-    llama3_1_405b = "llama3.1-405B"
-    llama3_1_8b_instruct = "llama3.1-8B-instruct"
-    llama3_1_70b_instruct = "llama3.1-70B-instruct"
-    llama3_1_405b_instruct = "llama3.1-405B-instruct"
+    meta_llama3_1_8b = "Meta-Llama3.1-8B"
+    meta_llama3_1_70b = "Meta-Llama3.1-70B"
+    meta_llama3_1_405b = "Meta-Llama3.1-405B"
+    meta_llama3_1_8b_instruct = "Meta-Llama3.1-8B-Instruct"
+    meta_llama3_1_70b_instruct = "Meta-Llama3.1-70B-Instruct"
+    meta_llama3_1_405b_instruct = "Meta-Llama3.1-405B-Instruct"
 
     # Safety models
-    llama_guard_3_8b = "llama-guard-3-8B"
-    prompt_guard = "prompt-guard"
+    llama_guard_3_8b = "Llama-Guard-3-8B"
+    prompt_guard_86m = "Prompt-Guard-86M"
 
 
 @json_schema_type
@@ -77,26 +78,32 @@ class HardwareRequirements(BaseModel):
         "description": "The model family and SKU of the model along with other parameters corresponding to the model."
     }
 )
-class ModelSKU(BaseModel):
-    model_id: ModelId
+class Model(BaseModel):
+    core_model_id: CoreModelId
+    is_default_variant: bool
 
     # The variant is a string representation of other parameters which helps
     # uniquely identify the model. this typically includes the quantization
     # format, model parallel size, etc.
     @property
     def variant(self) -> str:
-        return (
-            f"{self.quantization_format.value}-mp{self.hardware_requirements.gpu_count}"
-        )
+        parts = [
+            self.quantization_format.value,
+            f"mp{self.hardware_requirements.gpu_count}",
+        ]
+
+        return "-".join(parts)
 
     # The SKU is uniquely identified by (model_id, variant) combo
-    @property
-    def sku_id(self) -> str:
-        return f"{self.model_id.value}-{self.variant}"
+    def descriptor(self, shorten_default_variant: bool = True) -> str:
+        if shorten_default_variant and self.is_default_variant:
+            return self.core_model_id.value
+
+        return f"{self.core_model_id.value}:{self.variant}"
 
     description_markdown: str
     max_seq_length: int
-    huggingface_id: Optional[str] = None
+    huggingface_repo: Optional[str] = None
     hardware_requirements: HardwareRequirements
     quantization_format: CheckpointQuantizationFormat = (
         CheckpointQuantizationFormat.bf16
