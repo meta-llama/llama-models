@@ -21,7 +21,7 @@ Llama is an accessible, open large language model (LLM) designed for developers,
 
 Our mission is to empower individuals and industry through this opportunity while fostering an environment of discovery and ethical AI advancements. The model weights are licensed for researchers and commercial entities, upholding the principles of openness.
 
-## Llama Models
+## [Llama Models](#Llama-Models)
 
 |  **Model** | **Launch date** | **Model sizes** | **Context Length** | **Tokenizer** | **Acceptable use policy**  |  **License** | **Model Card** |
 | :----: | :----: | :----: | :----:|:----:|:----:|:----:|:----:|
