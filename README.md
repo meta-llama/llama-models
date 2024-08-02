@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Llama_Repo.jpeg" width="400"/>
+  <img src="https://github.com/meta-llama/llama-models/blob/main/Llama_Repo.jpeg" width="400"/>
 </p>
 
 <p align="center">
@@ -9,6 +9,11 @@
 ---
 
 # Llama Models
+
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-models)](https://pypi.org/project/llama-models/)
+[![Discord](https://img.shields.io/discord/1257833999603335178)](https://discord.gg/TZAAYNVtrU)
+
+
 Llama is an accessible, open large language model (LLM) designed for developers, researchers, and businesses to build, experiment, and responsibly scale their generative AI ideas. Part of a foundational system, it serves as a bedrock for innovation in the global community. A few key aspects:
 1. **Open access**: Easy accessibility to cutting-edge large language models, fostering collaboration and advancements among developers, researchers, and organizations
 2. **Broad ecosystem**: Llama models have been downloaded hundreds of millions of times, there are thousands of community projects built on Llama and platform support is broad from cloud providers to startups - the world is building with Llama!
@@ -16,7 +21,7 @@ Llama is an accessible, open large language model (LLM) designed for developers,
 
 Our mission is to empower individuals and industry through this opportunity while fostering an environment of discovery and ethical AI advancements. The model weights are licensed for researchers and commercial entities, upholding the principles of openness.
 
-## Llama Models
+## [Llama Models](#Llama-Models)
 
 |  **Model** | **Launch date** | **Model sizes** | **Context Length** | **Tokenizer** | **Acceptable use policy**  |  **License** | **Model Card** |
 | :----: | :----: | :----: | :----:|:----:|:----:|:----:|:----:|

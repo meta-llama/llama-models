@@ -1,3 +1,4 @@
+PyYAML
 blobfile
 jinja2
 json-strong-typing

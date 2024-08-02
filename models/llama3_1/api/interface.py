@@ -5,15 +5,15 @@
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
 
-import glob
 import json
-import os
+
 from datetime import datetime
 from pathlib import Path
 
 from typing import List, Optional
 
-from termcolor import colored, cprint
+import yaml
+from jinja2 import Environment, FileSystemLoader
 
 from .chat_format import ChatFormat
 
@@ -25,21 +25,67 @@ from .datatypes import (
     SystemMessage,
     ToolCall,
     ToolDefinition,
-    ToolParamDefinition,
 )
 from .tokenizer import Tokenizer
 
 THIS_DIR = Path(__file__).parent
 
-TEMPLATES = {}
-for role in ("system", "assistant", "tool", "user"):
-    for path in glob.glob(str(THIS_DIR / "templates" / f"{role}_message*.yaml")):
-        name = os.path.basename(path)
-        name = name.replace("_", "-").replace(".yaml", "").replace(".", "-")
-        TEMPLATES[name] = (role, path, f"{role}_message.jinja")
+
+class Template:
+    def __init__(self, role, template_name, yaml_path, notes=None):
+        self.role = role
+        self.template_name = template_name
+        self.yaml_path = yaml_path
+        self.notes = notes or ""
 
 
-class LLama3_1_Interface:
+TEMPLATES = [
+    Template("user", "user-default", "user_message.default.yaml"),
+    Template(
+        "assistant",
+        "assistant-builtin-tool-call",
+        "assistant_message.builtin_tool_call.yaml",
+        "Notice <|python_tag|>",
+    ),
+    Template(
+        "assistant",
+        "assistant-custom-tool-call",
+        "assistant_message.custom_tool_call.yaml",
+        "Notice <function=...> format",
+    ),
+    Template("assistant", "assistant-default", "assistant_message.default.yaml"),
+    Template(
+        "system",
+        "system-builtin-and-custom-tools",
+        "system_message.builtin_and_custom_tools.yaml",
+    ),
+    Template(
+        "system",
+        "system-builtin-tools-only",
+        "system_message.builtin_tools_only.yaml",
+    ),
+    Template(
+        "system",
+        "system-custom-tools-only",
+        "system_message.custom_tools_only.yaml",
+    ),
+    Template("system", "system-default", "system_message.default.yaml"),
+    Template(
+        "tool",
+        "tool-success",
+        "tool_message.success.yaml",
+        "Note ipython header and [stdout]",
+    ),
+    Template(
+        "tool",
+        "tool-failure",
+        "tool_message.failure.yaml",
+        "Note ipython header and [stderr]",
+    ),
+]
+
+
+class LLama31Interface:
     def __init__(self, tokenizer_path: str):
         self.tokenizer = Tokenizer(tokenizer_path)
         self.formatter = ChatFormat(self.tokenizer)
@@ -154,40 +200,29 @@ def get_parameters_string(tooldef: ToolDefinition) -> str:
     )
 
 
-def list_jinja_templates():
-    global TEMPLATES
-
-    for name in TEMPLATES.keys():
-        print(f"{name}")
+def list_jinja_templates() -> List[Template]:
+    return TEMPLATES
 
 
 def render_jinja_template(name: str):
-    if name not in TEMPLATES:
+    by_name = {t.template_name: t for t in TEMPLATES}
+    if name not in by_name:
         raise ValueError(f"No template found for `{name}`")
 
-    import yaml
-    from jinja2 import Environment, FileSystemLoader
+    template = by_name[name]
+    jinja_template = f"{template.role}_message.jinja"
 
     tokenizer = Tokenizer(str(THIS_DIR / "tokenizer.model"))
     special_tokens = list(tokenizer.special_tokens.values())
 
-    role, input_path, jinja_template = TEMPLATES[name]
-
     env = Environment(loader=FileSystemLoader(THIS_DIR / "templates"))
-    template = env.get_template(jinja_template)
-
-    with open(input_path, "r") as f:
+    with open(THIS_DIR / "templates" / template.yaml_path, "r") as f:
         context = yaml.safe_load(f)
         context["today"] = datetime.now().strftime("%d %B %Y")
 
-        output = template.render(context)
+        output = env.get_template(jinja_template).render(context)
         tokens = tokenizer.encode(output, allowed_special="all", bos=False, eos=False)
 
-        for t in tokens:
-            decoded = tokenizer.decode([t])
-            if t in special_tokens:
-                cprint(decoded, "yellow", end="")
-            else:
-                print(decoded, end="")
+        tokens = [(tokenizer.decode([t]), t in special_tokens) for t in tokens]
 
-        print("")
+    return template, tokens
