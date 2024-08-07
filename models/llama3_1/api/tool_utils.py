@@ -19,7 +19,9 @@ CUSTOM_TOOL_CALL_PATTERN = re.compile(
 
 def is_json(s):
     try:
-        json.loads(s)
+        parsed = json.loads(s)
+        # Return True for valid objects and not for ints, strings, etc
+        return isinstance(parsed, dict)
     except json.JSONDecodeError:
         return False
     return True
