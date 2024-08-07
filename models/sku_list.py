@@ -398,7 +398,7 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
     else:
         folder = model.huggingface_repo.split("/")[-1]
 
-    files = []
+    files = ["checklist.chk"]
     if (
         model.core_model_id == CoreModelId.llama_guard_3_8b
         and model.quantization_format == CheckpointQuantizationFormat.int8
