@@ -509,7 +509,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>5
    </td>
-   <td>micro_avg/acc_char
+   <td>macro_avg/acc
    </td>
    <td>45.5
    </td>
