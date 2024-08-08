@@ -5,6 +5,7 @@
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
 
+from functools import lru_cache
 from typing import List, Optional
 
 from .datatypes import (
@@ -30,6 +31,7 @@ def resolve_model(descriptor: str) -> Optional[Model]:
     return None
 
 
+@lru_cache
 def all_registered_models() -> List[Model]:
     return llama2_family() + llama3_family() + llama3_1_family() + safety_models()
 
@@ -41,11 +43,13 @@ def recommended_sampling_params() -> SamplingParams:
         top_p=0.9,
     )
 
+
 def llama2_family() -> List[Model]:
     return [
         *llama2_base_models(),
         *llama2_instruct_models(),
     ]
+
 
 def llama3_family() -> List[Model]:
     return [
@@ -53,17 +57,18 @@ def llama3_family() -> List[Model]:
         *llama3_instruct_models(),
     ]
 
+
 def llama3_1_family() -> List[Model]:
     return [
         *llama3_1_base_models(),
         *llama3_1_instruct_models(),
     ]
 
+
 def llama2_base_models() -> List[Model]:
     return [
         Model(
             core_model_id=CoreModelId.meta_llama2_7b,
-
             is_default_variant=True,
             description_markdown="Llama 2 7b model",
             huggingface_repo="meta-llama/Llama-2-7b",
@@ -304,7 +309,6 @@ def llama3_1_base_models() -> List[Model]:
             },
         ),
     ]
-
 
 
 def llama2_instruct_models() -> List[Model]:
@@ -553,6 +557,7 @@ def llama3_1_instruct_models() -> List[Model]:
     ]
 
 
+@lru_cache
 def safety_models() -> List[Model]:
     return [
         Model(
