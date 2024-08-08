@@ -51,22 +51,30 @@ class CheckpointQuantizationFormat(Enum):
 
 
 @json_schema_type
+class ModelFamily(Enum):
+    llama2 = "llama2"
+    llama3 = "llama3"
+    llama3_1 = "llama3_1"
+    safety = "safety"
+
+
+@json_schema_type
 class CoreModelId(Enum):
     """Each of these models is a unique "SKU". These root models can be served in various garbs (especially by quantizing them)"""
 
     # Llama 2 family
-    meta_llama2_7b = "meta-llama/Llama-2-7b"
-    meta_llama2_13b = "meta-llama/Llama-2-13b"
-    meta_llama2_70b = "meta-llama/Llama-2-70b"
-    meta_llama2_7b_chat = "meta-llama/Llama-2-7b-chat"
-    meta_llama2_13b_chat = "meta-llama/Llama-2-13b-chat"
-    meta_llama2_70b_chat = "meta-llama/Llama-2-70b-chat"
+    meta_llama2_7b = "Llama-2-7b"
+    meta_llama2_13b = "Llama-2-13b"
+    meta_llama2_70b = "Llama-2-70b"
+    meta_llama2_7b_chat = "Llama-2-7b-chat"
+    meta_llama2_13b_chat = "Llama-2-13b-chat"
+    meta_llama2_70b_chat = "Llama-2-70b-chat"
 
     # Llama 3 family
-    meta_llama3_8b = "meta-llama/Meta-Llama-3-8B"
-    meta_llama3_70b = "meta-llama/Meta-Llama-3-70B"
-    meta_llama3_8b_instruct = "meta-llama/Meta-Llama-3-8B-Instruct"
-    meta_llama3_70b_instruct = "meta-llama/Meta-Llama-3-70B-Instruct"
+    meta_llama3_8b = "Llama-3-8B"
+    meta_llama3_70b = "Llama-3-70B"
+    meta_llama3_8b_instruct = "Llama-3-8B-Instruct"
+    meta_llama3_70b_instruct = "Llama-3-70B-Instruct"
 
     # Llama 3.1 family
     meta_llama3_1_8b = "Meta-Llama3.1-8B"
@@ -79,6 +87,41 @@ class CoreModelId(Enum):
     # Safety models
     llama_guard_3_8b = "Llama-Guard-3-8B"
     prompt_guard_86m = "Prompt-Guard-86M"
+
+
+def model_family(CoreModelId) -> ModelFamily:
+    if CoreModelId in [
+        CoreModelId.meta_llama2_7b,
+        CoreModelId.meta_llama2_13b,
+        CoreModelId.meta_llama2_70b,
+        CoreModelId.meta_llama2_7b_chat,
+        CoreModelId.meta_llama2_13b_chat,
+        CoreModelId.meta_llama2_70b_chat,
+    ]:
+        return ModelFamily.llama2
+    elif CoreModelId in [
+        CoreModelId.meta_llama3_8b,
+        CoreModelId.meta_llama3_70b,
+        CoreModelId.meta_llama3_8b_instruct,
+        CoreModelId.meta_llama3_70b_instruct,
+    ]:
+        return ModelFamily.llama3
+    elif CoreModelId in [
+        CoreModelId.meta_llama3_1_8b,
+        CoreModelId.meta_llama3_1_70b,
+        CoreModelId.meta_llama3_1_405b,
+        CoreModelId.meta_llama3_1_8b_instruct,
+        CoreModelId.meta_llama3_1_70b_instruct,
+        CoreModelId.meta_llama3_1_405b_instruct,
+    ]:
+        return ModelFamily.llama3_1
+    elif CoreModelId in [
+        CoreModelId.llama_guard_3_8b,
+        CoreModelId.prompt_guard_86m,
+    ]:
+        return ModelFamily.safety
+    else:
+        raise ValueError(f"Unknown model family for {CoreModelId}")
 
 
 @json_schema_type
@@ -95,6 +138,34 @@ class HardwareRequirements(BaseModel):
 class Model(BaseModel):
     core_model_id: CoreModelId
     is_default_variant: bool
+
+    @property
+    def model_family(self) -> ModelFamily:
+        return model_family(self.core_model_id)
+
+    # Featured models are shown in the non-exhaustive model list
+    @property
+    def is_featured(self) -> bool:
+        return self.model_family in [
+            ModelFamily.llama3_1,
+            ModelFamily.safety,
+        ]
+
+    @property
+    def max_seq_length(self) -> int:
+        if self.model_family == ModelFamily.llama2:
+            return 4096
+        elif self.model_family == ModelFamily.llama3:
+            return 8192
+        elif self.model_family == ModelFamily.llama3_1:
+            return 131072
+        elif self.core_model_id in [
+            CoreModelId.llama_guard_3_8b,
+            CoreModelId.prompt_guard_86m,
+        ]:
+            return 131072
+        else:
+            raise ValueError(f"Unknown max_seq_len for {self.core_model_id}")
 
     # The variant is a string representation of other parameters which helps
     # uniquely identify the model. this typically includes the quantization
@@ -116,7 +187,6 @@ class Model(BaseModel):
         return f"{self.core_model_id.value}:{self.variant}"
 
     description_markdown: str
-    max_seq_length: int
     huggingface_repo: Optional[str] = None
     hardware_requirements: HardwareRequirements
     quantization_format: CheckpointQuantizationFormat = (
