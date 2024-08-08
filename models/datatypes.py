@@ -51,6 +51,14 @@ class CheckpointQuantizationFormat(Enum):
 
 
 @json_schema_type
+class ModelFamily(Enum):
+    llama2 = "llama2"
+    llama3 = "llama3"
+    llama3_1 = "llama3_1"
+    safety = "safety"
+
+
+@json_schema_type
 class CoreModelId(Enum):
     """Each of these models is a unique "SKU". These root models can be served in various garbs (especially by quantizing them)"""
 
@@ -81,6 +89,41 @@ class CoreModelId(Enum):
     prompt_guard_86m = "Prompt-Guard-86M"
 
 
+def model_family(CoreModelId) -> ModelFamily:
+    if CoreModelId in [
+        CoreModelId.meta_llama2_7b,
+        CoreModelId.meta_llama2_13b,
+        CoreModelId.meta_llama2_70b,
+        CoreModelId.meta_llama2_7b_chat,
+        CoreModelId.meta_llama2_13b_chat,
+        CoreModelId.meta_llama2_70b_chat,
+    ]:
+        return ModelFamily.llama2
+    elif CoreModelId in [
+        CoreModelId.meta_llama3_8b,
+        CoreModelId.meta_llama3_70b,
+        CoreModelId.meta_llama3_8b_instruct,
+        CoreModelId.meta_llama3_70b_instruct,
+    ]:
+        return ModelFamily.llama3
+    elif CoreModelId in [
+        CoreModelId.meta_llama3_1_8b,
+        CoreModelId.meta_llama3_1_70b,
+        CoreModelId.meta_llama3_1_405b,
+        CoreModelId.meta_llama3_1_8b_instruct,
+        CoreModelId.meta_llama3_1_70b_instruct,
+        CoreModelId.meta_llama3_1_405b_instruct,
+    ]:
+        return ModelFamily.llama3_1
+    elif CoreModelId in [
+        CoreModelId.llama_guard_3_8b,
+        CoreModelId.prompt_guard_86m,
+    ]:
+        return ModelFamily.safety
+    else:
+        raise ValueError(f"Unknown model family for {CoreModelId}")
+
+
 @json_schema_type
 class HardwareRequirements(BaseModel):
     memory_gb_per_gpu: int
@@ -95,6 +138,26 @@ class HardwareRequirements(BaseModel):
 class Model(BaseModel):
     core_model_id: CoreModelId
     is_default_variant: bool
+
+    @property
+    def model_family(self) -> ModelFamily:
+        return model_family(self.core_model_id)
+
+    @property
+    def max_seq_length(self) -> int:
+        if self.model_family == ModelFamily.llama2:
+            return 4096
+        elif self.model_family == ModelFamily.llama3:
+            return 8192
+        elif self.model_family == ModelFamily.llama3_1:
+            return 131072
+        elif self.core_model_id in [
+            CoreModelId.llama_guard_3_8b,
+            CoreModelId.prompt_guard_86m,
+        ]:
+            return 131072
+        else:
+            raise ValueError(f"Unknown max_seq_len for {self.core_model_id}")
 
     # The variant is a string representation of other parameters which helps
     # uniquely identify the model. this typically includes the quantization
@@ -116,7 +179,6 @@ class Model(BaseModel):
         return f"{self.core_model_id.value}:{self.variant}"
 
     description_markdown: str
-    max_seq_length: int
     huggingface_repo: Optional[str] = None
     hardware_requirements: HardwareRequirements
     quantization_format: CheckpointQuantizationFormat = (

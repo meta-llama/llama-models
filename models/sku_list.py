@@ -16,9 +16,6 @@ from .datatypes import (
     SamplingStrategy,
 )
 
-LLAMA_2_CONTEXT_LENGTH = 4096
-LLAMA_3_CONTEXT_LENGTH = 8192
-LLAMA_3_1_CONTEXT_LENGTH = 131072
 VOCAB_SIZE = 128256
 
 
@@ -34,7 +31,7 @@ def resolve_model(descriptor: str) -> Optional[Model]:
 
 
 def all_registered_models() -> List[Model]:
-    return base_models() + instruct_models() + safety_models()
+    return llama2_family() + llama3_family() + llama3_1_family() + safety_models()
 
 
 def recommended_sampling_params() -> SamplingParams:
@@ -44,14 +41,31 @@ def recommended_sampling_params() -> SamplingParams:
         top_p=0.9,
     )
 
+def llama2_family() -> List[Model]:
+    return [
+        *llama2_base_models(),
+        *llama2_instruct_models(),
+    ]
+
+def llama3_family() -> List[Model]:
+    return [
+        *llama3_base_models(),
+        *llama3_instruct_models(),
+    ]
+
+def llama3_1_family() -> List[Model]:
+    return [
+        *llama3_1_base_models(),
+        *llama3_1_instruct_models(),
+    ]
 
 def llama2_base_models() -> List[Model]:
     return [
         Model(
             core_model_id=CoreModelId.meta_llama2_7b,
+
             is_default_variant=True,
             description_markdown="Llama 2 7b model",
-            max_seq_length=LLAMA_2_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Llama-2-7b",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -75,7 +89,6 @@ def llama2_base_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama2_13b,
             is_default_variant=True,
             description_markdown="Llama 2 13b model",
-            max_seq_length=LLAMA_2_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Llama-2-13b",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -99,11 +112,10 @@ def llama2_base_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama2_70b,
             is_default_variant=True,
             description_markdown="Llama 2 70b model",
-            max_seq_length=LLAMA_2_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Llama-2-70b",
             hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=20,
+                gpu_count=3,
+                memory_gb_per_gpu=48,
             ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
@@ -128,7 +140,6 @@ def llama3_base_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_8b,
             is_default_variant=True,
             description_markdown="Llama 3 8b model",
-            max_seq_length=LLAMA_3_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Meta-Llama-3-8B",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -152,7 +163,6 @@ def llama3_base_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_70b,
             is_default_variant=True,
             description_markdown="Llama 3 70b model",
-            max_seq_length=LLAMA_3_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Meta-Llama-3-70B",
             hardware_requirements=HardwareRequirements(
                 gpu_count=8,
@@ -181,7 +191,6 @@ def llama3_1_base_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_1_8b,
             is_default_variant=True,
             description_markdown="Llama 3.1 8b model",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -206,7 +215,6 @@ def llama3_1_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 70b model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=8,
                 memory_gb_per_gpu=20,
@@ -230,7 +238,6 @@ def llama3_1_base_models() -> List[Model]:
             is_default_variant=False,
             description_markdown="Llama 3.1 405b model (BF16 weights)",
             huggingface_repo=None,
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=8,
                 memory_gb_per_gpu=120,
@@ -253,7 +260,6 @@ def llama3_1_base_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_1_405b,
             is_default_variant=True,
             description_markdown="Llama 3.1 405b model (FP8 quantized)",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-FP8",
             hardware_requirements=HardwareRequirements(
                 gpu_count=8,
@@ -279,7 +285,6 @@ def llama3_1_base_models() -> List[Model]:
             is_default_variant=False,
             description_markdown="Llama 3.1 405b model (BF16 weights)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=16,
                 memory_gb_per_gpu=70,
@@ -301,13 +306,6 @@ def llama3_1_base_models() -> List[Model]:
     ]
 
 
-def base_models() -> List[Model]:
-    return [
-        *llama2_base_models(),
-        *llama3_base_models(),
-        *llama3_1_base_models(),
-    ]
-
 
 def llama2_instruct_models() -> List[Model]:
     return [
@@ -315,7 +313,6 @@ def llama2_instruct_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama2_7b_chat,
             is_default_variant=True,
             description_markdown="Llama 2 7b chat model",
-            max_seq_length=LLAMA_2_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Llama-2-7b-chat",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -339,7 +336,6 @@ def llama2_instruct_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama2_13b_chat,
             is_default_variant=True,
             description_markdown="Llama 2 13b chat model",
-            max_seq_length=LLAMA_2_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Llama-2-13b-chat",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -363,7 +359,6 @@ def llama2_instruct_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama2_70b_chat,
             is_default_variant=True,
             description_markdown="Llama 2 70b chat model",
-            max_seq_length=LLAMA_2_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Llama-2-70b-chat",
             hardware_requirements=HardwareRequirements(
                 gpu_count=3,
@@ -392,7 +387,6 @@ def llama3_instruct_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_8b_instruct,
             is_default_variant=True,
             description_markdown="Llama 3 8b instruct model",
-            max_seq_length=LLAMA_3_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Meta-Llama-3-8B-Instruct",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -416,7 +410,6 @@ def llama3_instruct_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_70b_instruct,
             is_default_variant=True,
             description_markdown="Llama 3 70b instruct model",
-            max_seq_length=LLAMA_3_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Meta-Llama-3-70B-Instruct",
             hardware_requirements=HardwareRequirements(
                 gpu_count=3,
@@ -445,7 +438,6 @@ def llama3_1_instruct_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_1_8b_instruct,
             is_default_variant=True,
             description_markdown="Llama 3.1 8b instruct model",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B-Instruct",
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -470,7 +462,6 @@ def llama3_1_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 70b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B-Instruct",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=8,
                 memory_gb_per_gpu=20,
@@ -494,7 +485,6 @@ def llama3_1_instruct_models() -> List[Model]:
             is_default_variant=False,
             description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
             huggingface_repo=None,
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=8,
                 memory_gb_per_gpu=120,
@@ -518,7 +508,6 @@ def llama3_1_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 405b instruct model (FP8 quantized)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=8,
                 memory_gb_per_gpu=70,
@@ -543,7 +532,6 @@ def llama3_1_instruct_models() -> List[Model]:
             is_default_variant=False,
             description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=16,
                 memory_gb_per_gpu=70,
@@ -565,14 +553,6 @@ def llama3_1_instruct_models() -> List[Model]:
     ]
 
 
-def instruct_models() -> List[Model]:
-    return [
-        *llama2_instruct_models(),
-        *llama3_instruct_models(),
-        *llama3_1_instruct_models(),
-    ]
-
-
 def safety_models() -> List[Model]:
     return [
         Model(
@@ -580,7 +560,6 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
                 memory_gb_per_gpu=20,
@@ -603,7 +582,6 @@ def safety_models() -> List[Model]:
             is_default_variant=False,
             description_markdown="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B-INT8",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             quantization_format=CheckpointQuantizationFormat.int8,
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
@@ -627,7 +605,6 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Prompt Guard 86M injection safety model",
             huggingface_repo="meta-llama/Prompt-Guard-86M",
-            max_seq_length=LLAMA_3_1_CONTEXT_LENGTH,
             hardware_requirements=HardwareRequirements(
                 gpu_count=1,
                 memory_gb_per_gpu=1,
