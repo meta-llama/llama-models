@@ -143,6 +143,14 @@ class Model(BaseModel):
     def model_family(self) -> ModelFamily:
         return model_family(self.core_model_id)
 
+    # Featured models are shown in the non-exhaustive model list
+    @property
+    def is_featured(self) -> bool:
+        return self.model_family in [
+            ModelFamily.llama3_1,
+            ModelFamily.safety,
+        ]
+
     @property
     def max_seq_length(self) -> int:
         if self.model_family == ModelFamily.llama2:
