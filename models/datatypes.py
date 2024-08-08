@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 
-from strong_typing.schema import json_schema_type
+from .schema_utils import json_schema_type
 
 
 @json_schema_type
