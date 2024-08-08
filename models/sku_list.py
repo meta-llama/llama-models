@@ -34,7 +34,7 @@ def resolve_model(descriptor: str) -> Optional[Model]:
 
 
 def all_registered_models() -> List[Model]:
-    return base_models() + chat_models() + instruct_models() + safety_models()
+    return base_models() + instruct_models() + safety_models()
 
 
 def recommended_sampling_params() -> SamplingParams:
@@ -309,7 +309,7 @@ def base_models() -> List[Model]:
     ]
 
 
-def chat_models() -> List[Model]:
+def llama2_instruct_models() -> List[Model]:
     return [
         Model(
             core_model_id=CoreModelId.meta_llama2_7b_chat,
@@ -567,6 +567,7 @@ def llama3_1_instruct_models() -> List[Model]:
 
 def instruct_models() -> List[Model]:
     return [
+        *llama2_instruct_models(),
         *llama3_instruct_models(),
         *llama3_1_instruct_models(),
     ]
