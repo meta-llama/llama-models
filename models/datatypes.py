@@ -54,6 +54,20 @@ class CheckpointQuantizationFormat(Enum):
 class CoreModelId(Enum):
     """Each of these models is a unique "SKU". These root models can be served in various garbs (especially by quantizing them)"""
 
+    # Llama 2 family
+    meta_llama2_7b = "meta-llama/Llama-2-7b"
+    meta_llama2_13b = "meta-llama/Llama-2-13b"
+    meta_llama2_70b = "meta-llama/Llama-2-70b"
+    meta_llama2_7b_chat = "meta-llama/Llama-2-7b-chat"
+    meta_llama2_13b_chat = "meta-llama/Llama-2-13b-chat"
+    meta_llama2_70b_chat = "meta-llama/Llama-2-70b-chat"
+
+    # Llama 3 family
+    meta_llama3_8b = "meta-llama/Meta-Llama-3-8B"
+    meta_llama3_70b = "meta-llama/Meta-Llama-3-70B"
+    meta_llama3_8b_instruct = "meta-llama/Meta-Llama-3-8B-Instruct"
+    meta_llama3_70b_instruct = "meta-llama/Meta-Llama-3-70B-Instruct"
+
     # Llama 3.1 family
     meta_llama3_1_8b = "Meta-Llama3.1-8B"
     meta_llama3_1_70b = "Meta-Llama3.1-70B"
