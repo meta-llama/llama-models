@@ -8,7 +8,7 @@
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .schema_utils import json_schema_type
 
@@ -136,6 +136,8 @@ class HardwareRequirements(BaseModel):
     }
 )
 class Model(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     core_model_id: CoreModelId
     is_default_variant: bool
 

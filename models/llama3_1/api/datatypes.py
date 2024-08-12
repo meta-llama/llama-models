@@ -8,7 +8,7 @@
 from enum import Enum
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from typing_extensions import Annotated
 from llama_models.datatypes import *  # noqa
@@ -84,6 +84,16 @@ class ToolDefinition(BaseModel):
     tool_name: Union[BuiltinTool, str]
     description: Optional[str] = None
     parameters: Optional[Dict[str, ToolParamDefinition]] = None
+
+    @validator("tool_name", pre=True)
+    @classmethod
+    def validate_field(cls, v):
+        if isinstance(v, str):
+            try:
+                return BuiltinTool(v)
+            except ValueError:
+                return v
+        return v
 
 
 @json_schema_type
