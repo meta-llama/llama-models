@@ -6,7 +6,7 @@
 # the top-level of this source tree.
 
 import json
-
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -212,11 +212,11 @@ def render_jinja_template(name: str):
     template = by_name[name]
     jinja_template = f"{template.role}_message.jinja"
 
-    tokenizer = Tokenizer(str(THIS_DIR / "tokenizer.model"))
+    tokenizer = Tokenizer(os.path.join(THIS_DIR, "tokenizer.model"))
     special_tokens = list(tokenizer.special_tokens.values())
 
-    env = Environment(loader=FileSystemLoader(THIS_DIR / "templates"))
-    with open(THIS_DIR / "templates" / template.yaml_path, "r") as f:
+    env = Environment(loader=FileSystemLoader(os.path.join(THIS_DIR,"templates")))
+    with open(os.path.join(THIS_DIR, "templates", template.yaml_path), "r") as f:
         context = yaml.safe_load(f)
         context["today"] = datetime.now().strftime("%d %B %Y")
 
