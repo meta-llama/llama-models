@@ -31,15 +31,15 @@ Our mission is to empower individuals and industry through this opportunity whil
 
 ## Download
 
-To download the model weights and tokenizer, please visit the [Meta Llama website](https://llama.meta.com/llama-downloads/) and accept our License.
+To download the model weights and tokenizer:
 
-Once your request is approved, you will receive a signed URL over email. Then, install the [Llama CLI](https://github.com/meta-llama/llama-stack) (`pip install llama-toolchain`) and run:
-
-```
-llama download --source meta --model-id CHOSEN_MODEL_ID
-```
-
-Pass the URL provided when prompted to start the download. You can view a list of model IDs with `llama model list`.
+1. Visit the [Meta Llama website](https://llama.meta.com/llama-downloads/).
+2. Read and accept the license.
+3. Once your request is approved you will receive a signed URL via email.
+4. Install the [Llama CLI](https://github.com/meta-llama/llama-stack): `pip install llama-toolchain`
+5. Run `llama model list` to determine the model ID you wish to download
+6. Run: `llama download --source meta --model-id CHOSEN_MODEL_ID`
+7. Pass the URL provided when prompted to start the download.
 
 Remember that the links expire after 24 hours and a certain amount of downloads. You can always re-request a link if you start seeing errors such as `403: Forbidden`.
 
