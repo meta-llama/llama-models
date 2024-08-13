@@ -3,10 +3,10 @@
 Environment: ipython
 {%- set builtin_tools = builtin_tools | reject('equalto', 'code_interpreter') | list -%}
 {%- if builtin_tools %}
-Tools: {{ builtin_tools | join(", ") }}
+Tools: {{ builtin_tools | join(", ") -}}
 {% endif -%}
-{% endif %}
-Cutting Knowledge Date: December 2023
+{% endif -%}
+{{ '\nCutting Knowledge Date: December 2023' }}
 Today Date: {{ today }}
 <|eot_id|>
 {%- if custom_tools %}
