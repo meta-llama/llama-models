@@ -49,13 +49,13 @@ We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama) i
 
 1. Visit one of the repos (ex. [meta-llama/Meta-Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct)).
 2. Read and accept the license.
-3. Once your request is approved, you'll be granted access to all Llama 3.1 models as well as previous versions. Note that requests may take up to one hour to get processed.
+3. Once your request is approved, you'll be granted access to all Llama 3.1 models as well as previous versions. Note that approvals may take up to one hour.
 
 You can then download the models:
 
-1. In the web browser by clicking on the "Files and versions" tab and download the contents of the `original` folder.
-2. Using `llama download --source huggingface --hf-token YOUR_ACCESS_TOKEN` ([create/view access tokens here](https://huggingface.co/settings/tokens))
-3. Via the HuggingFace CLI (`pip install huggingface-hub`):
+- Via `llama download --source huggingface --hf-token YOUR_ACCESS_TOKEN` ([create/view access tokens here](https://huggingface.co/settings/tokens))
+- Via the HuggingFace CLI (`pip install huggingface-hub`):
+- In the web browser by clicking on the "Files and versions" tab
 
 ```bash
 huggingface-cli download meta-llama/Meta-Llama-3.1-8B-Instruct --include "original/*" --local-dir meta-llama/Meta-Llama-3.1-8B-Instruct
