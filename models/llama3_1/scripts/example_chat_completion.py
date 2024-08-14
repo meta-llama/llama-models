@@ -11,9 +11,14 @@
 from typing import Optional
 
 import fire
-from api.datatypes import CompletionMessage, StopReason, SystemMessage, UserMessage
+from models.llama3_1.api.datatypes import (
+    CompletionMessage,
+    StopReason,
+    SystemMessage,
+    UserMessage,
+)
 
-from reference_impl.generation import Llama
+from models.llama3_1.reference_impl.generation import Llama
 
 
 def main(
@@ -69,19 +74,19 @@ These are just a few of the many attractions that Paris has to offer. With so mu
             UserMessage(content="How to go from Beijing to NY?"),
         ],
     ]
-    results = generator.chat_completion(
-        dialogs,
-        max_gen_len=max_gen_len,
-        temperature=temperature,
-        top_p=top_p,
-    )
+    for dialog in dialogs:
+        result = generator.chat_completion(
+            dialog,
+            max_gen_len=max_gen_len,
+            temperature=temperature,
+            top_p=top_p,
+        )
 
-    for dialog, result in zip(dialogs, results):
         for msg in dialog:
             print(f"{msg.role.capitalize()}: {msg.content}\n")
-        print(
-            f"> {result['generation'].role.capitalize()}: {result['generation'].content}"
-        )
+
+        out_message = result.generation
+        print(f"> {out_message.role.capitalize()}: {out_message.content}")
         print("\n==================================\n")
 
 

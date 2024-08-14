@@ -10,7 +10,7 @@
 
 import fire
 
-from reference_impl.generation import Llama
+from models.llama3_1.reference_impl.generation import Llama
 from termcolor import cprint
 
 
@@ -50,18 +50,17 @@ cherry is""",
         "1, 2, 3, 5, 8, 13",
         "ba ba black sheep, have you any wool?",
     ]
-    results = generator.text_completion(
-        prompts,
-        temperature=0.6,
-        top_p=0.9,
-        max_gen_len=max_gen_len,
-        logprobs=False,
-        echo=False,
-    )
+    for prompt in prompts:
+        result = generator.text_completion(
+            prompt,
+            temperature=0.6,
+            top_p=0.9,
+            max_gen_len=max_gen_len,
+            logprobs=False,
+        )
 
-    for p, res in zip(prompts, results):
-        cprint(f"{p}", end="")
-        cprint(f"{res['generation']}", color="yellow")
+        cprint(f"{prompt}", end="")
+        cprint(f"{result.generation}", color="yellow")
         print("\n==================================\n")
 
 
