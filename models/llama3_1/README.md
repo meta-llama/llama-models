@@ -62,6 +62,8 @@ PYTHONPATH=$(git rev-parse --show-toplevel) torchrun \
   --model_parallel_size $NGPUS
 ```
 
+For more flexibility in running inference (including running FP8 inference), please see the [`Llama Stack`](https://github.com/meta-llama/llama-stack) repository.
+
 
 ## Access to Hugging Face
 
