@@ -31,28 +31,40 @@ Our mission is to empower individuals and industry through this opportunity whil
 
 ## Download
 
-To download the model weights and tokenizer, please visit the [Meta Llama website](https://llama.meta.com/llama-downloads/) and accept our License.
+To download the model weights and tokenizer:
 
-Once your request is approved, you will receive a signed URL over email. Then, run the download.sh script, passing the URL provided when prompted to start the download.
-
-Pre-requisites: Ensure you have `wget` and `md5sum` installed. Then run the script: `./download.sh`. `./download.sh`can be found inside the respective `models` directory. 
+1. Visit the [Meta Llama website](https://llama.meta.com/llama-downloads/).
+2. Read and accept the license.
+3. Once your request is approved you will receive a signed URL via email.
+4. Install the [Llama CLI](https://github.com/meta-llama/llama-stack): `pip install llama-toolchain`
+5. Run `llama model list` to determine the model ID you wish to download
+6. Run: `llama download --source meta --model-id CHOSEN_MODEL_ID`
+7. Pass the URL provided when prompted to start the download.
 
 Remember that the links expire after 24 hours and a certain amount of downloads. You can always re-request a link if you start seeing errors such as `403: Forbidden`.
 
-### Access to Hugging Face
+### Download via HuggingFace
 
-We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama), in both transformers and native `llama3` formats. To download the weights from Hugging Face, please follow these steps:
+We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama) in both transformers and native `llama3` formats. To gain access:
 
-- Visit one of the repos, for example [meta-llama/Meta-Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct).
-- Read and accept the license. Once your request is approved, you'll be granted access to all Llama 3.1 models as well as previous versions. Note that requests used to take up to one hour to get processed.
-- To download the original native weights to use with this repo, click on the "Files and versions" tab and download the contents of the `original` folder. You can also download them from the command line if you `pip install huggingface-hub`:
+1. Visit one of the repos (ex. [meta-llama/Meta-Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct)).
+2. Read and accept the license.
+3. Once your request is approved, you'll be granted access to all Llama 3.1 models as well as previous versions. Note that approvals may take up to one hour.
+
+You can then download the models:
+
+- Via `llama download --source huggingface --hf-token YOUR_ACCESS_TOKEN` ([create/view access tokens here](https://huggingface.co/settings/tokens))
+- Via the HuggingFace CLI (`pip install huggingface-hub`):
+- In the web browser by clicking on the "Files and versions" tab
 
 ```bash
 huggingface-cli download meta-llama/Meta-Llama-3.1-8B-Instruct --include "original/*" --local-dir meta-llama/Meta-Llama-3.1-8B-Instruct
 ```
 
-**NOTE** The original native weights of meta-llama/Meta-Llama-3.1-405B would not be available through this HugginFace repo.
+The original native weights are in the `original/` subfolder (except for `meta-llama/Meta-Llama-3.1-405B`).
 
+
+## Using with transformers
 
 - To use with transformers, the following [pipeline](https://huggingface.co/docs/transformers/en/main_classes/pipelines) snippet will download and cache the weights:
 
