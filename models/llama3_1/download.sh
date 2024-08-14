@@ -10,8 +10,7 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed according to the terms of the Llama 3.1 Community License Agreement.
 
-set -e
-
+# removed set -e
 read -p "Enter the URL from email: " PRESIGNED_URL
 ALL_MODELS_LIST="meta-llama-3.1-405b,meta-llama-3.1-70b,meta-llama-3.1-8b,meta-llama-guard-3-8b,prompt-guard"
 printf "\n **** Model list ***\n"
@@ -122,36 +121,76 @@ do
         printf "Downloading tokenizer\n"
         wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/tokenizer.model"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/tokenizer.model"
     fi
-
-    if [[ $PTH_FILE_COUNT -ge 0 ]]; then
-        for s in $(seq -f "%02g" 0 ${PTH_FILE_COUNT})
+    #-------------------------Modifications Start-----------------------------------
+    touch isdone
+    echo 0 > isdone
+    download_files()
+    {
+        if [[ $PTH_FILE_COUNT -ge 0 ]]; then
+            for s in $(seq -f "%02g" 0 ${PTH_FILE_COUNT})
+            do
+                printf "Downloading consolidated.${s}.pth\n"
+                touch ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+                if [[ $PTH_FILE_CHUNK_COUNT -gt 0 ]]; then
+                	start=0
+                    chunk_size=27000000001
+                    for chunk_count in $(seq 1 $PTH_FILE_CHUNK_COUNT)
+                    do
+                        end=$((start+chunk_size-1))
+                        if [[ ! -f ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth" ]]; then
+		                    start=`du -b ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth" | cut -f1`
+                        	curl ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -o ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth_${RANDOM}" -H "range: bytes=${start}-${end}"
+                        	if [ $? -ne 0 ]; then
+                        		cat ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth_"* >>  ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+                        		rm ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth_"*
+                        		return
+                        	fi
+                        	size_down=`du -b ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth_"* | cut -f1`
+                        	if [ $size_down -eq 110 ]; then
+                        	    rm ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth_"*
+                        	    read -p "URL Expired, get new URL. Your download progress is saved. Enter the new URL: " PRESIGNED_URL
+                        	    return
+                        	fi
+                        	cat ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth_"* >>  ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+                        	rm ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth_"*
+                        	# use it to keep track of what is successfully downloaded till now:
+                        	touch ${TARGET_FOLDER}"/${MODEL_PATH}/part.${s}.${chunk_count}.pth"
+                        fi
+                        start=$((end+1))
+                    done
+                else
+                    wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
+                fi
+            done
+        fi
+        for ADDITIONAL_FILE in ${ADDITIONAL_FILES//,/ }
         do
-            printf "Downloading consolidated.${s}.pth\n"
-            if [[ $PTH_FILE_CHUNK_COUNT -gt 0 ]]; then
-                start=0
-                chunk_size=27000000001
-                for chunk_count in $(seq 1 $PTH_FILE_CHUNK_COUNT)
-                do
-                    end=$((start+chunk_size-1))
-                    curl ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -o ${TARGET_FOLDER}"/${MODEL_PATH}/part.${chunk_count}.pth" -H "range: bytes=${start}-${end}"
-                    cat ${TARGET_FOLDER}"/${MODEL_PATH}/part.${chunk_count}.pth" >> ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
-                    rm ${TARGET_FOLDER}"/${MODEL_PATH}/part.${chunk_count}.pth"
-                    start=$((end+1))
-                done
-            else
-                wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/consolidated.${s}.pth"
-            fi
+            printf "Downloading $ADDITIONAL_FILE...\n"
+            wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/${ADDITIONAL_FILE}"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/${ADDITIONAL_FILE}"
         done
-    fi
-
-    for ADDITIONAL_FILE in ${ADDITIONAL_FILES//,/ }
+        if [[ $m != "prompt-guard" &&  $m != "meta-llama-guard-3-8b-int8-hf" ]]; then
+            printf "Downloading params.json...\n"
+            wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/params.json"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/params.json"
+        fi
+        rm part.*
+        echo 1 > isdone
+    }
+    while [ "`cat isdone`" = 0 ]
     do
-        printf "Downloading $ADDITIONAL_FILE...\n"
-        wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/${ADDITIONAL_FILE}"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/${ADDITIONAL_FILE}"
+        continue=1
+        # check if internet is available:
+	    ping -c 1 -q google.com >&/dev/null
+	    continue=$?
+	    echo $continue
+	    if [ $continue -eq 0 ]; then
+            download_files
+        fi
+        # reset network if not working well:
+        nmcli radio off && nmcli radio on # remove this line if no need for you to reset connection to get internet back on
+        continue=1
+        # wait for wifi to reconnect:
+        sleep 1m
     done
-
-    if [[ $m != "prompt-guard" &&  $m != "meta-llama-guard-3-8b-int8-hf" ]]; then
-        printf "Downloading params.json...\n"
-        wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/params.json"} -O ${TARGET_FOLDER}"/${MODEL_PATH}/params.json"
-    fi
+    rm isdone
+    #-------------------------Modifications End-----------------------------------
 done
