@@ -1,12 +1,12 @@
 {{ '<|start_header_id|>system<|end_header_id|>\n\n' -}}
 {% if builtin_tools or custom_tools -%}
 Environment: ipython
+{% endif -%}
 {%- set builtin_tools = builtin_tools | reject('equalto', 'code_interpreter') | list -%}
-{%- if builtin_tools %}
-Tools: {{ builtin_tools | join(", ") -}}
+{%- if builtin_tools -%}
+Tools: {{ builtin_tools | join(", ") }}
 {% endif -%}
-{% endif -%}
-{{ '\nCutting Knowledge Date: December 2023' }}
+Cutting Knowledge Date: December 2023
 Today Date: {{ today }}
 <|eot_id|>
 {%- if custom_tools %}
