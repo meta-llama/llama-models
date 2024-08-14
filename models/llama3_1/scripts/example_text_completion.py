@@ -8,6 +8,8 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
+from typing import Optional
+
 import fire
 
 from models.llama3_1.reference_impl.generation import Llama
@@ -22,6 +24,7 @@ def main(
     max_seq_len: int = 512,
     max_batch_size: int = 4,
     max_gen_len: int = 64,
+    model_parallel_size: Optional[int] = None,
 ):
     """
     Examples to run with the models finetuned for chat. Prompts correspond of chat
@@ -39,6 +42,7 @@ def main(
         tokenizer_path=tokenizer_path,
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
+        model_parallel_size=model_parallel_size,
     )
 
     prompts = [
