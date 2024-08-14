@@ -11,8 +11,8 @@ from typing import Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field, validator
 
 from typing_extensions import Annotated
-from llama_models.datatypes import *  # noqa
-from llama_models.schema_utils import json_schema_type
+from ...datatypes import *  # noqa
+from ...schema_utils import json_schema_type
 
 
 @json_schema_type
