@@ -66,8 +66,7 @@ For pre-trained models, we use a 3-shot config with CoT prompt and compute the a
 
 ### SQuAD
 
-For pre-trained models, we use SQuAD v2 with a 1-shot config and report exact match scores. We run this as a generative task. Maximum generation length is 32 tokens.
-
+For pre-trained models, we use SQuAD v2 with a 1-shot config and report exact match scores. We run this as a generative task. Maximum generation length is 32 tokens. In the prompt, we include the ground truth Q & A pairs for all previous questions pertaining to the same passage. In short, the prompt template takes the form "{few-shot example} {passage} {all previous Q & A pairs for passage} {input question}". For specifics, see the released [evaluation details dataset](https://huggingface.co/datasets/meta-llama/Meta-Llama-3.1-8B-evals/viewer/Meta-Llama-3.1-8B-evals__squad__details).
 
 ### QuAC
 
