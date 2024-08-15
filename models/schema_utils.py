@@ -96,10 +96,12 @@ class WebMethod:
     public: bool = False
     request_examples: Optional[List[Any]] = None
     response_examples: Optional[List[Any]] = None
+    method: Optional[str] = None
 
 
 def webmethod(
     route: Optional[str] = None,
+    method: Optional[str] = None,
     public: Optional[bool] = False,
     request_examples: Optional[List[Any]] = None,
     response_examples: Optional[List[Any]] = None,
@@ -116,6 +118,7 @@ def webmethod(
     def wrap(cls: T) -> T:
         cls.__webmethod__ = WebMethod(
             route=route,
+            method=method,
             public=public or False,
             request_examples=request_examples,
             response_examples=response_examples,
