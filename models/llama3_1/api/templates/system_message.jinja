@@ -12,28 +12,41 @@ Today Date: {{ today }}
 {%- if custom_tools %}
 {{- '<|start_header_id|>user<|end_header_id|>\n\n' -}}
 
-You have access to the following functions:
-
+Answer the user's question by making use of the following functions if needed.
+If none of the function can be used, please say so.
+Here is a list of functions in JSON format:
 {% for t in custom_tools %}
 {#- manually setting up JSON because jinja sorts keys in unexpected ways -#}
 {%- set tname = t.tool_name -%}
 {%- set tdesc = t.description -%}
-{%- set tparams = t.parameters | tojson -%}
-Use the function '{{ tname }}' to '{{ tdesc }}':
-{"name": "{{tname}}", "description": "{{tdesc}}", "parameters": {{tparams}}}
-
-{% endfor -%}
-Think very carefully before calling functions.
-If a you choose to call a function ONLY reply in the following format with no prefix or suffix:
-
-<function=example_function_name>{"example_name": "example_value"}</function>
-
-Reminder:
-- If looking for real time information use relevant functions before falling back to brave_search
-- Function calls MUST follow the specified format, start with <function= and end with </function>
-- Required parameters MUST be specified
-- Only call one function at a time
-- Put the entire function call reply on one line
+{%- set tparams = t.parameters -%}
+{%- set required_params = [] -%}
+{%- for param in tparams if param.required == true -%}
+    {%- set _ = required_params.append(param.name) -%}
+{%- endfor -%}
+{
+    "type": "function",
+    "function": {
+        "name": "{{tname}}",
+        "description": "{{tdesc}}",
+        "parameters": {
+            "type": "object",
+            "properties": [
+                {%- for param in tparams %}
+                {
+                    "{{param.name}}": {
+                        "type": "object",
+                        "description": "{{param.description}}"
+                    }
+                }{% if not loop.last %},{% endif %}
+                {%- endfor %}
+            ],
+            "required": {{ required_params | tojson }}
+        }
+    }
+}
+{% endfor %}
+Return function calls in JSON format.
 <|eot_id|>
 {%- endif -%}
 {{ additional_instructions -}}
