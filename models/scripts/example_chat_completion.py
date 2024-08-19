@@ -11,14 +11,14 @@
 from typing import Optional
 
 import fire
-from models.llama3_1.api.datatypes import (
+from models.llama3.api.datatypes import (
     CompletionMessage,
     StopReason,
     SystemMessage,
     UserMessage,
 )
 
-from models.llama3_1.reference_impl.generation import Llama
+from models.llama3.reference_impl.generation import Llama
 
 
 def main(

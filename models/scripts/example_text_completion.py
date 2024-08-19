@@ -12,7 +12,7 @@ from typing import Optional
 
 import fire
 
-from models.llama3_1.reference_impl.generation import Llama
+from models.llama3.reference_impl.generation import Llama
 from termcolor import cprint
 
 
