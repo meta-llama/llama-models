@@ -35,8 +35,10 @@ To download the model weights and tokenizer:
 1. Visit the [Meta Llama website](https://llama.meta.com/llama-downloads/).
 2. Read and accept the license.
 3. Once your request is approved you will receive a signed URL via email.
-4. Install the [Llama CLI](https://github.com/meta-llama/llama-stack): `pip install llama-toolchain`
-5. Run `llama model list` to determine the model ID you wish to download
+4. Install the [Llama CLI](https://github.com/meta-llama/llama-stack): `pip install llama-toolchain`.
+5. Run `llama model list` to show the latest available models and determine the model ID you wish to download. **NOTE**: 
+Run `llama model list --show-all` to show all the available llama models, including previous versions.
+
 6. Run: `llama download --source meta --model-id CHOSEN_MODEL_ID`
 7. Pass the URL provided when prompted to start the download.
 
