@@ -8,9 +8,11 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
+from pathlib import Path
 from typing import Optional
 
 import fire
+
 from models.llama3.api.datatypes import (
     CompletionMessage,
     StopReason,
@@ -21,9 +23,11 @@ from models.llama3.api.datatypes import (
 from models.llama3.reference_impl.generation import Llama
 
 
-def main(
+THIS_DIR = Path(__file__).parent.resolve()
+
+
+def run_main(
     ckpt_dir: str,
-    tokenizer_path: str,
     temperature: float = 0.6,
     top_p: float = 0.9,
     max_seq_len: int = 512,
@@ -40,6 +44,7 @@ def main(
 
     `max_gen_len` is optional because finetuned models are able to stop generations naturally.
     """
+    tokenizer_path = str(THIS_DIR.parent / "llama3/api/tokenizer.model")
     generator = Llama.build(
         ckpt_dir=ckpt_dir,
         tokenizer_path=tokenizer_path,
@@ -92,5 +97,9 @@ These are just a few of the many attractions that Paris has to offer. With so mu
         print("\n==================================\n")
 
 
+def main():
+    fire.Fire(run_main)
+
+
 if __name__ == "__main__":
-    fire.Fire(main)
+    main()

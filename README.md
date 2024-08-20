@@ -36,8 +36,8 @@ To download the model weights and tokenizer:
 2. Read and accept the license.
 3. Once your request is approved you will receive a signed URL via email.
 4. Install the [Llama CLI](https://github.com/meta-llama/llama-stack): `pip install llama-toolchain`.
-5. Run `llama model list` to show the latest available models and determine the model ID you wish to download. **NOTE**: 
-Run `llama model list --show-all` to show all the available llama models, including previous versions.
+5. Run `llama model list` to show the latest available models and determine the model ID you wish to download. **NOTE**:
+If you want older versions of models, run `llama model list --show-all` to show all the available Llama models.
 
 6. Run: `llama download --source meta --model-id CHOSEN_MODEL_ID`
 7. Pass the URL provided when prompted to start the download.
@@ -55,7 +55,8 @@ After installing the dependencies, you can run the example scripts (within `mode
 ```bash
 #!/bin/bash
 
-PYTHONPATH=$(git rev-parse --show-toplevel) torchrun models/scripts/example_chat_completion.py <CHECKPOINT_DIR> <TOKENIZER_PATH>
+CHECKPOINT_DIR=~/.llama/checkpoints/Meta-Llama3.1-8B-Instruct
+PYTHONPATH=$(git rev-parse --show-toplevel) torchrun models/scripts/example_chat_completion.py $CHECKPOINT_DIR
 ```
 
 The above script should be used with an Instruct (Chat) model. For a Base model, use the script `models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
@@ -67,7 +68,7 @@ For running larger models with tensor parallelism, you should modify as:
 NGPUS=8
 PYTHONPATH=$(git rev-parse --show-toplevel) torchrun \
   --nproc_per_node=$NGPUS \
-  models/scripts/example_chat_completion.py <CHECKPOINT_DIR> <TOKENIZER_PATH> \
+  models/scripts/example_chat_completion.py $CHECKPOINT_DIR \
   --model_parallel_size $NGPUS
 ```
 
