@@ -616,6 +616,28 @@ def safety_models() -> List[Model]:
             ),
             model_args={},
         ),
+        Model(
+            core_model_id=CoreModelId.llama_guard_2_8b,
+            is_default_variant=False,
+            description_markdown="Llama Guard v2 8b system safety model",
+            huggingface_repo="meta-llama/Meta-Llama-Guard-2-8B",
+            hardware_requirements=HardwareRequirements(
+                gpu_count=1,
+                memory_gb_per_gpu=20,
+            ),
+            model_args={
+                "dim": 4096,
+                "n_layers": 32,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 256,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": False,
+            },
+        ),
     ]
 
 
