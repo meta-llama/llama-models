@@ -87,6 +87,7 @@ class CoreModelId(Enum):
     # Safety models
     llama_guard_3_8b = "Llama-Guard-3-8B"
     prompt_guard_86m = "Prompt-Guard-86M"
+    llama_guard_2_8b = "Llama-Guard-2-8B"
 
 
 def model_family(CoreModelId) -> ModelFamily:
@@ -118,6 +119,7 @@ def model_family(CoreModelId) -> ModelFamily:
     elif CoreModelId in [
         CoreModelId.llama_guard_3_8b,
         CoreModelId.prompt_guard_86m,
+        CoreModelId.llama_guard_2_8b,
     ]:
         return ModelFamily.safety
     else:
