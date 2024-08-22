@@ -618,7 +618,7 @@ def safety_models() -> List[Model]:
         ),
         Model(
             core_model_id=CoreModelId.llama_guard_2_8b,
-            is_default_variant=False,
+            is_default_variant=True,
             description_markdown="Llama Guard v2 8b system safety model",
             huggingface_repo="meta-llama/Meta-Llama-Guard-2-8B",
             hardware_requirements=HardwareRequirements(
@@ -676,6 +676,8 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
             folder = "Meta-Llama-Guard-3-8B"
     elif model.core_model_id == CoreModelId.prompt_guard_86m:
         folder = "Prompt-Guard"
+    elif model.core_model_id == CoreModelId.llama_guard_2_8b:
+        folder = "llama-guard-2"
     else:
         folder = model.huggingface_repo.split("/")[-1]
         if "Llama-2" in folder:
