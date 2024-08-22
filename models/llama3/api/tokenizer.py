@@ -121,8 +121,8 @@ class Tokenizer:
             s (str): The input string to be encoded.
             bos (bool): Whether to prepend the beginning-of-sequence token.
             eos (bool): Whether to append the end-of-sequence token.
-            allowed_tokens ("all"|set[str]): allowed special tokens in string
-            disallowed_tokens ("all"|set[str]): special tokens that raise an error when in string
+            allowed_special ("all"|set[str]): allowed special tokens in string
+            disallowed_special ("all"|set[str]): special tokens that raise an error when in string
 
         Returns:
             list[int]: A list of token IDs.
