@@ -678,6 +678,8 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
         folder = "Prompt-Guard"
     else:
         folder = model.huggingface_repo.split("/")[-1]
+        if "Llama-2" in folder:
+            folder = folder.lower()
 
     files = ["checklist.chk"]
     if (
