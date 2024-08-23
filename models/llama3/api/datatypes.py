@@ -8,7 +8,7 @@
 from enum import Enum
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from typing_extensions import Annotated
 from ...datatypes import *  # noqa
@@ -80,7 +80,7 @@ class ToolDefinition(BaseModel):
     description: Optional[str] = None
     parameters: Optional[Dict[str, ToolParamDefinition]] = None
 
-    @validator("tool_name", pre=True)
+    @field_validator("tool_name", mode="before")
     @classmethod
     def validate_field(cls, v):
         if isinstance(v, str):
@@ -89,6 +89,41 @@ class ToolDefinition(BaseModel):
             except ValueError:
                 return v
         return v
+
+
+@json_schema_type
+class ToolChoice(Enum):
+    auto = "auto"
+    required = "required"
+
+
+@json_schema_type
+class ToolPromptFormat(Enum):
+    """This Enum refers to the prompt format for calling custom / zero shot tools
+
+    `json` --
+        Refers to the json format for calling tools.
+        The json format takes the form like
+        {
+            "type": "function",
+            "function" : {
+                "name": "function_name",
+                "description": "function_description",
+                "parameters": {...}
+            }
+        }
+
+    `function_tag` --
+        This is an example of how you could define
+        your own user defined format for making tool calls.
+        The function_tag format looks like this,
+        <function=function_name>(parameters)</function>
+
+    The detailed prompts for each of these formats are added to llama cli
+    """
+
+    json = "json"
+    function_tag = "function_tag"
 
 
 @json_schema_type
