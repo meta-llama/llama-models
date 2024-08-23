@@ -33,16 +33,11 @@ class URL(BaseModel):
         return self.uri
 
 
-@json_schema_type
-class Attachment(BaseModel):
-    url: URL
-    mime_type: str
-
-
-InterleavedTextAttachment = Union[
+InterleavedTextMedia = Union[
     str,
-    Attachment,
-    List[Union[str, Attachment]],
+    # Specific modalities can be placed here, but not generic attachments
+    # since models don't consume them in a generic way
+    List[Union[str]],
 ]
 
 
@@ -69,7 +64,7 @@ class ToolCall(BaseModel):
 class ToolResponse(BaseModel):
     call_id: str
     tool_name: Union[BuiltinTool, str]
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
 
 
 @json_schema_type
@@ -99,13 +94,13 @@ class ToolDefinition(BaseModel):
 @json_schema_type
 class UserMessage(BaseModel):
     role: Literal[Role.user.value] = Role.user.value
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
 
 
 @json_schema_type
 class SystemMessage(BaseModel):
     role: Literal[Role.system.value] = Role.system.value
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
 
 
 @json_schema_type
@@ -115,7 +110,7 @@ class ToolResponseMessage(BaseModel):
     # have a `content` type makes things nicer too
     call_id: str
     tool_name: Union[BuiltinTool, str]
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
 
 
 @json_schema_type
@@ -133,7 +128,7 @@ class TokenLogProbs(BaseModel):
 @json_schema_type
 class CompletionMessage(BaseModel):
     role: Literal[Role.assistant.value] = Role.assistant.value
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
     stop_reason: StopReason
     tool_calls: List[ToolCall] = Field(default_factory=list)
 

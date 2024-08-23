@@ -41,7 +41,7 @@ class ChatFormat:
     def encode_message(self, message: Message) -> List[int]:
         tokens = self.encode_header(message.role)
 
-        def _process_content(content: InterleavedTextAttachment):
+        def _process_content(content: InterleavedTextMedia):
             def _process(c):
                 if isinstance(c, str):
                     tokens.extend(self.tokenizer.encode(c, bos=False, eos=False))
