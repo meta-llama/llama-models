@@ -41,6 +41,9 @@ TIKTOKEN_MAX_ENCODE_CHARS = 400_000
 MAX_NO_WHITESPACES_CHARS = 25_000
 
 
+_INSTANCE = None
+
+
 class Tokenizer:
     """
     Tokenizing and encoding/decoding text using the Tiktoken tokenizer.
@@ -51,6 +54,16 @@ class Tokenizer:
     num_reserved_special_tokens = 256
 
     pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"  # noqa: E501
+
+    @classmethod
+    def get_instance(cls):
+        global _INSTANCE
+
+        if _INSTANCE is None:
+            _INSTANCE = Tokenizer(
+                os.path.join(os.path.dirname(__file__), "tokenizer.model")
+            )
+        return _INSTANCE
 
     def __init__(self, model_path: str):
         """
