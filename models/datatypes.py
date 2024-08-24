@@ -90,8 +90,8 @@ class CoreModelId(Enum):
     llama_guard_2_8b = "Llama-Guard-2-8B"
 
 
-def model_family(CoreModelId) -> ModelFamily:
-    if CoreModelId in [
+def model_family(model_id) -> ModelFamily:
+    if model_id in [
         CoreModelId.meta_llama2_7b,
         CoreModelId.meta_llama2_13b,
         CoreModelId.meta_llama2_70b,
@@ -100,14 +100,14 @@ def model_family(CoreModelId) -> ModelFamily:
         CoreModelId.meta_llama2_70b_chat,
     ]:
         return ModelFamily.llama2
-    elif CoreModelId in [
+    elif model_id in [
         CoreModelId.meta_llama3_8b,
         CoreModelId.meta_llama3_70b,
         CoreModelId.meta_llama3_8b_instruct,
         CoreModelId.meta_llama3_70b_instruct,
     ]:
         return ModelFamily.llama3
-    elif CoreModelId in [
+    elif model_id in [
         CoreModelId.meta_llama3_1_8b,
         CoreModelId.meta_llama3_1_70b,
         CoreModelId.meta_llama3_1_405b,
@@ -116,7 +116,7 @@ def model_family(CoreModelId) -> ModelFamily:
         CoreModelId.meta_llama3_1_405b_instruct,
     ]:
         return ModelFamily.llama3_1
-    elif CoreModelId in [
+    elif model_id in [
         CoreModelId.llama_guard_3_8b,
         CoreModelId.prompt_guard_86m,
         CoreModelId.llama_guard_2_8b,
@@ -158,6 +158,8 @@ class Model(BaseModel):
     @property
     def max_seq_length(self) -> int:
         if self.model_family == ModelFamily.llama2:
+            return 4096
+        elif self.core_model_id == CoreModelId.llama_guard_2_8b:
             return 4096
         elif self.model_family == ModelFamily.llama3:
             return 8192
