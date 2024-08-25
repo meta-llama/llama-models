@@ -59,12 +59,32 @@ class ToolCall(BaseModel):
     tool_name: Union[BuiltinTool, str]
     arguments: Dict[str, RecursiveType]
 
+    @validator("tool_name", pre=True)
+    @classmethod
+    def validate_field(cls, v):
+        if isinstance(v, str):
+            try:
+                return BuiltinTool(v)
+            except ValueError:
+                return v
+        return v
+
 
 @json_schema_type
 class ToolResponse(BaseModel):
     call_id: str
     tool_name: Union[BuiltinTool, str]
     content: InterleavedTextMedia
+
+    @validator("tool_name", pre=True)
+    @classmethod
+    def validate_field(cls, v):
+        if isinstance(v, str):
+            try:
+                return BuiltinTool(v)
+            except ValueError:
+                return v
+        return v
 
 
 @json_schema_type
