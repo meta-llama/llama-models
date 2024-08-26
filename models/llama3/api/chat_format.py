@@ -94,15 +94,21 @@ class ChatFormat:
                 content = content[len(header_str) :]
                 break
 
+        return self.decode_assistant_message_from_content(content, stop_reason)
+
+    def decode_assistant_message_from_content(
+        self, content: str, stop_reason: StopReason
+    ) -> CompletionMessage:
         ipython = content.startswith("<|python_tag|>")
         if ipython:
             content = content[len("<|python_tag|>") :]
 
-        eot = content.endswith("<|eot_id|>")
-        if eot:
+        if content.endswith("<|eot_id|>"):
             content = content[: -len("<|eot_id|>")]
-        else:
+            stop_reason = StopReason.end_of_turn
+        elif content.endswith("<|eom_id|>"):
             content = content[: -len("<|eom_id|>")]
+            stop_reason = StopReason.end_of_message
 
         tool_name = None
         tool_arguments = {}
