@@ -41,6 +41,19 @@ InterleavedTextMedia = Union[
 ]
 
 
+def interleaved_text_media_as_str(content: InterleavedTextMedia, sep: str = " ") -> str:
+    def _process(c) -> str:
+        if isinstance(c, str):
+            return c
+        else:
+            return "<media>"
+
+    if isinstance(content, list):
+        return sep.join(_process(c) for c in content)
+    else:
+        return _process(content)
+
+
 @json_schema_type
 class BuiltinTool(Enum):
     brave_search = "brave_search"
