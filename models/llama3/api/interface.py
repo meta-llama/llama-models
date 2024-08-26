@@ -14,6 +14,17 @@ from typing import List, Optional
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
+from termcolor import colored
+
+from ..prompt_templates import (
+    BuiltinToolGenerator,
+    FunctionTagCustomToolGenerator,
+    JsonCustomToolGenerator,
+    SystemDefaultGenerator,
+    ToolResponseGenerator,
+)
+
+from . import template_data
 
 from .chat_format import ChatFormat
 
@@ -25,18 +36,39 @@ from .datatypes import (
     SystemMessage,
     ToolCall,
     ToolDefinition,
+    ToolPromptFormat,
+    ToolResponseMessage,
+    UserMessage,
 )
 from .tokenizer import Tokenizer
+
 
 THIS_DIR = Path(__file__).parent
 
 
 class Template:
-    def __init__(self, role, template_name, yaml_path, notes=None):
+    def __init__(
+        self,
+        role,
+        template_name,
+        yaml_path=None,
+        data_provider=None,
+        notes=None,
+    ):
         self.role = role
         self.template_name = template_name
         self.yaml_path = yaml_path
-        self.notes = notes or ""
+        self.data_provider = data_provider or ""
+        self._notes = notes or ""
+
+    @property
+    def notes(self):
+        default = "↵ represents newline"
+        notes = default
+        if self._notes:
+            notes += "\n"
+            notes += self._notes
+        return notes
 
 
 TEMPLATES = [
@@ -45,12 +77,14 @@ TEMPLATES = [
         "assistant",
         "assistant-builtin-tool-call",
         "assistant_message.builtin_tool_call.yaml",
+        None,
         "Notice <|python_tag|>",
     ),
     Template(
         "assistant",
         "assistant-custom-tool-call",
         "assistant_message.custom_tool_call.yaml",
+        None,
         "Notice <function=...> format",
     ),
     Template("assistant", "assistant-default", "assistant_message.default.yaml"),
@@ -58,28 +92,40 @@ TEMPLATES = [
         "system",
         "system-builtin-and-custom-tools",
         "system_message.builtin_and_custom_tools.yaml",
+        "system_message_builtin_and_custom_tools",
     ),
     Template(
         "system",
         "system-builtin-tools-only",
         "system_message.builtin_tools_only.yaml",
+        "system_message_builtin_tools_only",
     ),
     Template(
         "system",
         "system-custom-tools-only",
         "system_message.custom_tools_only.yaml",
+        "system_message_custom_tools_only",
+    ),
+    Template(
+        "system",
+        "system-custom-tools-only-function-tag-format",
+        None,
+        "system_message_custom_tools_only_function_tag_format",
+        "Notice <function=...> format",
     ),
     Template("system", "system-default", "system_message.default.yaml"),
     Template(
         "tool",
         "tool-success",
         "tool_message.success.yaml",
+        "tool_success",
         "Note ipython header and [stdout]",
     ),
     Template(
         "tool",
         "tool-failure",
         "tool_message.failure.yaml",
+        "tool_failure",
         "Note ipython header and [stderr]",
     ),
 ]
@@ -90,63 +136,63 @@ class LLama31Interface:
         self.tokenizer = Tokenizer(tokenizer_path)
         self.formatter = ChatFormat(self.tokenizer)
 
+    def tool_response_message(self, *args, **kwargs):
+        template = ToolResponseGenerator().gen(*args, **kwargs)
+        return ToolResponseMessage(
+            call_id="call_id",
+            tool_name="tool_name",
+            content=template.render(),
+        )
+
     def recommended_system_message(
         self,
         builtin_tools: List[BuiltinTool],
         custom_tools: List[ToolDefinition],
-        instructions: Optional[str] = None,
-    ) -> SystemMessage:
-        content = ""
-        if builtin_tools:
-            content += "Environment: ipython\n"
+        instruction: Optional[str] = None,
+        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
+    ) -> List[Message]:
+        messages = []
 
-            tool_str = ", ".join(
-                [t.value for t in builtin_tools if t != BuiltinTool.code_interpreter]
-            )
-            if tool_str:
-                content += f"Tools: {tool_str}\n"
+        default_gen = SystemDefaultGenerator()
+        default_template = default_gen.gen()
 
-        current_date = datetime.now()
-        formatted_date = current_date.strftime("%d %B %Y")
-        date_str = f"""
-Cutting Knowledge Date: December 2023
-Today Date: {formatted_date}"""
-        content += date_str
+        sys_content = ""
+
+        tool_template = None
+        if builtin_tools or custom_tools:
+            tool_gen = BuiltinToolGenerator()
+            tool_template = tool_gen.gen(builtin_tools + custom_tools)
+
+            sys_content += tool_template.render()
+            sys_content += "\n"
+
+        sys_content += default_template.render()
+
+        if instruction:
+            sys_content += "\n\n"
+            sys_content += instruction
+
+        sys_content += "\n"
+        messages.append(SystemMessage(content=sys_content))
 
         if custom_tools:
-            content += "\n" + self.get_custom_tool_instructions(custom_tools)
+            if tool_prompt_format == ToolPromptFormat.json:
+                tool_gen = JsonCustomToolGenerator()
+            elif tool_prompt_format == ToolPromptFormat.function_tag:
+                tool_gen = FunctionTagCustomToolGenerator()
+            else:
+                raise ValueError(
+                    f"Non supported ToolPromptFormat {request.tool_prompt_format}"
+                )
 
-        if instructions:
-            content += f"\n{instructions}"
+            custom_template = tool_gen.gen(custom_tools)
+            messages.append(UserMessage(content=custom_template.render()))
 
-        return SystemMessage(content=content)
+        return messages
 
-    def get_custom_tool_instructions(self, custom_tools: List[ToolDefinition]) -> str:
-        custom_tool_params = ""
-
-        custom_tool_params = "\n".join(
-            f"{get_instruction_string(t)}\n{get_parameters_string(t)}\n"
-            for t in custom_tools
-        )
-
-        content = f"""
-You have access to the following functions:
-
-{custom_tool_params}
-Think very carefully before calling functions.
-If a you choose to call a function ONLY reply in the following format with no prefix or suffix:
-
-<function=example_function_name>{{"example_name": "example_value"}}</function>
-
-Reminder:
-- If looking for real time information use relevant functions before falling back to brave_search
-- Function calls MUST follow the specified format, start with <function= and end with </function>
-- Required parameters MUST be specified
-- Only call one function at a time
-- Put the entire function call reply on one line
-
-"""
-        return content
+    def get_tokens(self, messages: List[Message]) -> List[int]:
+        model_input = self.formatter.encode_dialog_prompt(messages)
+        return model_input.tokens
 
     def get_sample_builtin_tool_call_message(self) -> CompletionMessage:
         return CompletionMessage(
@@ -163,8 +209,8 @@ Reminder:
             ],
         )
 
-    def get_message_as_str_tokens(self, message: Message) -> str:
-        tokens = self.formatter.encode_message(message)
+    def get_message_as_str_tokens(self, messages: Message) -> str:
+        tokens = self.formatter.encode_dialog_prompt(messages)
         return self.tokenizer.decode(tokens)
 
     def display_message_as_tokens(self, message: Message) -> None:
@@ -204,7 +250,7 @@ def list_jinja_templates() -> List[Template]:
     return TEMPLATES
 
 
-def render_jinja_template(name: str):
+def render_jinja_template_using_yaml(name: str):
     by_name = {t.template_name: t for t in TEMPLATES}
     if name not in by_name:
         raise ValueError(f"No template found for `{name}`")
@@ -226,3 +272,30 @@ def render_jinja_template(name: str):
         tokens = [(tokenizer.decode([t]), t in special_tokens) for t in tokens]
 
     return template, tokens
+
+
+def render_jinja_template(name: str):
+    by_name = {t.template_name: t for t in TEMPLATES}
+    if name not in by_name:
+        raise ValueError(f"No template found for `{name}`")
+
+    template = by_name[name]
+    interface = LLama31Interface(str(THIS_DIR / "tokenizer.model"))
+
+    special_tokens = list(interface.tokenizer.special_tokens.values())
+    if template.data_provider:
+        data_func = getattr(template_data, template.data_provider)
+        if template.role == "system":
+            messages = interface.recommended_system_message(**data_func())
+        elif template.role == "tool":
+            messages = [interface.tool_response_message(**data_func())]
+        elif template.role == "assistant":
+            messages = [UserMessage(content=data_func())]
+
+        tokens = interface.get_tokens(messages)
+        tokens = [
+            (interface.tokenizer.decode([t]), t in special_tokens) for t in tokens
+        ]
+        return template, tokens
+    else:
+        return render_jinja_template_using_yaml(name)
