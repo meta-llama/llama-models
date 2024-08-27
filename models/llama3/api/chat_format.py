@@ -38,7 +38,9 @@ class ChatFormat:
         tokens.extend(self.tokenizer.encode("\n\n", bos=False, eos=False))
         return tokens
 
-    def encode_message(self, message: Message) -> List[int]:
+    def encode_message(
+        self, message: Message, tool_prompt_format: ToolPromptFormat
+    ) -> List[int]:
         tokens = self.encode_header(message.role)
 
         def _process_content(content: InterleavedTextMedia):
@@ -59,7 +61,7 @@ class ChatFormat:
 
         if isinstance(message, CompletionMessage):
             for t in message.tool_calls:
-                content = ToolUtils.encode_tool_call(t)
+                content = ToolUtils.encode_tool_call(t, tool_prompt_format)
                 _process_content(content)
 
         eom = False
@@ -71,11 +73,15 @@ class ChatFormat:
         )
         return tokens
 
-    def encode_dialog_prompt(self, messages: List[Message]) -> ModelInput:
+    def encode_dialog_prompt(
+        self,
+        messages: List[Message],
+        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
+    ) -> ModelInput:
         tokens = []
         tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
         for message in messages:
-            toks = self.encode_message(message)
+            toks = self.encode_message(message, tool_prompt_format)
             tokens.extend(toks)
 
         # Add the start of an assistant message for the model to complete.

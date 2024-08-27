@@ -9,7 +9,7 @@ import json
 import re
 from typing import Optional, Tuple
 
-from .datatypes import BuiltinTool, ToolCall
+from .datatypes import BuiltinTool, ToolCall, ToolPromptFormat
 
 BUILTIN_TOOL_PATTERN = r'\b(?P<tool_name>\w+)\.call\(query="(?P<query>[^"]*)"\)'
 CUSTOM_TOOL_CALL_PATTERN = re.compile(
@@ -80,7 +80,7 @@ class ToolUtils:
             return None
 
     @staticmethod
-    def encode_tool_call(t: ToolCall) -> str:
+    def encode_tool_call(t: ToolCall, tool_prompt_format: ToolPromptFormat) -> str:
         if t.tool_name == BuiltinTool.brave_search:
             q = t.arguments["query"]
             return f'brave_search.call(query="{q}")'
@@ -94,5 +94,15 @@ class ToolUtils:
             return t.arguments["code"]
         else:
             fname = t.tool_name
-            args = json.dumps(t.arguments)
-            return f"<function={fname}>{args}</function>"
+
+            if tool_prompt_format == ToolPromptFormat.json:
+                return json.dumps(
+                    {
+                        "type": "function",
+                        "name": fname,
+                        "parameters": t.arguments,
+                    }
+                )
+            elif tool_prompt_format == ToolPromptFormat.function_tag:
+                args = json.dumps(t.arguments)
+                return f"<function={fname}>{args}</function>"
