@@ -106,13 +106,6 @@ TEMPLATES = [
         "system_message.custom_tools_only.yaml",
         "system_message_custom_tools_only",
     ),
-    Template(
-        "system",
-        "system-custom-tools-only-function-tag-format",
-        None,
-        "system_message_custom_tools_only_function_tag_format",
-        "Notice <function=...> format",
-    ),
     Template("system", "system-default", "system_message.default.yaml"),
     Template(
         "tool",
@@ -274,7 +267,7 @@ def render_jinja_template_using_yaml(name: str):
     return template, tokens
 
 
-def render_jinja_template(name: str):
+def render_jinja_template(name: str, tool_prompt_format: ToolPromptFormat):
     by_name = {t.template_name: t for t in TEMPLATES}
     if name not in by_name:
         raise ValueError(f"No template found for `{name}`")
@@ -286,11 +279,14 @@ def render_jinja_template(name: str):
     if template.data_provider:
         data_func = getattr(template_data, template.data_provider)
         if template.role == "system":
-            messages = interface.recommended_system_message(**data_func())
+            messages = interface.recommended_system_message(
+                **data_func(), tool_prompt_format=tool_prompt_format
+            )
         elif template.role == "tool":
             messages = [interface.tool_response_message(**data_func())]
         elif template.role == "assistant":
-            messages = [UserMessage(content=data_func())]
+            # get CompletionMessage from interface or data_func
+            messages = []
 
         tokens = interface.get_tokens(messages)
         tokens = [

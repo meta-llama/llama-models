@@ -1,11 +1,15 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# top-level folder for each specific model found within the models/ directory at
+# the top-level of this source tree.
+
 from ..prompt_templates import (
     BuiltinToolGenerator,
-    FunctionTagCustomToolGenerator,
     JsonCustomToolGenerator,
-    SystemDefaultGenerator,
     ToolResponseGenerator,
 )
-from .datatypes import ToolPromptFormat
 
 INSTRUCTION = "You are a helpful assistant."
 
@@ -23,16 +27,6 @@ def system_message_custom_tools_only():
         "builtin_tools": [],
         "custom_tools": JsonCustomToolGenerator().data_examples()[0],
         "instruction": INSTRUCTION,
-        "tool_prompt_format": ToolPromptFormat.json,
-    }
-
-
-def system_message_custom_tools_only_function_tag_format():
-    return {
-        "builtin_tools": [],
-        "custom_tools": JsonCustomToolGenerator().data_examples()[0],
-        "instruction": INSTRUCTION,
-        "tool_prompt_format": ToolPromptFormat.function_tag,
     }
 
 
@@ -41,7 +35,6 @@ def system_message_builtin_and_custom_tools():
         "builtin_tools": BuiltinToolGenerator().data_examples()[0],
         "custom_tools": JsonCustomToolGenerator().data_examples()[0],
         "instruction": INSTRUCTION,
-        "tool_prompt_format": ToolPromptFormat.json,
     }
 
 
