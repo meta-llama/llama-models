@@ -1,6 +1,13 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# top-level folder for each specific model found within the models/ directory at
+# the top-level of this source tree.
+
 import textwrap
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, List
 
 from llama_models.llama3.api.datatypes import (
     BuiltinTool,
@@ -166,7 +173,7 @@ class FunctionTagCustomToolGenerator(PromptTemplateGeneratorBase):
 
             {% endfor -%}
             Think very carefully before calling functions.
-            If a you choose to call a function ONLY reply in the following format with no prefix or suffix:
+            If you choose to call a function ONLY reply in the following format with no prefix or suffix:
 
             <function=example_function_name>{"example_name": "example_value"}</function>
 
