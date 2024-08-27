@@ -10,6 +10,7 @@ from ..prompt_templates import (
     JsonCustomToolGenerator,
     ToolResponseGenerator,
 )
+from .datatypes import BuiltinTool, StopReason, ToolCall
 
 INSTRUCTION = "You are a helpful assistant."
 
@@ -38,9 +39,55 @@ def system_message_builtin_and_custom_tools():
     }
 
 
+def system_default():
+    return {
+        "builtin_tools": [],
+        "custom_tools": [],
+        "instruction": INSTRUCTION,
+    }
+
+
 def tool_success():
     return ToolResponseGenerator().data_examples()[0]
 
 
 def tool_failure():
     return ToolResponseGenerator().data_examples()[1]
+
+
+def assistant_builtin_tool_call():
+    return {
+        "content": "",
+        "tool_call": ToolCall(
+            call_id="uuid",
+            tool_name=BuiltinTool.brave_search,
+            arguments={
+                "query": "Who won NBA in 2024?",
+            },
+        ),
+        "stop_reason": StopReason.end_of_message,
+    }
+
+
+def assistant_custom_tool_call():
+    return {
+        "content": "",
+        "tool_call": ToolCall(
+            call_id="uuid",
+            tool_name="trending_songs",
+            arguments={"country": "US", "n": 10},
+        ),
+        "stop_reason": StopReason.end_of_turn,
+    }
+
+
+def assistant_default():
+    return {
+        "content": "Hi, I am a helpful assistant. What can I help you with today?",
+        "tool_call": None,
+        "stop_reason": StopReason.end_of_turn,
+    }
+
+
+def user_default():
+    return {"content": "Please tell me how to plan a trip to New York"}

@@ -72,22 +72,32 @@ class Template:
 
 
 TEMPLATES = [
-    Template("user", "user-default", "user_message.default.yaml"),
+    Template(
+        "user",
+        "user-default",
+        "user_message.default.yaml",
+        "user_default",
+    ),
     Template(
         "assistant",
         "assistant-builtin-tool-call",
         "assistant_message.builtin_tool_call.yaml",
-        None,
+        "assistant_builtin_tool_call",
         "Notice <|python_tag|>",
     ),
     Template(
         "assistant",
         "assistant-custom-tool-call",
         "assistant_message.custom_tool_call.yaml",
-        None,
+        "assistant_custom_tool_call",
         "Notice <function=...> format",
     ),
-    Template("assistant", "assistant-default", "assistant_message.default.yaml"),
+    Template(
+        "assistant",
+        "assistant-default",
+        "assistant_message.default.yaml",
+        "assistant_default",
+    ),
     Template(
         "system",
         "system-builtin-and-custom-tools",
@@ -106,7 +116,12 @@ TEMPLATES = [
         "system_message.custom_tools_only.yaml",
         "system_message_custom_tools_only",
     ),
-    Template("system", "system-default", "system_message.default.yaml"),
+    Template(
+        "system",
+        "system-default",
+        "system_message.default.yaml",
+        "system_default",
+    ),
     Template(
         "tool",
         "tool-success",
@@ -125,11 +140,12 @@ TEMPLATES = [
 
 
 class LLama31Interface:
-    def __init__(self, tokenizer_path: str):
-        self.tokenizer = Tokenizer(tokenizer_path)
+    def __init__(self, tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json):
+        self.tokenizer = Tokenizer.get_instance()
         self.formatter = ChatFormat(self.tokenizer)
+        self.tool_prompt_format = tool_prompt_format
 
-    def tool_response_message(self, *args, **kwargs):
+    def tool_response_messages(self, *args, **kwargs):
         template = ToolResponseGenerator().gen(*args, **kwargs)
         return ToolResponseMessage(
             call_id="call_id",
@@ -137,12 +153,11 @@ class LLama31Interface:
             content=template.render(),
         )
 
-    def recommended_system_message(
+    def system_messages(
         self,
         builtin_tools: List[BuiltinTool],
         custom_tools: List[ToolDefinition],
         instruction: Optional[str] = None,
-        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
     ) -> List[Message]:
         messages = []
 
@@ -169,9 +184,9 @@ class LLama31Interface:
         messages.append(SystemMessage(content=sys_content))
 
         if custom_tools:
-            if tool_prompt_format == ToolPromptFormat.json:
+            if self.tool_prompt_format == ToolPromptFormat.json:
                 tool_gen = JsonCustomToolGenerator()
-            elif tool_prompt_format == ToolPromptFormat.function_tag:
+            elif self.tool_prompt_format == ToolPromptFormat.function_tag:
                 tool_gen = FunctionTagCustomToolGenerator()
             else:
                 raise ValueError(
@@ -184,8 +199,31 @@ class LLama31Interface:
         return messages
 
     def get_tokens(self, messages: List[Message]) -> List[int]:
-        model_input = self.formatter.encode_dialog_prompt(messages)
+        model_input = self.formatter.encode_dialog_prompt(
+            messages,
+            self.tool_prompt_format,
+        )
         return model_input.tokens
+
+    def assistant_response_messages(
+        self,
+        content: str,
+        stop_reason: StopReason,
+        tool_call: Optional[ToolCall] = None,
+    ) -> List[CompletionMessage]:
+        tool_calls = []
+        if tool_call:
+            tool_calls.append(tool_call)
+        return [
+            CompletionMessage(
+                content=content,
+                tool_calls=tool_calls,
+                stop_reason=stop_reason,
+            )
+        ]
+
+    def user_message(self, content: str) -> List[UserMessage]:
+        return [UserMessage(content=content)]
 
     def get_sample_builtin_tool_call_message(self) -> CompletionMessage:
         return CompletionMessage(
@@ -273,22 +311,21 @@ def render_jinja_template(name: str, tool_prompt_format: ToolPromptFormat):
         raise ValueError(f"No template found for `{name}`")
 
     template = by_name[name]
-    interface = LLama31Interface(str(THIS_DIR / "tokenizer.model"))
+    interface = LLama31Interface(tool_prompt_format)
 
-    special_tokens = list(interface.tokenizer.special_tokens.values())
     if template.data_provider:
         data_func = getattr(template_data, template.data_provider)
         if template.role == "system":
-            messages = interface.recommended_system_message(
-                **data_func(), tool_prompt_format=tool_prompt_format
-            )
+            messages = interface.system_messages(**data_func())
         elif template.role == "tool":
-            messages = [interface.tool_response_message(**data_func())]
+            messages = interface.tool_response_messages(**data_func())
         elif template.role == "assistant":
-            # get CompletionMessage from interface or data_func
-            messages = []
+            messages = interface.assistant_response_messages(**data_func())
+        elif template.role == "user":
+            messages = interface.user_message(**data_func())
 
         tokens = interface.get_tokens(messages)
+        special_tokens = list(interface.tokenizer.special_tokens.values())
         tokens = [
             (interface.tokenizer.decode([t]), t in special_tokens) for t in tokens
         ]
