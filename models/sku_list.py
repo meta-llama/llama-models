@@ -616,6 +616,28 @@ def safety_models() -> List[Model]:
             ),
             model_args={},
         ),
+        Model(
+            core_model_id=CoreModelId.llama_guard_2_8b,
+            is_default_variant=True,
+            description_markdown="Llama Guard v2 8b system safety model",
+            huggingface_repo="meta-llama/Meta-Llama-Guard-2-8B",
+            hardware_requirements=HardwareRequirements(
+                gpu_count=1,
+                memory_gb_per_gpu=20,
+            ),
+            model_args={
+                "dim": 4096,
+                "n_layers": 32,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 256,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": False,
+            },
+        ),
     ]
 
 
@@ -654,8 +676,12 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
             folder = "Meta-Llama-Guard-3-8B"
     elif model.core_model_id == CoreModelId.prompt_guard_86m:
         folder = "Prompt-Guard"
+    elif model.core_model_id == CoreModelId.llama_guard_2_8b:
+        folder = "llama-guard-2"
     else:
         folder = model.huggingface_repo.split("/")[-1]
+        if "Llama-2" in folder:
+            folder = folder.lower()
 
     files = ["checklist.chk"]
     if (
