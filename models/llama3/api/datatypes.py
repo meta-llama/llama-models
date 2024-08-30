@@ -163,6 +163,7 @@ class ToolPromptFormat(Enum):
 class UserMessage(BaseModel):
     role: Literal[Role.user.value] = Role.user.value
     content: InterleavedTextMedia
+    context: Optional[InterleavedTextMedia] = None
 
 
 @json_schema_type

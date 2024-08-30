@@ -59,6 +59,10 @@ class ChatFormat:
 
         _process_content(message.content)
 
+        if isinstance(message, UserMessage) and message.context is not None:
+            _process_content("\n\n")
+            _process_content(message.context)
+
         if isinstance(message, CompletionMessage):
             for t in message.tool_calls:
                 content = ToolUtils.encode_tool_call(t, tool_prompt_format)
