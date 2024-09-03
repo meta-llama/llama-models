@@ -8,7 +8,6 @@
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass
 class ModelArgs:
     dim: int = 4096
@@ -30,8 +29,11 @@ class ModelArgs:
             if hasattr(self, k):
                 setattr(self, k, v)
 
-        if self.n_kv_heads is None:
-            self.n_kv_heads = self.n_heads
-        assert self.n_kv_heads <= self.n_heads
-        assert self.n_heads % self.n_kv_heads == 0
-        assert self.dim % self.n_heads == 0
+        self.n_kv_heads = self.n_kv_heads or self.n_heads
+        self._validate_args()
+
+    def _validate_args(self):
+        assert self.n_kv_heads <= self.n_heads, "Number of key-value heads must be less than or equal to the number of heads"
+        assert self.n_heads % self.n_kv_heads == 0, "Number of heads must be divisible by the number of key-value heads"
+        assert self.dim % self.n_heads == 0, "Dimension must be divisible by the number of heads"
+}
