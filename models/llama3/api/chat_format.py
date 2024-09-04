@@ -38,10 +38,12 @@ class ChatFormat:
         tokens.extend(self.tokenizer.encode("\n\n", bos=False, eos=False))
         return tokens
 
-    def encode_message(self, message: Message) -> List[int]:
+    def encode_message(
+        self, message: Message, tool_prompt_format: ToolPromptFormat
+    ) -> List[int]:
         tokens = self.encode_header(message.role)
 
-        def _process_content(content: InterleavedTextAttachment):
+        def _process_content(content: InterleavedTextMedia):
             def _process(c):
                 if isinstance(c, str):
                     tokens.extend(self.tokenizer.encode(c, bos=False, eos=False))
@@ -57,9 +59,13 @@ class ChatFormat:
 
         _process_content(message.content)
 
+        if isinstance(message, UserMessage) and message.context is not None:
+            _process_content("\n\n")
+            _process_content(message.context)
+
         if isinstance(message, CompletionMessage):
             for t in message.tool_calls:
-                content = ToolUtils.encode_tool_call(t)
+                content = ToolUtils.encode_tool_call(t, tool_prompt_format)
                 _process_content(content)
 
         eom = False
@@ -71,11 +77,15 @@ class ChatFormat:
         )
         return tokens
 
-    def encode_dialog_prompt(self, messages: List[Message]) -> ModelInput:
+    def encode_dialog_prompt(
+        self,
+        messages: List[Message],
+        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
+    ) -> ModelInput:
         tokens = []
         tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
         for message in messages:
-            toks = self.encode_message(message)
+            toks = self.encode_message(message, tool_prompt_format)
             tokens.extend(toks)
 
         # Add the start of an assistant message for the model to complete.
@@ -94,15 +104,21 @@ class ChatFormat:
                 content = content[len(header_str) :]
                 break
 
+        return self.decode_assistant_message_from_content(content, stop_reason)
+
+    def decode_assistant_message_from_content(
+        self, content: str, stop_reason: StopReason
+    ) -> CompletionMessage:
         ipython = content.startswith("<|python_tag|>")
         if ipython:
             content = content[len("<|python_tag|>") :]
 
-        eot = content.endswith("<|eot_id|>")
-        if eot:
+        if content.endswith("<|eot_id|>"):
             content = content[: -len("<|eot_id|>")]
-        else:
+            stop_reason = StopReason.end_of_turn
+        elif content.endswith("<|eom_id|>"):
             content = content[: -len("<|eom_id|>")]
+            stop_reason = StopReason.end_of_message
 
         tool_name = None
         tool_arguments = {}

@@ -33,17 +33,25 @@ class URL(BaseModel):
         return self.uri
 
 
-@json_schema_type
-class Attachment(BaseModel):
-    url: URL
-    mime_type: str
-
-
-InterleavedTextAttachment = Union[
+InterleavedTextMedia = Union[
     str,
-    Attachment,
-    List[Union[str, Attachment]],
+    # Specific modalities can be placed here, but not generic attachments
+    # since models don't consume them in a generic way
+    List[Union[str]],
 ]
+
+
+def interleaved_text_media_as_str(content: InterleavedTextMedia, sep: str = " ") -> str:
+    def _process(c) -> str:
+        if isinstance(c, str):
+            return c
+        else:
+            return "<media>"
+
+    if isinstance(content, list):
+        return sep.join(_process(c) for c in content)
+    else:
+        return _process(content)
 
 
 @json_schema_type
@@ -64,12 +72,32 @@ class ToolCall(BaseModel):
     tool_name: Union[BuiltinTool, str]
     arguments: Dict[str, RecursiveType]
 
+    @validator("tool_name", pre=True)
+    @classmethod
+    def validate_field(cls, v):
+        if isinstance(v, str):
+            try:
+                return BuiltinTool(v)
+            except ValueError:
+                return v
+        return v
+
 
 @json_schema_type
 class ToolResponse(BaseModel):
     call_id: str
     tool_name: Union[BuiltinTool, str]
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
+
+    @validator("tool_name", pre=True)
+    @classmethod
+    def validate_field(cls, v):
+        if isinstance(v, str):
+            try:
+                return BuiltinTool(v)
+            except ValueError:
+                return v
+        return v
 
 
 @json_schema_type
@@ -97,15 +125,51 @@ class ToolDefinition(BaseModel):
 
 
 @json_schema_type
+class ToolChoice(Enum):
+    auto = "auto"
+    required = "required"
+
+
+@json_schema_type
+class ToolPromptFormat(Enum):
+    """This Enum refers to the prompt format for calling custom / zero shot tools
+
+    `json` --
+        Refers to the json format for calling tools.
+        The json format takes the form like
+        {
+            "type": "function",
+            "function" : {
+                "name": "function_name",
+                "description": "function_description",
+                "parameters": {...}
+            }
+        }
+
+    `function_tag` --
+        This is an example of how you could define
+        your own user defined format for making tool calls.
+        The function_tag format looks like this,
+        <function=function_name>(parameters)</function>
+
+    The detailed prompts for each of these formats are added to llama cli
+    """
+
+    json = "json"
+    function_tag = "function_tag"
+
+
+@json_schema_type
 class UserMessage(BaseModel):
     role: Literal[Role.user.value] = Role.user.value
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
+    context: Optional[InterleavedTextMedia] = None
 
 
 @json_schema_type
 class SystemMessage(BaseModel):
     role: Literal[Role.system.value] = Role.system.value
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
 
 
 @json_schema_type
@@ -115,7 +179,7 @@ class ToolResponseMessage(BaseModel):
     # have a `content` type makes things nicer too
     call_id: str
     tool_name: Union[BuiltinTool, str]
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
 
 
 @json_schema_type
@@ -133,7 +197,7 @@ class TokenLogProbs(BaseModel):
 @json_schema_type
 class CompletionMessage(BaseModel):
     role: Literal[Role.assistant.value] = Role.assistant.value
-    content: InterleavedTextAttachment
+    content: InterleavedTextMedia
     stop_reason: StopReason
     tool_calls: List[ToolCall] = Field(default_factory=list)
 

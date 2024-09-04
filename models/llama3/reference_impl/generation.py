@@ -282,6 +282,7 @@ class Llama:
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
         logprobs: bool = False,
+        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
     ) -> ChatPrediction:
         if (
             max_gen_len is None
@@ -296,7 +297,9 @@ class Llama:
 
         stop_reason = None
         for result in self.generate(
-            model_input=self.formatter.encode_dialog_prompt(messages),
+            model_input=self.formatter.encode_dialog_prompt(
+                messages, tool_prompt_format
+            ),
             max_gen_len=max_gen_len,
             temperature=temperature,
             top_p=top_p,
