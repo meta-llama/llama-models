@@ -137,11 +137,13 @@ class LLama31Interface:
 
     def tool_response_messages(self, *args, **kwargs):
         template = ToolResponseGenerator().gen(*args, **kwargs)
-        return ToolResponseMessage(
-            call_id="call_id",
-            tool_name="tool_name",
-            content=template.render(),
-        )
+        return [
+            ToolResponseMessage(
+                call_id="call_id",
+                tool_name="tool_name",
+                content=template.render(),
+            )
+        ]
 
     def system_messages(
         self,
