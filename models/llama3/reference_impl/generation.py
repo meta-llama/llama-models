@@ -33,7 +33,7 @@ from termcolor import cprint
 
 from ..api.args import ModelArgs
 from ..api.chat_format import ChatFormat, ModelInput
-from ..api.datatypes import CompletionMessage, Message, StopReason
+from ..api.datatypes import CompletionMessage, Message, StopReason, ToolPromptFormat
 from ..api.tokenizer import Tokenizer
 from .model import Transformer
 
