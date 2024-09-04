@@ -29,17 +29,6 @@ def run_main(
     max_gen_len: int = 64,
     model_parallel_size: Optional[int] = None,
 ):
-    """
-    Examples to run with the models finetuned for chat. Prompts correspond of chat
-    turns between the user and assistant with the final one always being the user.
-
-    An optional system prompt at the beginning to control how the model should respond
-    is also supported.
-
-    The context window of llama3 models is 8192 tokens, so `max_seq_len` needs to be <= 8192.
-
-    `max_gen_len` is optional because finetuned models are able to stop generations naturally.
-    """
     tokenizer_path = str(THIS_DIR.parent / "llama3/api/tokenizer.model")
     generator = Llama.build(
         ckpt_dir=ckpt_dir,
@@ -50,7 +39,7 @@ def run_main(
     )
 
     prompts = [
-        "The color of the sky is blue but sometimes it can also be ",
+        "The color of the sky is blue but sometimes it can also be",
         """\
 apple is pomme,
 bannana is banane,
