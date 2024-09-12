@@ -22,7 +22,7 @@ def read_requirements():
 
 setup(
     name="llama_models",
-    version="0.0.13",
+    version="0.0.14",
     author="Meta Llama",
     author_email="llama-oss@meta.com",
     description="Llama models",
