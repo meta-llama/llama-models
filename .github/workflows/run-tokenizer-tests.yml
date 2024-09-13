@@ -1,6 +1,9 @@
 name: Run Tokenizer Tests
 
 on:
+  push:
+    branches:
+      - "ci_cd_testing"
   workflow_dispatch:
 
 jobs:
