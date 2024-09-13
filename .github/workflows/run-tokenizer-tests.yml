@@ -1,0 +1,26 @@
+name: Run Tokenizer Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pip install -U pip setuptools
+
+      - name: Set environment variable
+        run: |
+          echo "TOKENIZER_PATH=models/llama3/api/tokenizer.py" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: |
+          python -m unittest models/llama3/api/test_tokenizer.py
