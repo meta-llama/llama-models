@@ -11,7 +11,6 @@ from typing import List, Optional
 from .datatypes import (
     CheckpointQuantizationFormat,
     CoreModelId,
-    HardwareRequirements,
     Model,
     SamplingParams,
     SamplingStrategy,
@@ -72,10 +71,6 @@ def llama2_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 2 7b model",
             huggingface_repo="meta-llama/Llama-2-7b",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
@@ -95,10 +90,6 @@ def llama2_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 2 13b model",
             huggingface_repo="meta-llama/Llama-2-13b",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=28,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 5120,
@@ -118,10 +109,6 @@ def llama2_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 2 70b model",
             huggingface_repo="meta-llama/Llama-2-70b",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=3,
-                memory_gb_per_gpu=48,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
@@ -146,10 +133,6 @@ def llama3_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3 8b model",
             huggingface_repo="meta-llama/Meta-Llama-3-8B",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
@@ -169,10 +152,6 @@ def llama3_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3 70b model",
             huggingface_repo="meta-llama/Meta-Llama-3-70B",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
@@ -197,10 +176,6 @@ def llama3_1_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 8b model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
@@ -220,10 +195,6 @@ def llama3_1_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 70b model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
@@ -242,11 +213,7 @@ def llama3_1_base_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_1_405b,
             is_default_variant=False,
             description_markdown="Llama 3.1 405b model (BF16 weights)",
-            huggingface_repo=None,
-            hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=120,
-            ),
+            huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
@@ -266,10 +233,6 @@ def llama3_1_base_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 405b model (FP8 quantized)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-FP8",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=70,
-            ),
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
@@ -288,12 +251,8 @@ def llama3_1_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b,
             is_default_variant=False,
-            description_markdown="Llama 3.1 405b model (BF16 weights)",
+            description_markdown="Llama 3.1 405b model (BF16 weights for mp16)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=16,
-                memory_gb_per_gpu=70,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
@@ -307,6 +266,9 @@ def llama3_1_base_models() -> List[Model]:
                 "rope_theta": 500000.0,
                 "use_scaled_rope": True,
             },
+            metadata={
+                "pth_file_count": 16,
+            },
         ),
     ]
 
@@ -318,10 +280,6 @@ def llama2_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 2 7b chat model",
             huggingface_repo="meta-llama/Llama-2-7b-chat",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=14,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
@@ -341,10 +299,6 @@ def llama2_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 2 13b chat model",
             huggingface_repo="meta-llama/Llama-2-13b-chat",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=28,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 5120,
@@ -364,10 +318,6 @@ def llama2_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 2 70b chat model",
             huggingface_repo="meta-llama/Llama-2-70b-chat",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=3,
-                memory_gb_per_gpu=48,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
@@ -392,10 +342,6 @@ def llama3_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3 8b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3-8B-Instruct",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
@@ -415,10 +361,6 @@ def llama3_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3 70b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3-70B-Instruct",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=3,
-                memory_gb_per_gpu=48,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
@@ -443,10 +385,6 @@ def llama3_1_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 8b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B-Instruct",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 4096,
@@ -466,10 +404,6 @@ def llama3_1_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 70b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B-Instruct",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=20,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 8192,
@@ -488,11 +422,7 @@ def llama3_1_instruct_models() -> List[Model]:
             core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
             is_default_variant=False,
             description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
-            huggingface_repo=None,
-            hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=120,
-            ),
+            huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
@@ -512,10 +442,6 @@ def llama3_1_instruct_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama 3.1 405b instruct model (FP8 quantized)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=8,
-                memory_gb_per_gpu=70,
-            ),
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
@@ -534,12 +460,8 @@ def llama3_1_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
             is_default_variant=False,
-            description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
+            description_markdown="Llama 3.1 405b instruct model (BF16 weights for mp16)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=16,
-                memory_gb_per_gpu=70,
-            ),
             recommended_sampling_params=recommended_sampling_params(),
             model_args={
                 "dim": 16384,
@@ -553,6 +475,9 @@ def llama3_1_instruct_models() -> List[Model]:
                 "rope_theta": 500000.0,
                 "use_scaled_rope": True,
             },
+            metadata={
+                "pth_file_count": 16,
+            },
         ),
     ]
 
@@ -565,10 +490,6 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=20,
-            ),
             model_args={
                 "dim": 4096,
                 "ffn_dim_multiplier": 1.3,
@@ -588,10 +509,6 @@ def safety_models() -> List[Model]:
             description_markdown="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B-INT8",
             quantization_format=CheckpointQuantizationFormat.int8,
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=10,
-            ),
             model_args={
                 "dim": 4096,
                 "ffn_dim_multiplier": 1.3,
@@ -610,10 +527,6 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Prompt Guard 86M injection safety model",
             huggingface_repo="meta-llama/Prompt-Guard-86M",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=1,
-            ),
             model_args={},
         ),
         Model(
@@ -621,10 +534,6 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama Guard v2 8b system safety model",
             huggingface_repo="meta-llama/Meta-Llama-Guard-2-8B",
-            hardware_requirements=HardwareRequirements(
-                gpu_count=1,
-                memory_gb_per_gpu=20,
-            ),
             model_args={
                 "dim": 4096,
                 "n_layers": 32,
@@ -654,16 +563,16 @@ class LlamaDownloadInfo:
 def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
     """Information needed to download model from llamameta.net"""
 
-    gpu = model.hardware_requirements.gpu_count
+    pth_count = model.metadata.get("pth_file_count", 16)
     if model.core_model_id == CoreModelId.meta_llama3_1_405b:
-        if gpu == 16:
+        if pth_count == 16:
             folder = "Meta-Llama-3.1-405B-MP16"
         elif model.quantization_format == CheckpointQuantizationFormat.fp8_mixed:
             folder = "Meta-Llama-3.1-405B"
         else:
             folder = "Meta-Llama-3.1-405B-MP8"
     elif model.core_model_id == CoreModelId.meta_llama3_1_405b_instruct:
-        if gpu == 16:
+        if pth_count == 16:
             folder = "Meta-Llama-3.1-405B-Instruct-MP16"
         elif model.quantization_format == CheckpointQuantizationFormat.fp8_mixed:
             folder = "Meta-Llama-3.1-405B-Instruct"
@@ -734,8 +643,8 @@ def llama_meta_pth_size(model: Model) -> int:
     ):
         return 0
 
-    gpu = model.hardware_requirements.gpu_count
-    if gpu == 16:
+    pth_count = model.metadata.get("pth_file_count", 0)
+    if pth_count == 16:
         return 51268302389
     elif model.quantization_format == CheckpointQuantizationFormat.fp8_mixed:
         return 60903742309
