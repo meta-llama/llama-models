@@ -8,7 +8,7 @@
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from .schema_utils import json_schema_type
 
@@ -126,12 +126,6 @@ def model_family(model_id) -> ModelFamily:
         raise ValueError(f"Unknown model family for {CoreModelId}")
 
 
-@json_schema_type
-class HardwareRequirements(BaseModel):
-    memory_gb_per_gpu: int
-    gpu_count: int
-
-
 @json_schema_type(
     schema={
         "description": "The model family and SKU of the model along with other parameters corresponding to the model."
@@ -180,7 +174,6 @@ class Model(BaseModel):
     def variant(self) -> str:
         parts = [
             self.quantization_format.value,
-            f"mp{self.hardware_requirements.gpu_count}",
         ]
 
         return "-".join(parts)
@@ -194,12 +187,12 @@ class Model(BaseModel):
 
     description_markdown: str
     huggingface_repo: Optional[str] = None
-    hardware_requirements: HardwareRequirements
     quantization_format: CheckpointQuantizationFormat = (
         CheckpointQuantizationFormat.bf16
     )
     recommended_sampling_params: Optional[SamplingParams] = None
     model_args: Dict[str, Any]
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     @property
     def is_instruct_model(self) -> bool:
