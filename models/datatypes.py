@@ -175,6 +175,9 @@ class Model(BaseModel):
         parts = [
             self.quantization_format.value,
         ]
+        # really ad-hoc, we should probably drop these SKUs
+        if pth_count := self.metadata.get("pth_file_count", 0):
+            parts.append(f"mp{pth_count}")
 
         return "-".join(parts)
 
