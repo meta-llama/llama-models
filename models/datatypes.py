@@ -174,10 +174,8 @@ class Model(BaseModel):
     def variant(self) -> str:
         parts = [
             self.quantization_format.value,
+            f"mp{self.pth_file_count}",
         ]
-        # really ad-hoc, we should probably drop these SKUs
-        if pth_count := self.metadata.get("pth_file_count", 0):
-            parts.append(f"mp{pth_count}")
 
         return "-".join(parts)
 
@@ -195,6 +193,7 @@ class Model(BaseModel):
     )
     recommended_sampling_params: Optional[SamplingParams] = None
     model_args: Dict[str, Any]
+    pth_file_count: int
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     @property
