@@ -42,7 +42,7 @@ class RMSNorm(torch.nn.Module):
         return output * self.weight
 
 
-def apply_scaling_fast(freqs: torch.Tensor) -> torch.Tensor:
+def apply_scaling(freqs: torch.Tensor) -> torch.Tensor:
     scale_factor = 8
     low_freq_factor = 1
     high_freq_factor = 4
