@@ -43,6 +43,7 @@ class RMSNorm(torch.nn.Module):
 
 
 def apply_scaling(freqs: torch.Tensor) -> torch.Tensor:
+    # Values obtained from grid search
     scale_factor = 8
     low_freq_factor = 1
     high_freq_factor = 4
