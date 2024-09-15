@@ -58,7 +58,7 @@ def register_schema(
 
     :param data_type: The type to associate with a JSON schema.
     :param schema: The schema to associate the type with. Derived automatically if omitted.
-    :param name: The name used for looking uo the type. Determined automatically if omitted.
+    :param name: The name used for looking up the type. Determined automatically if omitted.
     :returns: The input type.
     """
     return data_type
