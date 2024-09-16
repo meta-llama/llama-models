@@ -74,7 +74,6 @@ jobs:
          run: |
              sleep ${{ inputs.sleep_time }}
 
-      # TODO Identify version of pip prior to installing dependencies
       - name: "Installing 'llama-models' dependencies"
         id: pip_install
         run: |
@@ -87,7 +86,6 @@ jobs:
         run: |
           echo "TOKENIZER_PATH=models/llama3/api/tokenizer.py" >> $GITHUB_ENV
 
-      # TODO Identify version of python prior to running tests
       - name: Run tests
         id: run_tests
         run: |
