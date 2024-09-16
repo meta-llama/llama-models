@@ -52,13 +52,11 @@ jobs:
         run: |
             cat /etc/os-release
 
-
       - name: "Checkout 'meta-llama/llama-models' repository"
         id: checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
-
 
       - name: "[DEBUG] Content of the repository after checkout"
         id: content_after_checkout
@@ -67,11 +65,11 @@ jobs:
             ls -la ${GITHUB_WORKSPACE}
 
       # Place sleep step before the test execution to "exec" into the test k8s POD and run tests manually to identify what dependencies are being used.
-       - name: "[DEBUG] sleep"
-         id: sleep
-         if: ${{ github.event.inputs.debug == 'true' && github.event.inputs.sleep_time != '' }}
-         run: |
-             sleep ${{ inputs.sleep_time }}
+      - name: "[DEBUG] sleep"
+        id: sleep
+        if: ${{ github.event.inputs.debug == 'true' && github.event.inputs.sleep_time != '' }}
+        run: |
+            sleep ${{ inputs.sleep_time }}
 
       - name: "Installing 'llama-models' dependencies"
         id: pip_install
