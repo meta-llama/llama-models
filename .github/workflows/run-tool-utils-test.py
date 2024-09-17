@@ -86,7 +86,6 @@ jobs:
           echo "[STEP] Installing 'llama-models' models"
           pip install -U pip setuptools
           pip install -r requirements.txt
-          pip install blobfile
 
       - name: Run tests
         id: run_tests
