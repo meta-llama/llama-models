@@ -79,6 +79,7 @@ jobs:
       - name: "Installing 'apt' required packages"
         id: apt_install
         run: |
+          echo "[STEP] Installing 'apt' required packages"
           sudo apt update -y
           sudo apt upgrade -y
           sudo apt install python3-pip -y
@@ -95,14 +96,14 @@ jobs:
         id: run_tests_tokenizer
         continue-on-error: true
         run: |
-          echo "Running Tokenizer tests on Self-Hosted k8s ARC Runner"
+          echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
           cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/api/test_tokenizer.py
 
       - name: Run tool utils tests
         id: run_tests_tool_utils
         continue-on-error: true
         run: |
-          echo "[STEP]" Running tool utils test on Self-Hosted k8s ARC Runner"
+          echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
           cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py
 
       - name: Publish Test Summary
