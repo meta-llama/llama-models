@@ -75,8 +75,8 @@ jobs:
         id: pip_install
         run: |
           echo "[STEP] Installing 'llama-models' models"
-          which pip
           which python
+          which pip
           pip3 install -U pip setuptools
           pip3 install -r requirements.txt
 
