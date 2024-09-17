@@ -87,9 +87,7 @@ jobs:
         id: pip_install
         run: |
           echo "[STEP] Installing 'llama-models' models"
-          which pip
-          which python3
-          pip install -U pip setuptools
+          pip install -U pip setuptools blobfile
           pip install -r requirements.txt
 
       - name: Set environment variable
