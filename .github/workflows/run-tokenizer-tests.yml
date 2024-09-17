@@ -34,7 +34,6 @@ on:
 
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.py"  
-  PYTHONPATH: $GITHUB_WORKSPACE:$PYTHONPATH
 
 jobs:
   execute_workflow:
@@ -62,11 +61,6 @@ jobs:
         run: |
             ls -la ${GITHUB_WORKSPACE}
 
-      # - name: "Forced sleep_600"
-      #   id: forced_sleep_600
-      #   run: |
-      #       sleep 600
-
       # Place sleep step before the test execution to "exec" into the test k8s POD and run tests manually to identify what dependencies are being used.
       - name: "[DEBUG] sleep"
         id: sleep
@@ -86,11 +80,8 @@ jobs:
         id: pip_install
         run: |
           echo "[STEP] Installing 'llama-models' models"
-          echo $PYTHONPATH
-          echo "Done printing PYTHONPATH"
           pip install -U pip setuptools
           pip install -r requirements.txt
-          #pip install -r models/llama3/requirements.txt
           pip install blobfile
           pip install llama-models
 
@@ -104,8 +95,13 @@ jobs:
       - name: Run tool utils tests
         id: run_tests_tool_utils
         continue-on-error: true
+        env:
+          PYTHONPATH: $GITHUB_WORKSPACE:$PYTHONPATH
         run: |
           echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
+          echo $PYTHONPATH
+          echo "Done printing PYTHONPATH"
+          echo $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py
 
       - name: Publish Test Summary
