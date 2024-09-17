@@ -87,8 +87,9 @@ jobs:
         id: pip_install
         run: |
           echo "[STEP] Installing 'llama-models' models"
-          pip install -U pip setuptools blobfile
+          pip install -U pip setuptools
           pip install -r requirements.txt
+          pip install blobfile
 
       - name: Set environment variable
         id: set_env
