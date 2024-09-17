@@ -91,11 +91,6 @@ jobs:
           pip install -r requirements.txt
           pip install blobfile
 
-      - name: Set environment variable
-        id: set_env
-        run: |
-          echo "TOKENIZER_PATH=models/llama3/api/tokenizer.py" >> $GITHUB_ENV
-
       - name: Run tests
         id: run_tests
         run: |
