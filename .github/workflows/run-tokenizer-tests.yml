@@ -10,9 +10,6 @@ on:
   #    - 'models/llama3/api/*.py'
   #
 
-  push:
-    branches:
-      - "ci_cd_testing"
   workflow_dispatch:
     inputs:
       runner:
@@ -88,9 +85,10 @@ jobs:
         id: pip_install
         run: |
           echo "[STEP] Installing 'llama-models' models"
+          echo $PYTHONPATH
           pip install -U pip setuptools
           pip install -r requirements.txt
-          pip install -r models/llama3/requirements.txt
+          #pip install -r models/llama3/requirements.txt
           pip install blobfile
           pip install llama-models
 
