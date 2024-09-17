@@ -91,11 +91,17 @@ jobs:
           pip install -r requirements.txt
           pip install blobfile
 
-      - name: Run tests
-        id: run_tests
+      - name: Run Tokenizer tests
+        id: run_tests_tokenizer
         run: |
-          echo "Running tests on Self-Hosted k8s ARC Runner"
+          echo "Running Tokenizer tests on Self-Hosted k8s ARC Runner"
           cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/api/test_tokenizer.py
+
+      - name: Run tool utils tests
+        id: run_tests_tool_utils
+        run: |
+          echo "[STEP]" Running tool utils test on Self-Hosted k8s ARC Runner"
+          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py
 
       - name: Publish Test Summary
         id: test_summary
