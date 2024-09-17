@@ -34,6 +34,7 @@ on:
 
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.py"  
+  PYTHONPATH: $GITHUB_WORKSPACE:$PYTHONPATH
 
 jobs:
   execute_workflow:
@@ -86,6 +87,7 @@ jobs:
         run: |
           echo "[STEP] Installing 'llama-models' models"
           echo $PYTHONPATH
+          echo "Done printing PYTHONPATH"
           pip install -U pip setuptools
           pip install -r requirements.txt
           #pip install -r models/llama3/requirements.txt
