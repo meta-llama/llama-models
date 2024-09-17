@@ -1,15 +1,6 @@
 name: "[ARC][CPU]  Run Llama-models Tests"
 on:
 
-  # TODO: Add later when all tests are accounted for.
-  #
-  #pull_request:
-  #  branches:
-  #    - 'main'
-  #  paths:
-  #    - 'models/llama3/api/*.py'
-  #
-
   workflow_dispatch:
     inputs:
       runner:
@@ -83,7 +74,7 @@ jobs:
           pip install -U pip setuptools
           pip install -r requirements.txt
           pip install blobfile
-          #pip install llama-models
+          pip install llama-models
 
       - name: Run Tokenizer tests
         id: run_tests_tokenizer
@@ -99,9 +90,6 @@ jobs:
           PYTHONPATH: ${GITHUB_WORKSPACE}
         run: |
           echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
-          echo $PYTHONPATH
-          echo "Done printing PYTHONPATH"
-          echo $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py
 
       - name: Publish Test Summary
