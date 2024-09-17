@@ -18,7 +18,7 @@ on:
       runner:
         description: 'GHA Runner Scale Set label to run workflow on.'
         required: true
-        default: llama-models-gha-runnes-gpu
+        default: llama-models-fork-gha-runnes-gpu
 
       debug:
         description: 'Run debugging steps?'
