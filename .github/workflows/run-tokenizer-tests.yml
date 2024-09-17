@@ -63,8 +63,6 @@ jobs:
         if: ${{ github.event.inputs.debug == 'true' }}
         run: |
             ls -la ${GITHUB_WORKSPACE}
-            which pip
-            which python
 
       # Place sleep step before the test execution to "exec" into the test k8s POD and run tests manually to identify what dependencies are being used.
       - name: "[DEBUG] sleep"
@@ -77,6 +75,8 @@ jobs:
         id: pip_install
         run: |
           echo "[STEP] Installing 'llama-models' models"
+          which pip
+          which python
           pip3 install -U pip setuptools
           pip3 install -r requirements.txt
 
