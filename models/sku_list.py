@@ -74,7 +74,7 @@ def llama2_base_models() -> List[Model]:
             description_markdown="Llama 2 7b model",
             huggingface_repo="meta-llama/Llama-2-7b",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "n_layers": 32,
                 "n_heads": 32,
@@ -94,7 +94,7 @@ def llama2_base_models() -> List[Model]:
             description_markdown="Llama 2 13b model",
             huggingface_repo="meta-llama/Llama-2-13b",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 5120,
                 "n_layers": 40,
                 "n_heads": 40,
@@ -114,7 +114,7 @@ def llama2_base_models() -> List[Model]:
             description_markdown="Llama 2 70b model",
             huggingface_repo="meta-llama/Llama-2-70b",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 8192,
                 "n_layers": 80,
                 "n_heads": 64,
@@ -139,7 +139,7 @@ def llama3_base_models() -> List[Model]:
             description_markdown="Llama 3 8b model",
             huggingface_repo="meta-llama/Meta-Llama-3-8B",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "n_layers": 32,
                 "n_heads": 32,
@@ -159,7 +159,7 @@ def llama3_base_models() -> List[Model]:
             description_markdown="Llama 3 70b model",
             huggingface_repo="meta-llama/Meta-Llama-3-70B",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 8192,
                 "n_layers": 80,
                 "n_heads": 64,
@@ -184,7 +184,7 @@ def llama3_1_base_models() -> List[Model]:
             description_markdown="Llama 3.1 8b model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "n_layers": 32,
                 "n_heads": 32,
@@ -204,7 +204,7 @@ def llama3_1_base_models() -> List[Model]:
             description_markdown="Llama 3.1 70b model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 8192,
                 "n_layers": 80,
                 "n_heads": 64,
@@ -224,7 +224,7 @@ def llama3_1_base_models() -> List[Model]:
             description_markdown="Llama 3.1 405b model (BF16 weights)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 16384,
                 "n_layers": 126,
                 "n_heads": 128,
@@ -245,7 +245,7 @@ def llama3_1_base_models() -> List[Model]:
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-FP8",
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 16384,
                 "n_layers": 126,
                 "n_heads": 128,
@@ -265,7 +265,7 @@ def llama3_1_base_models() -> List[Model]:
             description_markdown="Llama 3.1 405b model (BF16 weights for mp16)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 16384,
                 "n_layers": 126,
                 "n_heads": 128,
@@ -290,7 +290,7 @@ def llama2_instruct_models() -> List[Model]:
             description_markdown="Llama 2 7b chat model",
             huggingface_repo="meta-llama/Llama-2-7b-chat",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "n_layers": 32,
                 "n_heads": 32,
@@ -310,7 +310,7 @@ def llama2_instruct_models() -> List[Model]:
             description_markdown="Llama 2 13b chat model",
             huggingface_repo="meta-llama/Llama-2-13b-chat",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 5120,
                 "n_layers": 40,
                 "n_heads": 40,
@@ -330,7 +330,7 @@ def llama2_instruct_models() -> List[Model]:
             description_markdown="Llama 2 70b chat model",
             huggingface_repo="meta-llama/Llama-2-70b-chat",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 8192,
                 "n_layers": 80,
                 "n_heads": 64,
@@ -355,7 +355,7 @@ def llama3_instruct_models() -> List[Model]:
             description_markdown="Llama 3 8b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3-8B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "n_layers": 32,
                 "n_heads": 32,
@@ -375,7 +375,7 @@ def llama3_instruct_models() -> List[Model]:
             description_markdown="Llama 3 70b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3-70B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 8192,
                 "n_layers": 80,
                 "n_heads": 64,
@@ -400,7 +400,7 @@ def llama3_1_instruct_models() -> List[Model]:
             description_markdown="Llama 3.1 8b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "n_layers": 32,
                 "n_heads": 32,
@@ -420,7 +420,7 @@ def llama3_1_instruct_models() -> List[Model]:
             description_markdown="Llama 3.1 70b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 8192,
                 "n_layers": 80,
                 "n_heads": 64,
@@ -440,7 +440,7 @@ def llama3_1_instruct_models() -> List[Model]:
             description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 16384,
                 "n_layers": 126,
                 "n_heads": 128,
@@ -461,7 +461,7 @@ def llama3_1_instruct_models() -> List[Model]:
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 16384,
                 "n_layers": 126,
                 "n_heads": 128,
@@ -481,7 +481,7 @@ def llama3_1_instruct_models() -> List[Model]:
             description_markdown="Llama 3.1 405b instruct model (BF16 weights for mp16)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
-            model_args={
+            arch_args={
                 "dim": 16384,
                 "n_layers": 126,
                 "n_heads": 128,
@@ -506,7 +506,7 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B",
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "ffn_dim_multiplier": 1.3,
                 "multiple_of": 1024,
@@ -526,7 +526,7 @@ def safety_models() -> List[Model]:
             description_markdown="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B-INT8",
             quantization_format=CheckpointQuantizationFormat.int8,
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "ffn_dim_multiplier": 1.3,
                 "multiple_of": 1024,
@@ -545,7 +545,7 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Prompt Guard 86M injection safety model",
             huggingface_repo="meta-llama/Prompt-Guard-86M",
-            model_args={},
+            arch_args={},
             pth_file_count=1,
         ),
         Model(
@@ -553,7 +553,7 @@ def safety_models() -> List[Model]:
             is_default_variant=True,
             description_markdown="Llama Guard v2 8b system safety model",
             huggingface_repo="meta-llama/Meta-Llama-Guard-2-8B",
-            model_args={
+            arch_args={
                 "dim": 4096,
                 "n_layers": 32,
                 "n_heads": 32,
