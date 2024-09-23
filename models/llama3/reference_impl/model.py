@@ -21,7 +21,11 @@ from fairscale.nn.model_parallel.layers import (
 )
 from torch import nn
 
-from .args import ModelArgs
+from ..api import ModelArgs
+
+# **NOTE**: This code is not runnable without installing `torch` and `fairscale`
+# dependencies. These dependencies are not part of the default dependencies
+# (requirements.txt) of the `llama-models` package.
 
 
 class RMSNorm(torch.nn.Module):

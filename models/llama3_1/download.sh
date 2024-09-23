@@ -87,6 +87,7 @@ do
         PTH_FILE_COUNT=7
         PTH_FILE_CHUNK_COUNT=3
         MODEL_PATH="Meta-Llama-3.1-405B"
+        ADDITIONAL_FILES="fp8_scales_0.pt,fp8_scales_1.pt,fp8_scales_2.pt,fp8_scales_3.pt,fp8_scales_4.pt,fp8_scales_5.pt,fp8_scales_6.pt,fp8_scales_7.pt"
     elif [[ $m == "meta-llama-3.1-70b-instruct" ]]; then
         PTH_FILE_COUNT=7
         MODEL_PATH="Meta-Llama-3.1-70B-Instruct"

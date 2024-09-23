@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Llama_Repo.jpeg" width="400"/>
+  <img src="/Llama_Repo.jpeg" width="400"/>
 </p>
 
 <p align="center">
@@ -9,6 +9,7 @@
 ---
 
 # Llama Models
+
 Llama is an accessible, open large language model (LLM) designed for developers, researchers, and businesses to build, experiment, and responsibly scale their generative AI ideas. Part of a foundational system, it serves as a bedrock for innovation in the global community. A few key aspects:
 1. **Open access**: Easy accessibility to cutting-edge large language models, fostering collaboration and advancements among developers, researchers, and organizations
 2. **Broad ecosystem**: Llama models have been downloaded hundreds of millions of times, there are thousands of community projects built on Llama and platform support is broad from cloud providers to startups - the world is building with Llama!
@@ -18,6 +19,9 @@ Our mission is to empower individuals and industry through this opportunity whil
 
 ## Llama Models
 
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-models)](https://pypi.org/project/llama-models/)
+[![Discord](https://img.shields.io/discord/1257833999603335178)](https://discord.gg/TZAAYNVtrU)
+
 |  **Model** | **Launch date** | **Model sizes** | **Context Length** | **Tokenizer** | **Acceptable use policy**  |  **License** | **Model Card** |
 | :----: | :----: | :----: | :----:|:----:|:----:|:----:|:----:|
 | Llama 2 | 7/18/2023 | 7B, 13B, 70B | 4K | Sentencepiece | [Use Policy](models/llama2/MODEL_CARD.md) | [License](models/llama2/LICENSE) | [Model Card](models/llama2/MODEL_CARD.md) |
@@ -26,15 +30,52 @@ Our mission is to empower individuals and industry through this opportunity whil
 
 ## Download
 
-To download the model weights and tokenizer, please visit the [Meta Llama website](https://llama.meta.com/llama-downloads/) and accept our License.
+To download the model weights and tokenizer:
 
-Once your request is approved, you will receive a signed URL over email. Then, run the download.sh script, passing the URL provided when prompted to start the download.
+1. Visit the [Meta Llama website](https://llama.meta.com/llama-downloads/).
+2. Read and accept the license.
+3. Once your request is approved you will receive a signed URL via email.
+4. Install the [Llama CLI](https://github.com/meta-llama/llama-stack): `pip install llama-toolchain`.
+5. Run `llama model list` to show the latest available models and determine the model ID you wish to download. **NOTE**:
+If you want older versions of models, run `llama model list --show-all` to show all the available Llama models.
 
-Pre-requisites: Ensure you have `wget` and `md5sum` installed. Then run the script: `./download.sh`. `./download.sh`can be found inside the respective `models` directory. 
+6. Run: `llama download --source meta --model-id CHOSEN_MODEL_ID`
+7. Pass the URL provided when prompted to start the download.
 
 Remember that the links expire after 24 hours and a certain amount of downloads. You can always re-request a link if you start seeing errors such as `403: Forbidden`.
 
-### Access to Hugging Face
+## Running the models
+
+You need to install the following dependencies (in addition to the `requirements.txt` in the root directory of this repository) to run the models:
+```
+pip install torch fairscale fire blobfile
+```
+
+After installing the dependencies, you can run the example scripts (within `models/scripts/` sub-directory) as follows:
+```bash
+#!/bin/bash
+
+CHECKPOINT_DIR=~/.llama/checkpoints/Meta-Llama3.1-8B-Instruct
+PYTHONPATH=$(git rev-parse --show-toplevel) torchrun models/scripts/example_chat_completion.py $CHECKPOINT_DIR
+```
+
+The above script should be used with an Instruct (Chat) model. For a Base model, use the script `models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
+
+For running larger models with tensor parallelism, you should modify as:
+```bash
+#!/bin/bash
+
+NGPUS=8
+PYTHONPATH=$(git rev-parse --show-toplevel) torchrun \
+  --nproc_per_node=$NGPUS \
+  models/scripts/example_chat_completion.py $CHECKPOINT_DIR \
+  --model_parallel_size $NGPUS
+```
+
+For more flexibility in running inference (including running FP8 inference), please see the [`Llama Stack`](https://github.com/meta-llama/llama-stack) repository.
+
+
+## Access to Hugging Face
 
 We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama), in both transformers and native `llama3` formats. To download the weights from Hugging Face, please follow these steps:
 
@@ -77,9 +118,9 @@ To help developers address these risks, we have created the [Responsible Use Gui
 ## Issues
 
 Please report any software “bug” or other problems with the models through one of the following means:
-- Reporting issues with the model: [github.com/meta-llama/llama-models/issues](https://github.com/meta-llama/llama-models/issues)
-- Reporting risky content generated by the model: [developers.facebook.com/llama_output_feedback](https://developers.facebook.com/llama_output_feedback)
-- Reporting bugs and security concerns: [facebook.com/whitehat/info](https://facebook.com/whitehat/info)
+- Reporting issues with the model: [https://github.com/meta-llama/llama-models/issues](https://github.com/meta-llama/llama-models/issues)
+- Reporting risky content generated by the model: [developers.facebook.com/llama_output_feedback](http://developers.facebook.com/llama_output_feedback)
+- Reporting bugs and security concerns: [facebook.com/whitehat/info](http://facebook.com/whitehat/info)
 
 
 ## Questions

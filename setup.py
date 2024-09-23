@@ -24,7 +24,7 @@ with io.open("README.md", encoding="utf-8") as f:
 
 setup(
     name="llama_models",
-    version="0.0.1",
+    version="0.0.19",
     author="Meta Llama",
     author_email="llama-oss@meta.com",
     description="Llama models",
