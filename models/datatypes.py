@@ -133,7 +133,7 @@ def model_family(model_id) -> ModelFamily:
 )
 class Model(BaseModel):
     core_model_id: CoreModelId
-    description_markdown: str
+    description: str
     huggingface_repo: Optional[str] = None
     recommended_sampling_params: Optional[SamplingParams] = None
     arch_args: Dict[str, Any]

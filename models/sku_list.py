@@ -71,7 +71,7 @@ def llama2_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama2_7b,
             is_default_variant=True,
-            description_markdown="Llama 2 7b model",
+            description="Llama 2 7b model",
             huggingface_repo="meta-llama/Llama-2-7b",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -91,7 +91,7 @@ def llama2_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama2_13b,
             is_default_variant=True,
-            description_markdown="Llama 2 13b model",
+            description="Llama 2 13b model",
             huggingface_repo="meta-llama/Llama-2-13b",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -111,7 +111,7 @@ def llama2_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama2_70b,
             is_default_variant=True,
-            description_markdown="Llama 2 70b model",
+            description="Llama 2 70b model",
             huggingface_repo="meta-llama/Llama-2-70b",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -136,7 +136,7 @@ def llama3_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_8b,
             is_default_variant=True,
-            description_markdown="Llama 3 8b model",
+            description="Llama 3 8b model",
             huggingface_repo="meta-llama/Meta-Llama-3-8B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -156,7 +156,7 @@ def llama3_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_70b,
             is_default_variant=True,
-            description_markdown="Llama 3 70b model",
+            description="Llama 3 70b model",
             huggingface_repo="meta-llama/Meta-Llama-3-70B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -181,7 +181,7 @@ def llama3_1_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_8b,
             is_default_variant=True,
-            description_markdown="Llama 3.1 8b model",
+            description="Llama 3.1 8b model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -201,7 +201,7 @@ def llama3_1_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_70b,
             is_default_variant=True,
-            description_markdown="Llama 3.1 70b model",
+            description="Llama 3.1 70b model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -221,7 +221,7 @@ def llama3_1_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b,
             is_default_variant=False,
-            description_markdown="Llama 3.1 405b model (BF16 weights)",
+            description="Llama 3.1 405b model (BF16 weights)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -241,7 +241,7 @@ def llama3_1_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b,
             is_default_variant=True,
-            description_markdown="Llama 3.1 405b model (FP8 quantized)",
+            description="Llama 3.1 405b model (FP8 quantized)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-FP8",
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
@@ -262,7 +262,7 @@ def llama3_1_base_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b,
             is_default_variant=False,
-            description_markdown="Llama 3.1 405b model (BF16 weights for mp16)",
+            description="Llama 3.1 405b model (BF16 weights for mp16)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -287,7 +287,7 @@ def llama2_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama2_7b_chat,
             is_default_variant=True,
-            description_markdown="Llama 2 7b chat model",
+            description="Llama 2 7b chat model",
             huggingface_repo="meta-llama/Llama-2-7b-chat",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -307,7 +307,7 @@ def llama2_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama2_13b_chat,
             is_default_variant=True,
-            description_markdown="Llama 2 13b chat model",
+            description="Llama 2 13b chat model",
             huggingface_repo="meta-llama/Llama-2-13b-chat",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -327,7 +327,7 @@ def llama2_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama2_70b_chat,
             is_default_variant=True,
-            description_markdown="Llama 2 70b chat model",
+            description="Llama 2 70b chat model",
             huggingface_repo="meta-llama/Llama-2-70b-chat",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -352,7 +352,7 @@ def llama3_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_8b_instruct,
             is_default_variant=True,
-            description_markdown="Llama 3 8b instruct model",
+            description="Llama 3 8b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3-8B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -372,7 +372,7 @@ def llama3_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_70b_instruct,
             is_default_variant=True,
-            description_markdown="Llama 3 70b instruct model",
+            description="Llama 3 70b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3-70B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -397,7 +397,7 @@ def llama3_1_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_8b_instruct,
             is_default_variant=True,
-            description_markdown="Llama 3.1 8b instruct model",
+            description="Llama 3.1 8b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-8B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -417,7 +417,7 @@ def llama3_1_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_70b_instruct,
             is_default_variant=True,
-            description_markdown="Llama 3.1 70b instruct model",
+            description="Llama 3.1 70b instruct model",
             huggingface_repo="meta-llama/Meta-Llama-3.1-70B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -437,7 +437,7 @@ def llama3_1_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
             is_default_variant=False,
-            description_markdown="Llama 3.1 405b instruct model (BF16 weights)",
+            description="Llama 3.1 405b instruct model (BF16 weights)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -457,7 +457,7 @@ def llama3_1_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
             is_default_variant=True,
-            description_markdown="Llama 3.1 405b instruct model (FP8 quantized)",
+            description="Llama 3.1 405b instruct model (FP8 quantized)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
@@ -478,7 +478,7 @@ def llama3_1_instruct_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
             is_default_variant=False,
-            description_markdown="Llama 3.1 405b instruct model (BF16 weights for mp16)",
+            description="Llama 3.1 405b instruct model (BF16 weights for mp16)",
             huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -504,7 +504,7 @@ def safety_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.llama_guard_3_8b,
             is_default_variant=True,
-            description_markdown="Llama Guard v3 8b system safety model",
+            description="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B",
             arch_args={
                 "dim": 4096,
@@ -523,7 +523,7 @@ def safety_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.llama_guard_3_8b,
             is_default_variant=False,
-            description_markdown="Llama Guard v3 8b system safety model",
+            description="Llama Guard v3 8b system safety model",
             huggingface_repo="meta-llama/Llama-Guard-3-8B-INT8",
             quantization_format=CheckpointQuantizationFormat.int8,
             arch_args={
@@ -543,7 +543,7 @@ def safety_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.prompt_guard_86m,
             is_default_variant=True,
-            description_markdown="Prompt Guard 86M injection safety model",
+            description="Prompt Guard 86M injection safety model",
             huggingface_repo="meta-llama/Prompt-Guard-86M",
             arch_args={},
             pth_file_count=1,
@@ -551,7 +551,7 @@ def safety_models() -> List[Model]:
         Model(
             core_model_id=CoreModelId.llama_guard_2_8b,
             is_default_variant=True,
-            description_markdown="Llama Guard v2 8b system safety model",
+            description="Llama Guard v2 8b system safety model",
             huggingface_repo="meta-llama/Meta-Llama-Guard-2-8B",
             arch_args={
                 "dim": 4096,
