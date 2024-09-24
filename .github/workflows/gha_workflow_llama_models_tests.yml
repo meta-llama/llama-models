@@ -110,7 +110,7 @@ jobs:
         if: always()
         run: |
           echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
-          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
+          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junit-xml="$GITHUB_WORKSPACE/result.xml"
 
       #- name: Publish Test Summary
       #  id: test_summary
@@ -121,8 +121,9 @@ jobs:
       - name: Test Summary
         uses: test-summary/action@v2
         with:
-          paths: "test/results/**/TEST-*.xml"
+          paths: "$GITHUB_WORKSPACE/result.xml"
           output: test-summary.md
+          verbose: true
         if: always()
 
       - name: Upload test summary
