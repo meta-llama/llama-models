@@ -573,7 +573,7 @@ In this section, we report the results for Llama 3.1 models on standard automati
    </td>
    <td>39.5
    </td>
-   <td>41.7
+   <td>46.7
    </td>
    <td>50.7
    </td>
