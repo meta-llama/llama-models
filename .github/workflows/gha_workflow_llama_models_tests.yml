@@ -25,6 +25,8 @@ on:
 
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.py"  
+  MODELS_PATH: '/data/llama3/models'
+  DEFAULT_MODEL: 'llama-31-8b'
 
 jobs:
   execute_workflow:
@@ -34,6 +36,26 @@ jobs:
         shell: bash # default shell to run all steps for a given job.
     runs-on: ${{ github.event.inputs.runner != '' && github.event.inputs.runner || 'llama-models-gha-runnes-gpu' }}
     steps:
+      - name: "[DEBUG] ls -la mounted EFS volume"
+        id: efs_volume
+        if: github.event.inputs.debug == 'true'
+        run: |
+            echo "========= Content of the EFS mount ============="
+            ls -la ${{ env.MODELS_PATH }}
+
+      - name: "Check if selected model exists in EFS volume"
+        id: check_if_model_exists
+        continue-on-error: true
+        run: |
+            if [ ! -d ${{ env.MODELS_PATH }}/${{ inputs.model }} ]; then
+                echo "Model '${{ inputs.model }}' does not exist in mounted EFS volume, Terminating workflow."
+                exit 1
+            fi
+            echo "Content of '${{ inputs.model }}' model"
+            ls -la ${{ env.MODELS_PATH }}/${{ inputs.model }}
+
+            exit 0
+
       - name: "[DEBUG] Get runner container OS information"
         id: os_info
         if: ${{ github.event.inputs.debug == 'true' }}
@@ -88,11 +110,24 @@ jobs:
         if: always()
         run: |
           echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
-          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py
+          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
 
-      - name: Publish Test Summary
-        id: test_summary
+      #- name: Publish Test Summary
+      #  id: test_summary
+      #  uses: test-summary/action@v2
+      #  with:
+      #    paths: "**/*.xml"
+      #  if: always()
+      - name: Test Summary
         uses: test-summary/action@v2
         with:
-          paths: "**/*.xml"
+          paths: "test/results/**/TEST-*.xml"
+          output: test-summary.md
+        if: always()
+
+      - name: Upload test summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-summary.md
         if: always()
