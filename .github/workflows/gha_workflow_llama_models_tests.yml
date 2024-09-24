@@ -97,6 +97,7 @@ jobs:
           pip install -r requirements.txt
           pip install blobfile
           pip install llama-models
+          pip install xmlrunner
 
       - name: Run Tokenizer tests
         id: run_tests_tokenizer
