@@ -25,6 +25,11 @@ class ModelArgs:
     max_batch_size: int = 32
     max_seq_len: int = 2048
 
+    # vision model params
+    vision_chunk_size: int = -1  # image resolution for image models
+    vision_max_num_chunks: int = 4
+    vision_num_cross_attention_layers: int = -1
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             if hasattr(self, k):

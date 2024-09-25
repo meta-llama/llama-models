@@ -12,6 +12,13 @@ from pydantic import BaseModel, Field, validator
 
 from typing_extensions import Annotated
 from ...datatypes import *  # noqa
+
+import base64
+import re
+from io import BytesIO
+
+from PIL import Image as PIL_Image
+
 from ...schema_utils import json_schema_type
 
 
@@ -33,11 +40,20 @@ class URL(BaseModel):
         return self.uri
 
 
+@json_schema_type
+class ImageMedia(BaseModel):
+    image: Union[PIL_Image.Image, URL]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
 InterleavedTextMedia = Union[
     str,
     # Specific modalities can be placed here, but not generic attachments
     # since models don't consume them in a generic way
-    List[Union[str]],
+    ImageMedia,
+    List[Union[str, ImageMedia]],
 ]
 
 
@@ -52,6 +68,35 @@ def interleaved_text_media_as_str(content: InterleavedTextMedia, sep: str = " ")
         return sep.join(_process(c) for c in content)
     else:
         return _process(content)
+
+
+def interleaved_text_media_localize(
+    content: InterleavedTextMedia,
+) -> InterleavedTextMedia:
+    def _localize_single(c: str | ImageMedia) -> str | ImageMedia:
+        if isinstance(c, ImageMedia):
+            # load image and return PIL version
+            img = c.image
+            if isinstance(img, URL):
+                if img.uri.startswith("file://"):
+                    img = PIL_Image.open(img.uri[len("file://") :]).convert("RGB")
+                elif img.uri.startswith("data"):
+                    match = re.match(r"data:image/(\w+);base64,(.+)", img.uri)
+                    if not match:
+                        raise ValueError("Invalid data URL format")
+                    image_type, image_data = match.groups()
+                    image_data = base64.b64decode(image_data)
+                    img = PIL_Image.open(BytesIO(image_data))
+                else:
+                    raise ValueError("Unsupported URL type")
+            return ImageMedia(image=img)
+        else:
+            return c
+
+    if isinstance(content, list):
+        return [_localize_single(c) for c in content]
+    else:
+        return _localize_single(content)
 
 
 @json_schema_type
@@ -105,6 +150,7 @@ class ToolParamDefinition(BaseModel):
     param_type: str
     description: Optional[str] = None
     required: Optional[bool] = True
+    default: Optional[Any] = None
 
 
 @json_schema_type
@@ -157,6 +203,7 @@ class ToolPromptFormat(Enum):
 
     json = "json"
     function_tag = "function_tag"
+    python_list = "python_list"
 
 
 @json_schema_type
