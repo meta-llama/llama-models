@@ -1,6 +1,7 @@
 name: "[ARC][CPU]  Run Llama-models Tests"
-on:
 
+on:
+  pull_request:
   workflow_dispatch:
     inputs:
       runner:
@@ -96,35 +97,36 @@ jobs:
           pip install -U pip setuptools
           pip install -r requirements.txt
           pip install blobfile
-          pip install llama-models
+          #pip install llama-models
           pip install xmlrunner
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-      - name: Run Tokenizer tests
-        id: run_tests_tokenizer
-        if: always()
-        run: |
-          echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
-          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/api/test_tokenizer.py
+      #- name: Run Tokenizer tests
+      #  id: run_tests_tokenizer
+      #  if: always()
+      #  run: |
+      #    echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
+      #    cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/api/test_tokenizer.py
 
-      - name: Run tool utils tests
-        id: run_tests_tool_utils
-        if: always()
+      #- name: Run tool utils tests
+      #  id: run_tests_tool_utils
+      #  if: always()
+      #  run: |
+      #    echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
+      #    cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
+
+      - name: "Running PyTest tests on Self-Hosted k8s ARC Runner"
+        id: pytest
         run: |
-          echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
-          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
+          echo "Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE}"
+          cd $GITHUB_WORKSPACE && python3 -m pytest --junitxml="$GITHUB_WORKSPACE/result.xml"
 
       #- name: Publish Test Summary
-      #  id: test_summary
-      #  uses: test-summary/action@v2
-      #  with:
-      #    paths: "**/*.xml"
-      #  if: always()
       - name: Test Summary
         uses: test-summary/action@v2
         with:
           paths: "$GITHUB_WORKSPACE/result.xml"
           output: test-summary.md
-          verbose: true
         if: always()
 
       - name: Upload test summary
