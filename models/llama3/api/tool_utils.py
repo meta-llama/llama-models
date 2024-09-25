@@ -4,12 +4,12 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
-
+import ast
 import json
 import re
 from typing import Optional, Tuple
 
-from .datatypes import BuiltinTool, ToolCall, ToolPromptFormat
+from .datatypes import BuiltinTool, RecursiveType, ToolCall, ToolPromptFormat
 
 BUILTIN_TOOL_PATTERN = r'\b(?P<tool_name>\w+)\.call\(query="(?P<query>[^"]*)"\)'
 CUSTOM_TOOL_CALL_PATTERN = re.compile(
@@ -25,6 +25,78 @@ def is_json(s):
     except json.JSONDecodeError:
         return False
     return True
+
+
+def is_valid_python_list(input_string):
+    """Check if the input string is a valid Python list of function calls"""
+    try:
+        # Try to parse the string
+        tree = ast.parse(input_string)
+
+        # Check if it's a single expression
+        if len(tree.body) != 1 or not isinstance(tree.body[0], ast.Expr):
+            return False
+
+        # Check if the expression is a list
+        expr = tree.body[0].value
+        if not isinstance(expr, ast.List):
+            return False
+
+        # Check if the list is empty
+        if len(expr.elts) == 0:
+            return False
+
+        # Check if all elements in the list are function calls
+        for element in expr.elts:
+            if not isinstance(element, ast.Call):
+                return False
+
+            # Check if the function call has a valid name
+            if not isinstance(element.func, ast.Name):
+                return False
+
+            # Check if all arguments are keyword arguments
+            if element.args or not all(
+                isinstance(arg, ast.keyword) for arg in element.keywords
+            ):
+                return False
+
+        return True
+
+    except SyntaxError:
+        # If parsing fails, it's not a valid Python expression
+        return False
+
+
+def parse_python_list_for_function_calls(input_string):
+    """
+    Parse a Python list of function calls and
+    return a list of tuples containing the function name and arguments
+    """
+    # Parse the string into an AST
+    tree = ast.parse(input_string)
+
+    # Ensure the input is a list
+    if not isinstance(tree.body[0], ast.Expr) or not isinstance(
+        tree.body[0].value, ast.List
+    ):
+        raise ValueError("Input must be a list of function calls")
+
+    result = []
+
+    # Iterate through each function call in the list
+    for node in tree.body[0].value.elts:
+        if isinstance(node, ast.Call):
+            function_name = node.func.id
+            function_args = {}
+
+            # Extract keyword arguments
+            for keyword in node.keywords:
+                function_args[keyword.arg] = ast.literal_eval(keyword.value)
+
+            result.append((function_name, function_args))
+
+    return result
 
 
 class ToolUtils:
@@ -76,6 +148,10 @@ class ToolUtils:
                 return function_name, args
             else:
                 return None
+        elif is_valid_python_list(message_body):
+            res = parse_python_list_for_function_calls(message_body)
+            # FIXME: Enable multiple tool calls
+            return res[0]
         else:
             return None
 
@@ -106,3 +182,22 @@ class ToolUtils:
             elif tool_prompt_format == ToolPromptFormat.function_tag:
                 args = json.dumps(t.arguments)
                 return f"<function={fname}>{args}</function>"
+
+            elif tool_prompt_format == ToolPromptFormat.python_list:
+
+                def format_value(value: RecursiveType) -> str:
+                    if isinstance(value, str):
+                        return f'"{value}"'
+                    elif isinstance(value, (int, float, bool)) or value is None:
+                        return str(value)
+                    elif isinstance(value, list):
+                        return f"[{', '.join(format_value(v) for v in value)}]"
+                    elif isinstance(value, dict):
+                        return f"{{{', '.join(f'{k}={format_value(v)}' for k, v in value.items())}}}"
+                    else:
+                        raise ValueError(f"Unsupported type: {type(value)}")
+
+                args_str = ", ".join(
+                    f"{k}={format_value(v)}" for k, v in t.arguments.items()
+                )
+                return f"[{fname}({args_str})]"

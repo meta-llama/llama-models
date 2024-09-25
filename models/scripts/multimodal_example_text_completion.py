@@ -12,7 +12,11 @@ from pathlib import Path
 from typing import Optional
 
 import fire
+
+from PIL import Image as PIL_Image
 from termcolor import cprint
+
+from models.llama3.api.datatypes import ImageMedia
 
 from models.llama3.reference_impl.generation import Llama
 
@@ -26,7 +30,7 @@ def run_main(
     top_p: float = 0.9,
     max_seq_len: int = 512,
     max_batch_size: int = 4,
-    max_gen_len: int = 64,
+    max_gen_len: Optional[int] = None,
     model_parallel_size: Optional[int] = None,
 ):
     tokenizer_path = str(THIS_DIR.parent / "llama3/api/tokenizer.model")
@@ -38,25 +42,31 @@ def run_main(
         model_parallel_size=model_parallel_size,
     )
 
-    prompts = [
+    with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
+        img = PIL_Image.open(f).convert("RGB")
+
+    with open(THIS_DIR / "resources/pasta.jpeg", "rb") as f:
+        img2 = PIL_Image.open(f).convert("RGB")
+
+    interleaved_contents = [
+        # text only
         "The color of the sky is blue but sometimes it can also be",
-        """\
-apple is pomme,
-bannana is banane,
-cherry is""",
-        "1, 2, 3, 5, 8, 13",
-        "ba ba black sheep, have you any wool?",
+        # image understanding
+        [
+            ImageMedia(image=img),
+            "If I had to write a haiku for this one",
+        ],
     ]
-    for prompt in prompts:
+
+    for content in interleaved_contents:
         result = generator.text_completion(
-            prompt,
-            temperature=0.6,
-            top_p=0.9,
+            content,
             max_gen_len=max_gen_len,
-            logprobs=False,
+            temperature=temperature,
+            top_p=top_p,
         )
 
-        cprint(f"{prompt}", end="")
+        cprint(f"{content}", end="")
         cprint(f"{result.generation}", color="yellow")
         print("\n==================================\n")
 

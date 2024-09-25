@@ -2,3 +2,4 @@ PyYAML
 jinja2
 tiktoken
 pydantic
+Pillow

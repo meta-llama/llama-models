@@ -88,6 +88,7 @@ class Tokenizer:
             "<|eom_id|>",  # end of message
             "<|eot_id|>",  # end of turn
             "<|python_tag|>",
+            "<|image|>",
         ]
         reserved_tokens = [
             f"<|reserved_special_token_{2 + i}|>"
@@ -114,6 +115,7 @@ class Tokenizer:
         self.python_tag_id = self.special_tokens["<|python_tag|>"]
         self.pad_id: int = self.special_tokens["<|finetune_right_pad_id|>"]
         self.stop_tokens = [
+            self.eos_id,
             self.special_tokens["<|eom_id|>"],
             self.special_tokens["<|eot_id|>"],
         ]

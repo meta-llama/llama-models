@@ -12,7 +12,10 @@ from pathlib import Path
 from typing import Optional
 
 import fire
-from termcolor import cprint
+
+from PIL import Image as PIL_Image
+
+from models.llama3.api.datatypes import ImageMedia, UserMessage
 
 from models.llama3.reference_impl.generation import Llama
 
@@ -26,7 +29,7 @@ def run_main(
     top_p: float = 0.9,
     max_seq_len: int = 512,
     max_batch_size: int = 4,
-    max_gen_len: int = 64,
+    max_gen_len: Optional[int] = None,
     model_parallel_size: Optional[int] = None,
 ):
     tokenizer_path = str(THIS_DIR.parent / "llama3/api/tokenizer.model")
@@ -38,26 +41,44 @@ def run_main(
         model_parallel_size=model_parallel_size,
     )
 
-    prompts = [
-        "The color of the sky is blue but sometimes it can also be",
-        """\
-apple is pomme,
-bannana is banane,
-cherry is""",
-        "1, 2, 3, 5, 8, 13",
-        "ba ba black sheep, have you any wool?",
+    # image understanding
+    dialogs = []
+    with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
+        img = PIL_Image.open(f).convert("RGB")
+
+    with open(THIS_DIR / "resources/pasta.jpeg", "rb") as f:
+        img2 = PIL_Image.open(f).convert("RGB")
+
+    dialogs = [
+        [
+            UserMessage(
+                content=[
+                    ImageMedia(image=img),
+                    "Describe this image in two sentences",
+                ],
+            )
+        ],
     ]
-    for prompt in prompts:
-        result = generator.text_completion(
-            prompt,
-            temperature=0.6,
-            top_p=0.9,
+    # text only
+    dialogs += [
+        [UserMessage(content="what is the recipe of mayonnaise in two sentences?")],
+    ]
+
+    for dialog in dialogs:
+        result = generator.chat_completion(
+            dialog,
             max_gen_len=max_gen_len,
-            logprobs=False,
+            temperature=temperature,
+            top_p=top_p,
         )
 
-        cprint(f"{prompt}", end="")
-        cprint(f"{result.generation}", color="yellow")
+        for msg in dialog:
+            print(f"{msg.role.capitalize()}: {msg.content}\n")
+
+        out_message = result.generation
+        print(f"> {out_message.role.capitalize()}: {out_message.content}")
+        for t in out_message.tool_calls:
+            print(f"  Tool call: {t.tool_name} ({t.arguments})")
         print("\n==================================\n")
 
 
