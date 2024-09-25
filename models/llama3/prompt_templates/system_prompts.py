@@ -167,7 +167,13 @@ class FunctionTagCustomToolGenerator(PromptTemplateGeneratorBase):
             {#- manually setting up JSON because jinja sorts keys in unexpected ways -#}
             {%- set tname = t.tool_name -%}
             {%- set tdesc = t.description -%}
-            {%- set tparams = t.parameters | tojson -%}
+            {%- set modified_params = t.parameters.copy() -%}
+            {%- for key, value in modified_params.items() -%}
+                {%- if 'default' in value -%}
+                    {%- set _ = value.pop('default', None) -%}
+                {%- endif -%}
+            {%- endfor -%}
+            {%- set tparams = modified_params | tojson -%}
             Use the function '{{ tname }}' to '{{ tdesc }}':
             {"name": "{{tname}}", "description": "{{tdesc}}", "parameters": {{tparams}}}
 
@@ -206,6 +212,82 @@ class FunctionTagCustomToolGenerator(PromptTemplateGeneratorBase):
                             param_type="str",
                             description="The genre of the songs to return",
                             required=False,
+                        ),
+                    },
+                ),
+            ]
+        ]
+
+
+class PythonListCustomToolGenerator(PromptTemplateGeneratorBase):  # noqa: N801
+
+    def gen(self, custom_tools: List[ToolDefinition]) -> PromptTemplate:
+        template_str = textwrap.dedent(
+            """
+            You are an expert in composing functions. You are given a question and a set of possible functions.
+            Based on the question, you will need to make one or more function/tool calls to achieve the purpose.
+            If none of the function can be used, point it out. If the given question lacks the parameters required by the function,
+            also point it out. You should only return the function call in tools call sections.
+
+            If you decide to invoke any of the function(s), you MUST put it in the format of [func_name1(params_name1=params_value1, params_name2=params_value2...), func_name2(params)]
+            You SHOULD NOT include any other text in the response.
+
+            Here is a list of functions in JSON format that you can invoke.
+
+            [
+                {% for t in tools -%}
+                {# manually setting up JSON because jinja sorts keys in unexpected ways -#}
+                {%- set tname = t.tool_name -%}
+                {%- set tdesc = t.description -%}
+                {%- set tparams = t.parameters -%}
+                {%- set required_params = [] -%}
+                {%- for name, param in tparams.items() if param.required == true -%}
+                    {%- set _ = required_params.append(name) -%}
+                {%- endfor -%}
+                {
+                    "name": "{{tname}}",
+                    "description": "{{tdesc}}",
+                    "parameters": {
+                        "type": "dict",
+                        "required": {{ required_params | tojson }},
+                        "properties": {
+                            {%- for name, param in tparams.items() %}
+                            "{{name}}": {
+                                "type": "{{param.param_type}}",
+                                "description": "{{param.description}}"{% if param.default %},
+                                "default": "{{param.default}}"{% endif %}
+                            }{% if not loop.last %},{% endif %}
+                            {%- endfor %}
+                        }
+                    }
+                }{% if not loop.last %},
+                {% endif -%}
+                {%- endfor %}
+            ]
+            """
+        )
+        return PromptTemplate(
+            template_str.strip("\n"),
+            {"tools": [t.model_dump() for t in custom_tools]},
+        )
+
+    def data_examples(self) -> List[List[ToolDefinition]]:
+        return [
+            [
+                ToolDefinition(
+                    tool_name="get_weather",
+                    description="Get weather info for places",
+                    parameters={
+                        "city": ToolParamDefinition(
+                            param_type="string",
+                            description="The name of the city to get the weather for",
+                            required=True,
+                        ),
+                        "metric": ToolParamDefinition(
+                            param_type="string",
+                            description="The metric for weather. Options are: celsius, fahrenheit",
+                            required=False,
+                            default="celsius",
                         ),
                     },
                 ),

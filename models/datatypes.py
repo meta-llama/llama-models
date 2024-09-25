@@ -49,12 +49,15 @@ class CheckpointQuantizationFormat(Enum):
 
     int8 = "int8"
 
+    int4 = "int4"
+
 
 @json_schema_type
 class ModelFamily(Enum):
     llama2 = "llama2"
     llama3 = "llama3"
     llama3_1 = "llama3_1"
+    llama3_2 = "llama3_2"
     safety = "safety"
 
 
@@ -63,63 +66,100 @@ class CoreModelId(Enum):
     """Each of these models is a unique "SKU". These root models can be served in various garbs (especially by quantizing them)"""
 
     # Llama 2 family
-    meta_llama2_7b = "Llama-2-7b"
-    meta_llama2_13b = "Llama-2-13b"
-    meta_llama2_70b = "Llama-2-70b"
-    meta_llama2_7b_chat = "Llama-2-7b-chat"
-    meta_llama2_13b_chat = "Llama-2-13b-chat"
-    meta_llama2_70b_chat = "Llama-2-70b-chat"
+    llama2_7b = "Llama-2-7b"
+    llama2_13b = "Llama-2-13b"
+    llama2_70b = "Llama-2-70b"
+    llama2_7b_chat = "Llama-2-7b-chat"
+    llama2_13b_chat = "Llama-2-13b-chat"
+    llama2_70b_chat = "Llama-2-70b-chat"
 
     # Llama 3 family
-    meta_llama3_8b = "Llama-3-8B"
-    meta_llama3_70b = "Llama-3-70B"
-    meta_llama3_8b_instruct = "Llama-3-8B-Instruct"
-    meta_llama3_70b_instruct = "Llama-3-70B-Instruct"
+    llama3_8b = "Llama-3-8B"
+    llama3_70b = "Llama-3-70B"
+    llama3_8b_instruct = "Llama-3-8B-Instruct"
+    llama3_70b_instruct = "Llama-3-70B-Instruct"
 
     # Llama 3.1 family
-    meta_llama3_1_8b = "Meta-Llama3.1-8B"
-    meta_llama3_1_70b = "Meta-Llama3.1-70B"
-    meta_llama3_1_405b = "Meta-Llama3.1-405B"
-    meta_llama3_1_8b_instruct = "Meta-Llama3.1-8B-Instruct"
-    meta_llama3_1_70b_instruct = "Meta-Llama3.1-70B-Instruct"
-    meta_llama3_1_405b_instruct = "Meta-Llama3.1-405B-Instruct"
+    llama3_1_8b = "Llama3.1-8B"
+    llama3_1_70b = "Llama3.1-70B"
+    llama3_1_405b = "Llama3.1-405B"
+    llama3_1_8b_instruct = "Llama3.1-8B-Instruct"
+    llama3_1_70b_instruct = "Llama3.1-70B-Instruct"
+    llama3_1_405b_instruct = "Llama3.1-405B-Instruct"
+
+    # Llama 3.2 family
+    llama3_2_1b = "Llama3.2-1B"
+    llama3_2_3b = "Llama3.2-3B"
+    llama3_2_1b_instruct = "Llama3.2-1B-Instruct"
+    llama3_2_3b_instruct = "Llama3.2-3B-Instruct"
+    llama3_2_11b_vision = "Llama3.2-11B-Vision"
+    llama3_2_90b_vision = "Llama3.2-90B-Vision"
+    llama3_2_11b_vision_instruct = "Llama3.2-11B-Vision-Instruct"
+    llama3_2_90b_vision_instruct = "Llama3.2-90B-Vision-Instruct"
 
     # Safety models
     llama_guard_3_8b = "Llama-Guard-3-8B"
     prompt_guard_86m = "Prompt-Guard-86M"
     llama_guard_2_8b = "Llama-Guard-2-8B"
+    llama_guard_3_11b_vision = "Llama-Guard-3-11B-Vision"
+    llama_guard_3_1b = "Llama-Guard-3-1B"
+
+
+def is_multimodal(model_id) -> bool:
+    if model_id in [
+        CoreModelId.llama3_2_11b_vision,
+        CoreModelId.llama3_2_90b_vision,
+        CoreModelId.llama3_2_11b_vision_instruct,
+        CoreModelId.llama3_2_90b_vision_instruct,
+    ]:
+        return True
+    else:
+        return False
 
 
 def model_family(model_id) -> ModelFamily:
     if model_id in [
-        CoreModelId.meta_llama2_7b,
-        CoreModelId.meta_llama2_13b,
-        CoreModelId.meta_llama2_70b,
-        CoreModelId.meta_llama2_7b_chat,
-        CoreModelId.meta_llama2_13b_chat,
-        CoreModelId.meta_llama2_70b_chat,
+        CoreModelId.llama2_7b,
+        CoreModelId.llama2_13b,
+        CoreModelId.llama2_70b,
+        CoreModelId.llama2_7b_chat,
+        CoreModelId.llama2_13b_chat,
+        CoreModelId.llama2_70b_chat,
     ]:
         return ModelFamily.llama2
     elif model_id in [
-        CoreModelId.meta_llama3_8b,
-        CoreModelId.meta_llama3_70b,
-        CoreModelId.meta_llama3_8b_instruct,
-        CoreModelId.meta_llama3_70b_instruct,
+        CoreModelId.llama3_8b,
+        CoreModelId.llama3_70b,
+        CoreModelId.llama3_8b_instruct,
+        CoreModelId.llama3_70b_instruct,
     ]:
         return ModelFamily.llama3
     elif model_id in [
-        CoreModelId.meta_llama3_1_8b,
-        CoreModelId.meta_llama3_1_70b,
-        CoreModelId.meta_llama3_1_405b,
-        CoreModelId.meta_llama3_1_8b_instruct,
-        CoreModelId.meta_llama3_1_70b_instruct,
-        CoreModelId.meta_llama3_1_405b_instruct,
+        CoreModelId.llama3_1_8b,
+        CoreModelId.llama3_1_70b,
+        CoreModelId.llama3_1_405b,
+        CoreModelId.llama3_1_8b_instruct,
+        CoreModelId.llama3_1_70b_instruct,
+        CoreModelId.llama3_1_405b_instruct,
     ]:
         return ModelFamily.llama3_1
+    elif model_id in [
+        CoreModelId.llama3_2_1b,
+        CoreModelId.llama3_2_3b,
+        CoreModelId.llama3_2_1b_instruct,
+        CoreModelId.llama3_2_3b_instruct,
+        CoreModelId.llama3_2_11b_vision,
+        CoreModelId.llama3_2_90b_vision,
+        CoreModelId.llama3_2_11b_vision_instruct,
+        CoreModelId.llama3_2_90b_vision_instruct,
+    ]:
+        return ModelFamily.llama3_2
     elif model_id in [
         CoreModelId.llama_guard_3_8b,
         CoreModelId.prompt_guard_86m,
         CoreModelId.llama_guard_2_8b,
+        CoreModelId.llama_guard_3_11b_vision,
+        CoreModelId.llama_guard_3_1b,
     ]:
         return ModelFamily.safety
     else:
@@ -180,6 +220,7 @@ class Model(BaseModel):
     def is_featured(self) -> bool:
         return self.model_family in [
             ModelFamily.llama3_1,
+            ModelFamily.llama3_2,
             ModelFamily.safety,
         ]
 
@@ -193,9 +234,13 @@ class Model(BaseModel):
             return 8192
         elif self.model_family == ModelFamily.llama3_1:
             return 131072
+        elif self.model_family == ModelFamily.llama3_2:
+            return 131072
         elif self.core_model_id in [
             CoreModelId.llama_guard_3_8b,
             CoreModelId.prompt_guard_86m,
+            CoreModelId.llama_guard_3_11b_vision,
+            CoreModelId.llama_guard_3_1b,
         ]:
             return 131072
         else:

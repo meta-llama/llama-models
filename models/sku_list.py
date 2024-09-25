@@ -32,9 +32,14 @@ def resolve_model(descriptor: str) -> Optional[Model]:
     return None
 
 
-@lru_cache
 def all_registered_models() -> List[Model]:
-    return llama2_family() + llama3_family() + llama3_1_family() + safety_models()
+    return (
+        llama2_family()
+        + llama3_family()
+        + llama3_1_family()
+        + llama3_2_family()
+        + safety_models()
+    )
 
 
 def recommended_sampling_params() -> SamplingParams:
@@ -66,10 +71,17 @@ def llama3_1_family() -> List[Model]:
     ]
 
 
+def llama3_2_family() -> List[Model]:
+    return [
+        *llama3_2_base_models(),
+        *llama3_2_instruct_models(),
+    ]
+
+
 def llama2_base_models() -> List[Model]:
     return [
         Model(
-            core_model_id=CoreModelId.meta_llama2_7b,
+            core_model_id=CoreModelId.llama2_7b,
             is_default_variant=True,
             description="Llama 2 7b model",
             huggingface_repo="meta-llama/Llama-2-7b",
@@ -89,7 +101,7 @@ def llama2_base_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama2_13b,
+            core_model_id=CoreModelId.llama2_13b,
             is_default_variant=True,
             description="Llama 2 13b model",
             huggingface_repo="meta-llama/Llama-2-13b",
@@ -109,7 +121,7 @@ def llama2_base_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama2_70b,
+            core_model_id=CoreModelId.llama2_70b,
             is_default_variant=True,
             description="Llama 2 70b model",
             huggingface_repo="meta-llama/Llama-2-70b",
@@ -134,11 +146,10 @@ def llama2_base_models() -> List[Model]:
 def llama3_base_models() -> List[Model]:
     return [
         Model(
-            core_model_id=CoreModelId.meta_llama3_8b,
+            core_model_id=CoreModelId.llama3_8b,
             is_default_variant=True,
             description="Llama 3 8b model",
-            huggingface_repo="meta-llama/Meta-Llama-3-8B",
-            recommended_sampling_params=recommended_sampling_params(),
+            huggingface_repo="meta-llama/Llama-3-8B",
             arch_args={
                 "dim": 4096,
                 "n_layers": 32,
@@ -154,10 +165,10 @@ def llama3_base_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_70b,
+            core_model_id=CoreModelId.llama3_70b,
             is_default_variant=True,
             description="Llama 3 70b model",
-            huggingface_repo="meta-llama/Meta-Llama-3-70B",
+            huggingface_repo="meta-llama/Llama-3-70B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 8192,
@@ -179,10 +190,10 @@ def llama3_base_models() -> List[Model]:
 def llama3_1_base_models() -> List[Model]:
     return [
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_8b,
+            core_model_id=CoreModelId.llama3_1_8b,
             is_default_variant=True,
             description="Llama 3.1 8b model",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-8B",
+            huggingface_repo="meta-llama/Llama-3.1-8B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 4096,
@@ -199,10 +210,10 @@ def llama3_1_base_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_70b,
+            core_model_id=CoreModelId.llama3_1_70b,
             is_default_variant=True,
             description="Llama 3.1 70b model",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-70B",
+            huggingface_repo="meta-llama/Llama-3.1-70B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 8192,
@@ -219,10 +230,10 @@ def llama3_1_base_models() -> List[Model]:
             pth_file_count=8,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_405b,
+            core_model_id=CoreModelId.llama3_1_405b,
             is_default_variant=False,
             description="Llama 3.1 405b model (BF16 weights)",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
+            huggingface_repo="meta-llama/Llama-3.1-405B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 16384,
@@ -239,10 +250,10 @@ def llama3_1_base_models() -> List[Model]:
             pth_file_count=8,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_405b,
+            core_model_id=CoreModelId.llama3_1_405b,
             is_default_variant=True,
             description="Llama 3.1 405b model (FP8 quantized)",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-405B-FP8",
+            huggingface_repo="meta-llama/Llama-3.1-405B-FP8",
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -260,10 +271,10 @@ def llama3_1_base_models() -> List[Model]:
             pth_file_count=8,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_405b,
+            core_model_id=CoreModelId.llama3_1_405b,
             is_default_variant=False,
             description="Llama 3.1 405b model (BF16 weights for mp16)",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-405B",
+            huggingface_repo="meta-llama/Llama-3.1-405B",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 16384,
@@ -282,10 +293,101 @@ def llama3_1_base_models() -> List[Model]:
     ]
 
 
+def llama3_2_base_models() -> List[Model]:
+    return [
+        Model(
+            core_model_id=CoreModelId.llama3_2_1b,
+            is_default_variant=True,
+            description="Llama 3.2 1b model",
+            huggingface_repo="meta-llama/Llama-3.2-1B",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 2048,
+                "n_layers": 16,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.5,
+                "multiple_of": 256,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama3_2_3b,
+            is_default_variant=True,
+            description="Llama 3.2 3b model",
+            huggingface_repo="meta-llama/Llama-3.2-3B",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 3072,
+                "n_layers": 28,
+                "n_heads": 24,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.0,
+                "multiple_of": 256,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama3_2_11b_vision,
+            is_default_variant=True,
+            description="Llama 3.2 11b vision model",
+            huggingface_repo="meta-llama/Llama-3.2-11B-Vision",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 4096,
+                "n_layers": 32,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 1024,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+                "vision_chunk_size": 448,
+                "vision_max_num_chunks": 4,
+                "vision_num_cross_attention_layers": 8,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama3_2_90b_vision,
+            is_default_variant=True,
+            description="Llama 3.2 90b vision model",
+            huggingface_repo="meta-llama/Llama-3.2-90B-Vision",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 8192,
+                "n_layers": 80,
+                "n_heads": 64,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 4096,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+                "vision_chunk_size": 560,
+                "vision_max_num_chunks": 4,
+                "vision_num_cross_attention_layers": 20,
+            },
+            pth_file_count=8,
+        ),
+    ]
+
+
 def llama2_instruct_models() -> List[Model]:
     return [
         Model(
-            core_model_id=CoreModelId.meta_llama2_7b_chat,
+            core_model_id=CoreModelId.llama2_7b_chat,
             is_default_variant=True,
             description="Llama 2 7b chat model",
             huggingface_repo="meta-llama/Llama-2-7b-chat",
@@ -305,7 +407,7 @@ def llama2_instruct_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama2_13b_chat,
+            core_model_id=CoreModelId.llama2_13b_chat,
             is_default_variant=True,
             description="Llama 2 13b chat model",
             huggingface_repo="meta-llama/Llama-2-13b-chat",
@@ -325,7 +427,7 @@ def llama2_instruct_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama2_70b_chat,
+            core_model_id=CoreModelId.llama2_70b_chat,
             is_default_variant=True,
             description="Llama 2 70b chat model",
             huggingface_repo="meta-llama/Llama-2-70b-chat",
@@ -350,10 +452,10 @@ def llama2_instruct_models() -> List[Model]:
 def llama3_instruct_models() -> List[Model]:
     return [
         Model(
-            core_model_id=CoreModelId.meta_llama3_8b_instruct,
+            core_model_id=CoreModelId.llama3_8b_instruct,
             is_default_variant=True,
             description="Llama 3 8b instruct model",
-            huggingface_repo="meta-llama/Meta-Llama-3-8B-Instruct",
+            huggingface_repo="meta-llama/Llama-3-8B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 4096,
@@ -370,10 +472,10 @@ def llama3_instruct_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_70b_instruct,
+            core_model_id=CoreModelId.llama3_70b_instruct,
             is_default_variant=True,
             description="Llama 3 70b instruct model",
-            huggingface_repo="meta-llama/Meta-Llama-3-70B-Instruct",
+            huggingface_repo="meta-llama/Llama-3-70B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 8192,
@@ -395,10 +497,10 @@ def llama3_instruct_models() -> List[Model]:
 def llama3_1_instruct_models() -> List[Model]:
     return [
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_8b_instruct,
+            core_model_id=CoreModelId.llama3_1_8b_instruct,
             is_default_variant=True,
             description="Llama 3.1 8b instruct model",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-8B-Instruct",
+            huggingface_repo="meta-llama/Llama-3.1-8B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 4096,
@@ -415,10 +517,10 @@ def llama3_1_instruct_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_70b_instruct,
+            core_model_id=CoreModelId.llama3_1_70b_instruct,
             is_default_variant=True,
             description="Llama 3.1 70b instruct model",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-70B-Instruct",
+            huggingface_repo="meta-llama/Llama-3.1-70B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 8192,
@@ -435,10 +537,10 @@ def llama3_1_instruct_models() -> List[Model]:
             pth_file_count=8,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
+            core_model_id=CoreModelId.llama3_1_405b_instruct,
             is_default_variant=False,
             description="Llama 3.1 405b instruct model (BF16 weights)",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
+            huggingface_repo="meta-llama/Llama-3.1-405B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 16384,
@@ -455,10 +557,10 @@ def llama3_1_instruct_models() -> List[Model]:
             pth_file_count=8,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
+            core_model_id=CoreModelId.llama3_1_405b_instruct,
             is_default_variant=True,
             description="Llama 3.1 405b instruct model (FP8 quantized)",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
+            huggingface_repo="meta-llama/Llama-3.1-405B-Instruct-FP8",
             quantization_format=CheckpointQuantizationFormat.fp8_mixed,
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
@@ -476,10 +578,10 @@ def llama3_1_instruct_models() -> List[Model]:
             pth_file_count=8,
         ),
         Model(
-            core_model_id=CoreModelId.meta_llama3_1_405b_instruct,
+            core_model_id=CoreModelId.llama3_1_405b_instruct,
             is_default_variant=False,
             description="Llama 3.1 405b instruct model (BF16 weights for mp16)",
-            huggingface_repo="meta-llama/Meta-Llama-3.1-405B-Instruct",
+            huggingface_repo="meta-llama/Llama-3.1-405B-Instruct",
             recommended_sampling_params=recommended_sampling_params(),
             arch_args={
                 "dim": 16384,
@@ -498,9 +600,163 @@ def llama3_1_instruct_models() -> List[Model]:
     ]
 
 
+def llama3_2_instruct_models() -> List[Model]:
+    return [
+        Model(
+            core_model_id=CoreModelId.llama3_2_1b_instruct,
+            is_default_variant=True,
+            description="Llama 3.2 1b instruct model",
+            huggingface_repo="meta-llama/Llama-3.2-1B-Instruct",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 2048,
+                "n_layers": 16,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.5,
+                "multiple_of": 256,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama3_2_3b_instruct,
+            is_default_variant=True,
+            description="Llama 3.2 3b instruct model",
+            huggingface_repo="meta-llama/Llama-3.2-3B-Instruct",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 3072,
+                "n_layers": 28,
+                "n_heads": 24,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.0,
+                "multiple_of": 256,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama3_2_11b_vision_instruct,
+            is_default_variant=True,
+            description="Llama 3.2 11b vision instruct model",
+            huggingface_repo="meta-llama/Llama-3.2-11B-Vision-Instruct",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 4096,
+                "n_layers": 32,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 1024,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+                "vision_chunk_size": 448,
+                "vision_max_num_chunks": 4,
+                "vision_num_cross_attention_layers": 8,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama3_2_90b_vision_instruct,
+            is_default_variant=True,
+            description="Llama 3.2 90b vision instruct model",
+            huggingface_repo="meta-llama/Llama-3.2-90B-Vision-Instruct",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 8192,
+                "n_layers": 80,
+                "n_heads": 64,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 4096,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+                "vision_chunk_size": 560,
+                "vision_max_num_chunks": 4,
+                "vision_num_cross_attention_layers": 20,
+            },
+            pth_file_count=8,
+        ),
+    ]
+
+
 @lru_cache
 def safety_models() -> List[Model]:
     return [
+        Model(
+            core_model_id=CoreModelId.llama_guard_3_11b_vision,
+            is_default_variant=True,
+            description="Llama Guard v3 11b vision system safety model",
+            huggingface_repo="meta-llama/Llama-Guard-3-11B-Vision",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 4096,
+                "n_layers": 32,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 1024,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+                "vision_chunk_size": 560,
+                "vision_max_num_chunks": 4,
+                "vision_num_cross_attention_layers": 8,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama_guard_3_1b,
+            is_default_variant=False,
+            description="Llama Guard v3 1b 'int4' quantized system safety model",
+            huggingface_repo="meta-llama/Llama-Guard-3-1B-INT4",
+            quantization_format=CheckpointQuantizationFormat.int4,
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 2048,
+                "n_layers": 12,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "rope_freq_base": 500000.0,
+                "norm_eps": 1e-05,
+                "hidden_dim": 6400,
+                "use_scaled_rope": True,
+            },
+            pth_file_count=1,
+        ),
+        Model(
+            core_model_id=CoreModelId.llama_guard_3_1b,
+            is_default_variant=True,
+            description="Llama Guard v3 1b system safety model",
+            huggingface_repo="meta-llama/Llama-Guard-3-1B",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 2048,
+                "n_layers": 16,
+                "n_heads": 32,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.5,
+                "multiple_of": 256,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
+            },
+            pth_file_count=1,
+        ),
         Model(
             core_model_id=CoreModelId.llama_guard_3_8b,
             is_default_variant=True,
@@ -536,7 +792,7 @@ def safety_models() -> List[Model]:
                 "norm_eps": 1e-05,
                 "rope_theta": 500000.0,
                 "use_scaled_rope": False,
-                "vocab_size": 128256,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
             },
             pth_file_count=1,
         ),
@@ -552,7 +808,7 @@ def safety_models() -> List[Model]:
             core_model_id=CoreModelId.llama_guard_2_8b,
             is_default_variant=True,
             description="Llama Guard v2 8b system safety model",
-            huggingface_repo="meta-llama/Meta-Llama-Guard-2-8B",
+            huggingface_repo="meta-llama/Llama-Guard-2-8B",
             arch_args={
                 "dim": 4096,
                 "n_layers": 32,
@@ -581,25 +837,25 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
     """Information needed to download model from llamameta.net"""
 
     pth_count = model.pth_file_count
-    if model.core_model_id == CoreModelId.meta_llama3_1_405b:
+    if model.core_model_id == CoreModelId.llama3_1_405b:
         if pth_count == 16:
-            folder = "Meta-Llama-3.1-405B-MP16"
+            folder = "Llama-3.1-405B-MP16"
         elif model.quantization_format == CheckpointQuantizationFormat.fp8_mixed:
-            folder = "Meta-Llama-3.1-405B"
+            folder = "Llama-3.1-405B"
         else:
-            folder = "Meta-Llama-3.1-405B-MP8"
-    elif model.core_model_id == CoreModelId.meta_llama3_1_405b_instruct:
+            folder = "Llama-3.1-405B-MP8"
+    elif model.core_model_id == CoreModelId.llama3_1_405b_instruct:
         if pth_count == 16:
-            folder = "Meta-Llama-3.1-405B-Instruct-MP16"
+            folder = "Llama-3.1-405B-Instruct-MP16"
         elif model.quantization_format == CheckpointQuantizationFormat.fp8_mixed:
-            folder = "Meta-Llama-3.1-405B-Instruct"
+            folder = "Llama-3.1-405B-Instruct"
         else:
-            folder = "Meta-Llama-3.1-405B-Instruct-MP8"
+            folder = "Llama-3.1-405B-Instruct-MP8"
     elif model.core_model_id == CoreModelId.llama_guard_3_8b:
         if model.quantization_format == CheckpointQuantizationFormat.int8:
-            folder = "Meta-Llama-Guard-3-8B-INT8-HF"
+            folder = "Llama-Guard-3-8B-INT8-HF"
         else:
-            folder = "Meta-Llama-Guard-3-8B"
+            folder = "Llama-Guard-3-8B"
     elif model.core_model_id == CoreModelId.prompt_guard_86m:
         folder = "Prompt-Guard"
     elif model.core_model_id == CoreModelId.llama_guard_2_8b:
@@ -634,6 +890,18 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
                 "tokenizer_config.json",
             ]
         )
+    elif (
+        model.core_model_id == CoreModelId.llama_guard_3_1b
+        and model.quantization_format == CheckpointQuantizationFormat.int4
+    ):
+        files.extend(
+            [
+                "llama_guard_3_1b_pruned_xnnpack.pte",
+                "example-prompt.txt",
+                "params.json",
+                "tokenizer.model",
+            ]
+        )
     else:
         files.extend(
             [
@@ -655,8 +923,8 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
 # Sadness because Cloudfront rejects our HEAD requests to find Content-Length
 def llama_meta_pth_size(model: Model) -> int:
     if model.core_model_id not in (
-        CoreModelId.meta_llama3_1_405b,
-        CoreModelId.meta_llama3_1_405b_instruct,
+        CoreModelId.llama3_1_405b,
+        CoreModelId.llama3_1_405b_instruct,
     ):
         return 0
 

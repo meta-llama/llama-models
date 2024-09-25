@@ -71,6 +71,12 @@ TEMPLATES = [
         "user_default",
     ),
     Template(
+        "user",
+        "user-images",
+        "user_images",
+    ),
+    Template("user", "user-interleaved-images", "user_interleaved_images"),
+    Template(
         "assistant",
         "assistant-builtin-tool-call",
         "assistant_builtin_tool_call",
