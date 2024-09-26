@@ -98,10 +98,10 @@ jobs:
           pip install -U pip setuptools
           pip install -r requirements.txt
           pip install blobfile
-          #pip install llama-models
+          pip install llama-models
           pip install xmlrunner
           pip install pytest 
-          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          #export PYTHONPATH=$PYTHONPATH:$(pwd)
 
       #- name: Run Tokenizer tests
       #  id: run_tests_tokenizer
@@ -124,16 +124,21 @@ jobs:
           cd ${{ github.workspace }} && python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
 
       #- name: Publish Test Summary
-      - name: Test Summary
-        uses: test-summary/action@v2
-        with:
-          paths: "${{ github.workspace }}/result.xml"
-          output: test-summary.md
-        if: always()
+      #- name: Test Summary
+      #  uses: test-summary/action@v2
+      #  with:
+      #    paths: "${{ github.workspace }}/result.xml"
+      #    output: test-summary.md
+      #  if: always()
 
-      - name: Upload test summary
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-summary
-          path: test-summary.md
-        if: always()
+      #- name: Upload test summary
+      #  uses: actions/upload-artifact@v3
+      #  with:
+      #    name: test-summary
+      #    path: test-summary.md
+      #  if: always()
+      - name: Test Summary
+      uses: test-summary/action@v2
+      with:
+        paths: "${{ github.workspace }}/TEST-*.xml"
+      if: always()
