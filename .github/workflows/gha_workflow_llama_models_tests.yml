@@ -140,5 +140,5 @@ jobs:
       - name: Test Summary
       uses: test-summary/action@v2
       with:
-        paths: "${{ github.workspace }}/TEST-*.xml"
+        paths: "${{ github.workspace }}/result.xml"
       if: always()
