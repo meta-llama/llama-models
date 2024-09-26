@@ -100,6 +100,7 @@ jobs:
           pip install blobfile
           #pip install llama-models
           pip install xmlrunner
+          pip install pytest 
           export PYTHONPATH=$PYTHONPATH:$(pwd)
 
       #- name: Run Tokenizer tests
