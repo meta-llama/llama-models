@@ -39,6 +39,7 @@ jobs:
     steps:
       - name: "[DEBUG] ls -la mounted EFS volume"
         id: efs_volume
+        continue-on-error: true
         if: github.event.inputs.debug == 'true'
         run: |
             echo "========= Content of the EFS mount ============="
@@ -118,14 +119,14 @@ jobs:
       - name: "Running PyTest tests on Self-Hosted k8s ARC Runner"
         id: pytest
         run: |
-          echo "Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE}"
-          cd $GITHUB_WORKSPACE && python3 -m pytest --junitxml="$GITHUB_WORKSPACE/result.xml"
+          echo "Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
+          cd ${{ github.workspace }} && python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
 
       #- name: Publish Test Summary
       - name: Test Summary
         uses: test-summary/action@v2
         with:
-          paths: "$GITHUB_WORKSPACE/result.xml"
+          paths: "${{ github.workspace }}/result.xml"
           output: test-summary.md
         if: always()
 
