@@ -127,7 +127,6 @@ jobs:
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
-          output: test-summary.md
         if: always()
 
       #- name: Upload test summary
