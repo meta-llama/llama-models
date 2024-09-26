@@ -137,8 +137,3 @@ jobs:
       #    name: test-summary
       #    path: test-summary.md
       #  if: always()
-      - name: Test Summary
-      uses: test-summary/action@v2
-      with:
-        paths: "${{ github.workspace }}/result.xml"
-      if: always()
