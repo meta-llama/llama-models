@@ -123,6 +123,12 @@ jobs:
           echo "Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
           cd ${{ github.workspace }} && python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
 
+      - name Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: "${{ github.workspace }}/result.xml"
+        if: always()
+
       #- name: Publish Test Summary
       #- name: Test Summary
       #  uses: test-summary/action@v2
