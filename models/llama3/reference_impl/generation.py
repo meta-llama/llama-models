@@ -33,7 +33,13 @@ from termcolor import cprint
 
 from ..api.args import ModelArgs
 from ..api.chat_format import ChatFormat, ModelInput
-from ..api.datatypes import CompletionMessage, Message, StopReason, ToolPromptFormat
+from ..api.datatypes import (
+    CompletionMessage,
+    InterleavedTextMedia,
+    Message,
+    StopReason,
+    ToolPromptFormat,
+)
 from ..api.tokenizer import Tokenizer
 from .model import Transformer
 
@@ -132,8 +138,14 @@ class Llama:
             torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
         else:
             torch.set_default_tensor_type(torch.cuda.HalfTensor)
-        model = Transformer(model_args)
-        model.load_state_dict(checkpoint, strict=False)
+        if model_args.vision_chunk_size > 0:
+            from .multimodal.model import CrossAttentionTransformer
+
+            model = CrossAttentionTransformer(model_args)
+            model.setup_cache(model_args.max_batch_size, torch.bfloat16)
+        else:
+            model = Transformer(model_args)
+        model.load_state_dict(checkpoint, strict=True)
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
         return Llama(model, tokenizer, model_args)
@@ -152,10 +164,20 @@ class Llama:
         temperature: float = 0.6,
         top_p: float = 0.9,
         logprobs: bool = False,
+        echo: bool = False,
+        print_model_input: bool = False,
     ) -> Generator:
         params = self.model.params
 
-        # cprint("Input to model -> " + self.tokenizer.decode(model_input.tokens), "red")
+        if print_model_input:
+            tokens_to_print = [
+                self.formatter.vision_token if t == 128256 else t
+                for t in model_input.tokens
+            ]
+            cprint(
+                "Input to model:\n" + self.tokenizer.decode(tokens_to_print) + "\n",
+                "red",
+            )
         prompt_tokens = [model_input.tokens]
 
         bsz = 1
@@ -171,6 +193,21 @@ class Llama:
             return
 
         total_len = min(max_gen_len + max_prompt_len, params.max_seq_len)
+
+        is_vision = not isinstance(self.model, Transformer)
+        if is_vision:
+            images = model_input.vision.images if model_input.vision is not None else []
+            mask = model_input.vision.mask if model_input.vision is not None else []
+
+            # the method works for bsz > 1 so add a batch dimension
+            xattn_caches, cross_attention_masks, full_text_row_masked_out_mask = (
+                self.model.compute_vision_tokens_masks(
+                    batch_images=[images],
+                    batch_masks=[mask],
+                    total_len=total_len,
+                )
+            )
+
         pad_id = self.tokenizer.pad_id
         tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device="cuda")
         for k, t in enumerate(prompt_tokens):
@@ -181,19 +218,34 @@ class Llama:
         prev_pos = 0
         eos_reached = torch.tensor([False] * bsz, device="cuda")
         input_text_mask = tokens != pad_id
-        if min_prompt_len == total_len:
-            logits = self.model.forward(tokens, prev_pos)
-            token_logprobs = -F.cross_entropy(
-                input=logits.transpose(1, 2),
-                target=tokens,
-                reduction="none",
-                ignore_index=pad_id,
-            )
+
+        if echo:
+            for i, t in enumerate(model_input.tokens):
+                yield TokenResult(
+                    token=t,
+                    text=self.tokenizer.decode([t]),
+                    logprobs=(
+                        token_logprobs[0, i : i + 1].tolist() if logprobs else None
+                    ),
+                )
 
         stop_tokens = torch.tensor(self.tokenizer.stop_tokens)
-
         for cur_pos in range(min_prompt_len, total_len):
-            logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+            if is_vision:
+                position_ids = torch.arange(
+                    prev_pos, cur_pos, dtype=torch.long, device="cuda"
+                )
+                text_only_inference = model_input.vision is None
+                logits = self.model.forward(
+                    position_ids,
+                    tokens,
+                    cross_attention_masks,
+                    full_text_row_masked_out_mask,
+                    xattn_caches,
+                    text_only_inference,
+                )
+            else:
+                logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
 
             if temperature > 0:
                 probs = torch.softmax(logits[:, -1] / temperature, dim=-1)
@@ -209,7 +261,18 @@ class Llama:
             tokens[:, cur_pos] = next_token
 
             target = tokens[:, prev_pos + 1 : cur_pos + 1]
-            
+            if is_vision:
+                # the logits space (num_classes) is designed to never contain a media_token
+                # however our input token stream does contain them. we need to nuke them here
+                # or else the CUDA kernels will crash with an illegal memory access
+                vision_tokens = [self.tokenizer.special_tokens["<|image|>"], 128256]
+                masks = [target.eq(t) for t in vision_tokens]
+                if len(masks) > 1:
+                    mask = torch.logical_or(*masks)
+                else:
+                    mask = masks[0]
+                target[mask] = 0
+
             if logprobs:
                 token_logprobs[:, prev_pos + 1 : cur_pos + 1] = -F.cross_entropy(
                     input=logits.transpose(1, 2),
@@ -236,11 +299,12 @@ class Llama:
 
     def text_completion(
         self,
-        prompt: str,
+        content: InterleavedTextMedia,
         temperature: float = 0.6,
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
         logprobs: bool = False,
+        echo: bool = False,
     ) -> CompletionPrediction:
         if (
             max_gen_len is None
@@ -249,17 +313,18 @@ class Llama:
         ):
             max_gen_len = self.model.params.max_seq_len - 1
 
-        prompt_tokens = self.tokenizer.encode(prompt, bos=True, eos=False)
+        model_input = self.formatter.encode_content(content)
 
         tokens = []
         token_logprobs = []
         decoded_tokens = []
         for result in self.generate(
-            model_input=ModelInput(tokens=prompt_tokens),
+            model_input=model_input,
             max_gen_len=max_gen_len,
             temperature=temperature,
             top_p=top_p,
             logprobs=logprobs,
+            echo=echo,
         ):
             tokens.append(result.token)
             if logprobs:
@@ -284,6 +349,7 @@ class Llama:
         max_gen_len: Optional[int] = None,
         logprobs: bool = False,
         tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
+        echo: bool = False,
     ) -> ChatPrediction:
         if (
             max_gen_len is None
@@ -305,6 +371,7 @@ class Llama:
             temperature=temperature,
             top_p=top_p,
             logprobs=logprobs,
+            echo=echo,
         ):
             tokens.append(result.token)
             if result.text == "<|eot_id|>":
@@ -329,6 +396,66 @@ class Llama:
             )
 
         return ChatPrediction(generation=message)
+
+    def chat_completion_raw(
+        self,
+        messages: List[Message],
+        temperature: float = 0.6,
+        top_p: float = 0.9,
+        max_gen_len: Optional[int] = None,
+        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
+    ) -> List[int]:
+        if (
+            max_gen_len is None
+            or max_gen_len == 0
+            or max_gen_len >= self.model.params.max_seq_len
+        ):
+            max_gen_len = self.model.params.max_seq_len - 1
+
+        output_tokens = []
+        model_input = self.formatter.encode_dialog_prompt(messages, tool_prompt_format)
+        input_tokens = model_input.tokens
+        for result in self.generate(
+            model_input=model_input,
+            max_gen_len=max_gen_len,
+            temperature=temperature,
+            top_p=top_p,
+            logprobs=False,
+        ):
+            output_tokens.append(result.token)
+
+        return input_tokens, output_tokens
+
+    def text_completion_raw(
+        self,
+        content: InterleavedTextMedia,
+        temperature: float = 0.6,
+        top_p: float = 0.9,
+        max_gen_len: Optional[int] = None,
+    ):
+        if (
+            max_gen_len is None
+            or max_gen_len == 0
+            or max_gen_len >= self.model.params.max_seq_len
+        ):
+            max_gen_len = self.model.params.max_seq_len - 1
+
+        model_input = self.formatter.encode_content(content)
+        input_tokens = model_input.tokens
+
+        output_tokens = []
+        token_logprobs = []
+        decoded_tokens = []
+        for result in self.generate(
+            model_input=model_input,
+            max_gen_len=max_gen_len,
+            temperature=temperature,
+            top_p=top_p,
+            logprobs=False,
+        ):
+            output_tokens.append(result.token)
+
+        return input_tokens, output_tokens
 
 
 def sample_top_p(probs, p):

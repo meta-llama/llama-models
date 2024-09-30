@@ -23,6 +23,14 @@ def system_message_builtin_tools_only():
     }
 
 
+def system_message_builtin_code_only():
+    return {
+        "builtin_tools": BuiltinToolGenerator().data_examples()[1],
+        "custom_tools": [],
+        "instruction": "",
+    }
+
+
 def system_message_custom_tools_only():
     return {
         "builtin_tools": [],
@@ -91,3 +99,13 @@ def assistant_default():
 
 def user_default():
     return {"content": "Please tell me how to plan a trip to New York"}
+
+
+def user_images():
+    return {"content": "<|image|><|image|>What do these images depict?"}
+
+
+def user_interleaved_images():
+    return {
+        "content": "<|image|>Describe the image in one sentence.<|image|>Write a haiku about these images"
+    }

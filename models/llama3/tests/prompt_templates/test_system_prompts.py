@@ -1,3 +1,10 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# top-level folder for each specific model found within the models/ directory at
+# the top-level of this source tree.
+
 import textwrap
 import unittest
 from datetime import datetime
@@ -6,6 +13,7 @@ from llama_models.llama3.prompt_templates import (
     BuiltinToolGenerator,
     FunctionTagCustomToolGenerator,
     JsonCustomToolGenerator,
+    PythonListCustomToolGenerator,
     SystemDefaultGenerator,
 )
 
@@ -86,7 +94,7 @@ class PromptTemplateTests(unittest.TestCase):
             {"name": "trending_songs", "description": "Returns the trending songs on a Music site", "parameters": {"genre": {"description": "The genre of the songs to return", "param_type": "str", "required": false}, "n": {"description": "The number of songs to return", "param_type": "int", "required": true}}}
 
             Think very carefully before calling functions.
-            If a you choose to call a function ONLY reply in the following format with no prefix or suffix:
+            If you choose to call a function ONLY reply in the following format with no prefix or suffix:
 
             <function=example_function_name>{"example_name": "example_value"}</function>
 
@@ -96,6 +104,45 @@ class PromptTemplateTests(unittest.TestCase):
             - Required parameters MUST be specified
             - Only call one function at a time
             - Put the entire function call reply on one line
+            """
+        )
+        self.check_generator_output(generator, expected_text.strip("\n"))
+
+    def test_llama_3_2_system_zero_shot(self):
+        generator = PythonListCustomToolGenerator()
+        expected_text = textwrap.dedent(
+            """
+            You are an expert in composing functions. You are given a question and a set of possible functions.
+            Based on the question, you will need to make one or more function/tool calls to achieve the purpose.
+            If none of the function can be used, point it out. If the given question lacks the parameters required by the function,
+            also point it out. You should only return the function call in tools call sections.
+
+            If you decide to invoke any of the function(s), you MUST put it in the format of [func_name1(params_name1=params_value1, params_name2=params_value2...), func_name2(params)]
+            You SHOULD NOT include any other text in the response.
+
+            Here is a list of functions in JSON format that you can invoke.
+
+            [
+                {
+                    "name": "get_weather",
+                    "description": "Get weather info for places",
+                    "parameters": {
+                        "type": "dict",
+                        "required": ["city"],
+                        "properties": {
+                            "city": {
+                                "type": "string",
+                                "description": "The name of the city to get the weather for"
+                            },
+                            "metric": {
+                                "type": "string",
+                                "description": "The metric for weather. Options are: celsius, fahrenheit",
+                                "default": "celsius"
+                            }
+                        }
+                    }
+                }
+            ]
             """
         )
         self.check_generator_output(generator, expected_text.strip("\n"))
