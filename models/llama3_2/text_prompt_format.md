@@ -144,7 +144,7 @@ NO other text MUST be included.<|eot_id|><|start_header_id|>assistant<|end_heade
 
 ##### Notes
 
-- The tool call format for the mdoel is the same whether your function calls are provided in the system or user message.
+- The tool call format for the model is the same whether your function calls are provided in the system or user message.
 - While builtin tool calls end with a <|eom_id|>, notice the <|eot_id|> for zero shot tool calls.
 
 
