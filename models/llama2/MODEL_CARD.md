@@ -28,7 +28,7 @@ Llama 2|*A new mix of publicly available online data*|70B|4k|&#10004;|2.0T|1.5 x
 
 **Research Paper** More information can be found in the paper "Llama-2: Open Foundation and Fine-tuned Chat Models", available at https://ai.meta.com/research/publications/llama-2-open-foundation-and-fine-tuned-chat-models/.
 
-**Where to send questions or comments about the model** Instructions on how to provide feedback or comments on the model can be found in the model [README](README.md).
+**Feedback:** Instructions on how to provide feedback or comments on the model can be found in the Llama Models [README](https://github.com/meta-llama/llama-models/blob/main/README.md).
 
 # **Intended Use**
 **Intended Use Cases** Llama 2 is intended for commercial and research use in English. Tuned models are intended for assistant-like chat, whereas pretrained models can be adapted for a variety of natural language generation tasks.
