@@ -1,7 +1,8 @@
 name: "Run Llama-models Tests"
 
 on:
-  pull_request:
+  pull_request_target:
+    types: opened
     branches:
       - 'main'
     #paths:
