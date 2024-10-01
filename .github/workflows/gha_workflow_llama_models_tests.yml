@@ -1,4 +1,4 @@
-name: "[ARC][CPU]  Run Llama-models Tests"
+name: "Run Llama-models Tests"
 
 on:
   pull_request:
@@ -46,6 +46,8 @@ env:
 jobs:
   execute_workflow:
     name: Execute workload on Self-Hosted CPU k8s runner
+    permissions:
+      pull-requests: write
     defaults:
       run:
         shell: bash # default shell to run all steps for a given job.
