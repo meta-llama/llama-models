@@ -51,7 +51,6 @@ jobs:
       run:
         shell: bash # default shell to run all steps for a given job.
     runs-on: ${{ github.event.inputs.runner != '' && github.event.inputs.runner || 'llama-models-fork-gha-runnes-gpu' }}
-    fail-fast: true
     steps:
 
       ##############################
