@@ -2,6 +2,11 @@ name: "[ARC][CPU]  Run Llama-models Tests"
 
 on:
   pull_request:
+    branches:
+      - 'main'
+    paths:
+      - '/models/**/*.py'
+
   workflow_dispatch:
     inputs:
       runner:
@@ -17,7 +22,17 @@ on:
       sleep_time:
         description: '[DEBUG] sleep time for debugging'
         required: true
-        default: "60"
+        default: "0"
+
+      api_tests:
+        description: 'Include tests with API keys'
+        required: true
+        default: false
+
+      model:
+        description: 'Llama model to use for testing'
+        required: true
+        default: "Llama3.2-3B-Instruct"
 
       branch:
         description: "Branch parameter to control which branch to checkout"
@@ -27,7 +42,7 @@ on:
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: '/data/llama3/models'
-  DEFAULT_MODEL: 'llama-31-8b'
+  GITHUB_WORKSPACE: ${{ github.workspace }}
 
 jobs:
   execute_workflow:
@@ -35,11 +50,15 @@ jobs:
     defaults:
       run:
         shell: bash # default shell to run all steps for a given job.
-    runs-on: ${{ github.event.inputs.runner != '' && github.event.inputs.runner || 'llama-models-gha-runnes-gpu' }}
+    runs-on: ${{ github.event.inputs.runner != '' && github.event.inputs.runner || 'llama-models-fork-gha-runnes-gpu' }}
+    fail-fast: true
     steps:
+
+      ##############################
+      #### INITIAL DEBUG CHECKS ####
+      ##############################
       - name: "[DEBUG] ls -la mounted EFS volume"
         id: efs_volume
-        continue-on-error: true
         if: github.event.inputs.debug == 'true'
         run: |
             echo "========= Content of the EFS mount ============="
@@ -64,11 +83,28 @@ jobs:
         run: |
             cat /etc/os-release
 
+      #######################
+      #### CODE CHECKOUT ####
+      #######################
       - name: "Checkout 'meta-llama/llama-models' repository"
         id: checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
+
+      - name: "Define path filters based on modifications"
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          predicate-quantifier: 'every'
+          filters: |
+            backend:
+              - '**/*.py'
+              - '**/*.in'
+              - '**/*.toml'
+              - '**/*.txt'
+              - '!**/*.md'
+              - '!**/*.jpeg'
 
       - name: "[DEBUG] Content of the repository after checkout"
         id: content_after_checkout
@@ -76,13 +112,22 @@ jobs:
         run: |
             ls -la ${GITHUB_WORKSPACE}
 
-      # Place sleep step before the test execution to "exec" into the test k8s POD and run tests manually to identify what dependencies are being used.
+      ##########################################################
+      ####              OPTIONAL SLEEP DEBUG                ####
+      #                                                        #
+      # Use to "exec" into the test k8s POD and run tests      #
+      # manually to identify what dependencies are being used. #
+      #                                                        #
+      ##########################################################
       - name: "[DEBUG] sleep"
         id: sleep
         if: ${{ github.event.inputs.debug == 'true' && github.event.inputs.sleep_time != '' }}
         run: |
             sleep ${{ inputs.sleep_time }}
 
+      ##################################
+      #### DEPENDENCY INSTALLATIONS ####
+      ##################################
       - name: "Installing 'apt' required packages"
         id: apt_install
         run: |
@@ -101,7 +146,10 @@ jobs:
           pip install llama-models
           pip install xmlrunner
           pip install pytest 
-          #export PYTHONPATH=$PYTHONPATH:$(pwd)
+
+      ######################
+      #### TEST RUNNING ####
+      ######################
 
       #- name: Run Tokenizer tests
       #  id: run_tests_tokenizer
@@ -119,19 +167,32 @@ jobs:
 
       - name: "Running PyTest tests on Self-Hosted k8s ARC Runner"
         id: pytest
+        working-directory: ${{ github.workspace }}
         run: |
           echo "Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
-          cd ${{ github.workspace }} && python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+          python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
 
+      ####################################
+      #### TEST REPORTS AND SUMMARIES ####
+      ####################################
       - name: Test Summary
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
+          output: test-summary.md
         if: always()
 
-      #- name: Upload test summary
-      #  uses: actions/upload-artifact@v3
-      #  with:
-      #    name: test-summary
-      #    path: test-summary.md
-      #  if: always()
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: JUnit Tests
+          path: ${{ github.workspace }}/result.xml
+          reporter: java-junit
+
+      - name: Upload test summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-summary.md
+        if: always()
