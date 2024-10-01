@@ -99,7 +99,6 @@ class CoreModelId(Enum):
 
     # Safety models
     llama_guard_3_8b = "Llama-Guard-3-8B"
-    prompt_guard_86m = "Prompt-Guard-86M"
     llama_guard_2_8b = "Llama-Guard-2-8B"
     llama_guard_3_11b_vision = "Llama-Guard-3-11B-Vision"
     llama_guard_3_1b = "Llama-Guard-3-1B"
@@ -156,7 +155,6 @@ def model_family(model_id) -> ModelFamily:
         return ModelFamily.llama3_2
     elif model_id in [
         CoreModelId.llama_guard_3_8b,
-        CoreModelId.prompt_guard_86m,
         CoreModelId.llama_guard_2_8b,
         CoreModelId.llama_guard_3_11b_vision,
         CoreModelId.llama_guard_3_1b,
@@ -238,7 +236,6 @@ class Model(BaseModel):
             return 131072
         elif self.core_model_id in [
             CoreModelId.llama_guard_3_8b,
-            CoreModelId.prompt_guard_86m,
             CoreModelId.llama_guard_3_11b_vision,
             CoreModelId.llama_guard_3_1b,
         ]:
