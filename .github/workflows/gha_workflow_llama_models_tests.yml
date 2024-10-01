@@ -47,8 +47,6 @@ env:
 jobs:
   execute_workflow:
     name: Execute workload on Self-Hosted CPU k8s runner
-    permissions:
-      pull-requests: write
     defaults:
       run:
         shell: bash # default shell to run all steps for a given job.
@@ -174,7 +172,7 @@ jobs:
 
       - name: Upload test summary
         id: publish_test_summary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-summary
           path: test-summary.md
@@ -185,7 +183,7 @@ jobs:
       ##############################
       - name: Update Pull Request with a comment
         id: publish_pr_comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request_target'
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: test-summary.md
