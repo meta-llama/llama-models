@@ -4,8 +4,8 @@ on:
   pull_request:
     branches:
       - 'main'
-    paths:
-      - '/models/**/*.py'
+    #paths:
+      #- 'models/**/*.py'
 
   workflow_dispatch:
     inputs:
