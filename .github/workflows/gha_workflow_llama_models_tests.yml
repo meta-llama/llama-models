@@ -42,7 +42,6 @@ on:
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: '/data/llama3/models'
-  GITHUB_WORKSPACE: ${{ github.workspace }}
 
 jobs:
   execute_workflow:
@@ -58,6 +57,7 @@ jobs:
       ##############################
       - name: "[DEBUG] ls -la mounted EFS volume"
         id: efs_volume
+        continue-on-error: true
         if: github.event.inputs.debug == 'true'
         run: |
             echo "========= Content of the EFS mount ============="
