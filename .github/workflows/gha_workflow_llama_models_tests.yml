@@ -95,6 +95,7 @@ jobs:
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          ref: 'main'
           predicate-quantifier: 'every'
           filters: |
             backend:
