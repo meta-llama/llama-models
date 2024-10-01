@@ -797,14 +797,6 @@ def safety_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.prompt_guard_86m,
-            is_default_variant=True,
-            description="Prompt Guard 86M injection safety model",
-            huggingface_repo="meta-llama/Prompt-Guard-86M",
-            arch_args={},
-            pth_file_count=1,
-        ),
-        Model(
             core_model_id=CoreModelId.llama_guard_2_8b,
             is_default_variant=True,
             description="Llama Guard v2 8b system safety model",
@@ -856,8 +848,6 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
             folder = "Llama-Guard-3-8B-INT8-HF"
         else:
             folder = "Llama-Guard-3-8B"
-    elif model.core_model_id == CoreModelId.prompt_guard_86m:
-        folder = "Prompt-Guard"
     elif model.core_model_id == CoreModelId.llama_guard_2_8b:
         folder = "llama-guard-2"
     else:
@@ -879,15 +869,6 @@ def llama_meta_net_info(model: Model) -> LlamaDownloadInfo:
                 "tokenizer.json",
                 "tokenizer_config.json",
                 "model.safetensors.index.json",
-            ]
-        )
-    elif model.core_model_id == CoreModelId.prompt_guard_86m:
-        files.extend(
-            [
-                "model.safetensors",
-                "special_tokens_map.json",
-                "tokenizer.json",
-                "tokenizer_config.json",
             ]
         )
     elif (
