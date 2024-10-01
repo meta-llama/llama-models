@@ -91,21 +91,6 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch }}
 
-      - name: "Define path filters based on modifications"
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          ref: 'main'
-          predicate-quantifier: 'every'
-          filters: |
-            backend:
-              - '**/*.py'
-              - '**/*.in'
-              - '**/*.toml'
-              - '**/*.txt'
-              - '!**/*.md'
-              - '!**/*.jpeg'
-
       - name: "[DEBUG] Content of the repository after checkout"
         id: content_after_checkout
         if: ${{ github.event.inputs.debug == 'true' }}
