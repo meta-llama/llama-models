@@ -162,23 +162,27 @@ jobs:
       #### TEST REPORTS AND SUMMARIES ####
       ####################################
       - name: Test Summary
+        id: create_test_summary
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
           output: test-summary.md
         if: always()
 
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: JUnit Tests
-          path: ${{ github.workspace }}/result.xml
-          reporter: java-junit
-
       - name: Upload test summary
+        id: publish_test_summary
         uses: actions/upload-artifact@v3
         with:
           name: test-summary
           path: test-summary.md
         if: always()
+
+      ##############################
+      #### PULL REQUEST COMMENT ####
+      ##############################
+      - name: Update Pull Request with a comment
+        id: publish_pr_comment
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: test-summary.md
