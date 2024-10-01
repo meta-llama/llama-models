@@ -25,7 +25,7 @@ on:
         default: "main"
 
 env: 
-  TOKENIZER_PATH: "models/llama3/api/tokenizer.py"  
+  TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: '/data/llama3/models'
   DEFAULT_MODEL: 'llama-31-8b'
 
