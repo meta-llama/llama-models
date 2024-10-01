@@ -88,7 +88,6 @@ Provide your safety assessment for ONLY THE LAST User message in the above conve
     result = generator.chat_completion(
         dialog,
         temperature=0,
-        print_model_input=True,
     )
 
     for msg in dialog:

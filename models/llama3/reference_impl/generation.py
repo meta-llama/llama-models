@@ -305,7 +305,6 @@ class Llama:
         max_gen_len: Optional[int] = None,
         logprobs: bool = False,
         echo: bool = False,
-        print_model_input: bool = False,
     ) -> CompletionPrediction:
         if (
             max_gen_len is None
@@ -326,7 +325,6 @@ class Llama:
             top_p=top_p,
             logprobs=logprobs,
             echo=echo,
-            print_model_input=print_model_input,
         ):
             tokens.append(result.token)
             if logprobs:
@@ -352,7 +350,6 @@ class Llama:
         logprobs: bool = False,
         tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
         echo: bool = False,
-        print_model_input: bool = False,
     ) -> ChatPrediction:
         if (
             max_gen_len is None
@@ -375,7 +372,6 @@ class Llama:
             top_p=top_p,
             logprobs=logprobs,
             echo=echo,
-            print_model_input=print_model_input,
         ):
             tokens.append(result.token)
             if result.text == "<|eot_id|>":
