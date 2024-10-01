@@ -135,6 +135,7 @@ jobs:
           sudo apt update -y
           sudo apt upgrade -y
           sudo apt install python3-pip -y
+          sudo apt install git-lfs -y
 
       - name: "Installing 'llama-models' dependencies"
         id: pip_install
