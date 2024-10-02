@@ -5,7 +5,8 @@ on:
     types: opened
     branches:
       - 'main'
-    #paths:
+    paths:
+      # Trigger workflow only if changes include files within the models directory
       - 'models/**/*.py'
 
   workflow_dispatch:
@@ -75,7 +76,6 @@ jobs:
             fi
             echo "Content of '${{ inputs.model }}' model"
             ls -la ${{ env.MODELS_PATH }}/${{ inputs.model }}
-
             exit 0
 
       - name: "[DEBUG] Get runner container OS information"
@@ -139,53 +139,73 @@ jobs:
       #### AUTOMATIC TESTING ON PULL REQUESTS ####
       ############################################
 
-      #- name: Run Tokenizer tests
-      #  id: run_tests_tokenizer
-      #  if: always()
-      #  run: |
-      #    echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
-      #    cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/api/test_tokenizer.py
-
-      #- name: Run tool utils tests
-      #  id: run_tests_tool_utils
-      #  if: always()
-      #  run: |
-      #    echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
-      #    cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
-
-      - name: "Running all PyTest tests on Self-Hosted k8s ARC Runner"
-        id: pytest
+      #### Run tests ####
+      
+      - name: Run Tokenizer tests
+        id: run_tests_tokenizer
         working-directory: ${{ github.workspace }}
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'pull_request_target'
         run: |
-          echo "Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
-          python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+          echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
+          python3 -m pytest models/llama3/api/test_tokenizer.py
 
-      ####################################
-      #### TEST REPORTS AND SUMMARIES ####
-      ####################################
-      - name: Test Summary
-        id: create_test_summary
+      - name: Run tool utils tests
+        id: run_tests_tool_utils
+        if: always()
+        run: |
+          echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
+          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
+
+      #### Create test summary ####
+
+      - name: PR - Test Summary
+        id: create_test_summary_pr
+        if: github.event_name == 'pull_request_target'
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
           output: test-summary.md
         if: always()
 
-      - name: Upload test summary
-        id: publish_test_summary
+      - name: PR - Upload Test Summary
+        id: publish_test_summary_pr
+        if: github.event_name == 'pull_request_target'
         uses: actions/upload-artifact@v4
         with:
           name: test-summary
           path: test-summary.md
         if: always()
 
-      ##############################
-      #### PULL REQUEST COMMENT ####
-      ##############################
+      #### Update PR request ####
+
       - name: Update Pull Request with a comment
         id: publish_pr_comment
         if: github.event_name == 'pull_request_target'
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: test-summary.md
+
+
+      ########################
+      #### MANUAL TESTING ####
+      ########################
+
+      #### Run tests ####
+
+      - name: "Running all PyTest tests on Self-Hosted k8s ARC Runner"
+        id: pytest
+        working-directory: ${{ github.workspace }}
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
+          python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+
+      #### Create test summary ####
+
+      - name: Manual - Test Summary
+        id: create_test_summary_manual
+        if: github.event_name == 'workflow_dispatch'
+        uses: test-summary/action@v2
+        with:
+          paths: "${{ github.workspace }}/result.xml"
+        if: always()
