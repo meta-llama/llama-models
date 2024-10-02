@@ -44,7 +44,7 @@ on:
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: '/data/llama3/models'
-  API_KEY: ${{ github.event.inputs.api_key }}
+  #API_KEY: ${{ github.event.inputs.api_key }}
 
 jobs:
   execute_workflow:
@@ -76,6 +76,7 @@ jobs:
             fi
             echo "Content of '${{ inputs.model }}' model"
             ls -la ${{ env.MODELS_PATH }}/${{ inputs.model }}
+
             exit 0
 
       - name: "[DEBUG] Get runner container OS information"
