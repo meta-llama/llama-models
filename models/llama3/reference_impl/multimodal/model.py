@@ -1333,13 +1333,14 @@ class CrossAttentionTransformerText(torch.nn.Module):
 
 
 class CrossAttentionTransformer(torch.nn.Module):
-    def __init__(self, args: ModelArgs) -> None:
+    def __init__(self, args: ModelArgs, device: torch.device = torch.device('cuda')) -> None:
         super().__init__()
         self.params = args
 
         self.model_dim = args.dim
         self.vision_model = CrossAttentionTransformerVision(args)
         self.text_model = CrossAttentionTransformerText(args)
+        self.device = device
         self.image_res = args.vision_chunk_size
         self.max_num_chunks = args.vision_max_num_chunks
         self.image_transform = partial(
@@ -1407,7 +1408,7 @@ class CrossAttentionTransformer(torch.nn.Module):
         else:
             vision_tokens = self.vision_model(stacked_images, aspect_ratios)
 
-        vision_tokens = vision_tokens.to("cuda")
+        vision_tokens = vision_tokens.to(self.device)
 
         bsz, nimg, nchunk, ntok, image_token_dim = tuple(vision_tokens.shape)
         xattn_caches = torch.stack(
@@ -1428,7 +1429,7 @@ class CrossAttentionTransformer(torch.nn.Module):
         cross_attention_masks, full_text_row_masked_out_mask = (
             self.text_model._get_xattn_mask(
                 num_tokens=total_len,
-                text_device="cuda",
+                text_device=self.device,
                 text_dtype=next(self.text_model.parameters()).dtype,
                 vision_tokens=vision_tokens,
                 cross_attention_masks=padded_masks,

@@ -64,7 +64,10 @@ class TokenResult:
     text: str
     logprobs: Optional[List[float]] = None
 
+def _is_cuda(device: torch.device):
+    return device.type == torch.device('cuda').type
 
+    
 class Llama:
     @staticmethod
     def build(
@@ -74,6 +77,7 @@ class Llama:
         max_batch_size: int,
         model_parallel_size: Optional[int] = None,
         seed: int = 1,
+        device: torch.device = torch.device('cuda')
     ):
         """
         Build a Llama instance by initializing and loading a model checkpoint.
@@ -85,6 +89,7 @@ class Llama:
             max_batch_size (int): Maximum batch size for inference.
             model_parallel_size (Optional[int], optional): Number of model parallel processes.
                 If not provided, it's determined from the environment. Defaults to None.
+            device (Optional[torch.device]): Computational device to use, e.g. cuda, mps, cpu.
 
         Returns:
             Llama: An instance of the Llama class with the loaded model and tokenizer.
@@ -107,8 +112,10 @@ class Llama:
                 model_parallel_size = int(os.environ.get("WORLD_SIZE", 1))
             initialize_model_parallel(model_parallel_size)
 
-        local_rank = int(os.environ.get("LOCAL_RANK", 0))
-        torch.cuda.set_device(local_rank)
+        
+        if _is_cuda(device):
+            local_rank = int(os.environ.get("LOCAL_RANK", 0))
+            torch.cuda.set_device(local_rank)
 
         torch.manual_seed(seed)
 
@@ -134,25 +141,29 @@ class Llama:
         )
         tokenizer = Tokenizer(model_path=tokenizer_path)
         assert model_args.vocab_size == tokenizer.n_words
-        if torch.cuda.is_bf16_supported():
+        if _is_cuda(device) and torch.cuda.is_bf16_supported():
             torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
-        else:
+        elif _is_cuda(device):
             torch.set_default_tensor_type(torch.cuda.HalfTensor)
+        else:
+            torch.set_default_tensor_type(torch.float16)
+        
         if model_args.vision_chunk_size > 0:
             from .multimodal.model import CrossAttentionTransformer
 
-            model = CrossAttentionTransformer(model_args)
+            model = CrossAttentionTransformer(model_args, device=device)
             model.setup_cache(model_args.max_batch_size, torch.bfloat16)
         else:
-            model = Transformer(model_args)
+            model = Transformer(model_args, device=device)
         model.load_state_dict(checkpoint, strict=True)
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
         return Llama(model, tokenizer, model_args)
 
-    def __init__(self, model: Transformer, tokenizer: Tokenizer, args: ModelArgs):
+    def __init__(self, model: Transformer, tokenizer: Tokenizer, args: ModelArgs, device: torch.device = torch.device('cuda')):
         self.args = args
         self.model = model
+        self.device = device
         self.tokenizer = tokenizer
         self.formatter = ChatFormat(tokenizer)
 
@@ -209,14 +220,14 @@ class Llama:
             )
 
         pad_id = self.tokenizer.pad_id
-        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device="cuda")
+        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device=self.device)
         for k, t in enumerate(prompt_tokens):
-            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
+            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device=self.device)
         if logprobs:
             token_logprobs = torch.zeros_like(tokens, dtype=torch.float)
 
         prev_pos = 0
-        eos_reached = torch.tensor([False] * bsz, device="cuda")
+        eos_reached = torch.tensor([False] * bsz, device=self.device)
         input_text_mask = tokens != pad_id
 
         if echo:
@@ -233,7 +244,7 @@ class Llama:
         for cur_pos in range(min_prompt_len, total_len):
             if is_vision:
                 position_ids = torch.arange(
-                    prev_pos, cur_pos, dtype=torch.long, device="cuda"
+                    prev_pos, cur_pos, dtype=torch.long, device=self.device
                 )
                 text_only_inference = model_input.vision is None
                 logits = self.model.forward(
