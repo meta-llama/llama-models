@@ -160,6 +160,7 @@ jobs:
           pip install llama-models
           pip install xmlrunner
           pip install pytest 
+          pip install numpy
 
       ############################################
       #### AUTOMATIC TESTING ON PULL REQUESTS ####
