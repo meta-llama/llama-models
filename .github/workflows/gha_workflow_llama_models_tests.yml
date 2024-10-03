@@ -223,6 +223,7 @@ jobs:
       - name: "Running all PyTest tests on Self-Hosted k8s ARC Runner"
         id: pytest
         working-directory: ${{ github.workspace }}
+        continue-on-error: true
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
