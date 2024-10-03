@@ -6,7 +6,7 @@ on:
     branches:
       - 'main'
     paths:
-      #- 'models/**/*.py'
+      - 'models/**/*.py'
 
   workflow_dispatch:
     inputs:
@@ -25,10 +25,10 @@ on:
         required: true
         default: "0"
 
-      #api_key:
-      #  description: 'Provider API key'
-      #  required: false
-      #  default: "-"
+      api_key:
+        description: 'Provider API key'
+        required: false
+        default: "---"
 
       model:
         description: 'Llama model to use for testing'
@@ -43,7 +43,7 @@ on:
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: '/data/llama3/models'
-  #API_KEY: ${{ github.event.inputs.api_key }}
+  API_KEY: ${{ github.event.inputs.api_key }}
 
 jobs:
   execute_workflow:
@@ -140,47 +140,47 @@ jobs:
 
       #### Run tests ####
       
-      #- name: Run Tokenizer tests
-      #  id: run_tests_tokenizer
-      #  working-directory: ${{ github.workspace }}
-      #  if: github.event_name == 'pull_request_target'
-      #  run: |
-      #    echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
-      #    python3 -m pytest models/llama3/api/test_tokenizer.py
+      - name: Run Tokenizer tests
+        id: run_tests_tokenizer
+        working-directory: ${{ github.workspace }}
+        if: github.event_name == 'pull_request_target'
+        run: |
+          echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
+          python3 -m pytest models/llama3/api/test_tokenizer.py
 
-      #- name: Run tool utils tests
-      #  id: run_tests_tool_utils
-      #  if: github.event_name == 'pull_request_target'
-      #  run: |
-      #    echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
-      #    cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
+      - name: Run tool utils tests
+        id: run_tests_tool_utils
+        if: github.event_name == 'pull_request_target'
+        run: |
+          echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
+          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
 
       #### Create test summary ####
 
-      #- name: PR - Test Summary
-      #  id: create_test_summary_pr
-      #  if: github.event_name == 'pull_request_target'
-      #  uses: test-summary/action@v2
-      #  with:
-      #    paths: "${{ github.workspace }}/result.xml"
-      #    output: test-summary.md
+      - name: PR - Test Summary
+        id: create_test_summary_pr
+        if: github.event_name == 'pull_request_target'
+        uses: test-summary/action@v2
+        with:
+          paths: "${{ github.workspace }}/result.xml"
+          output: test-summary.md
 
-      #- name: PR - Upload Test Summary
-      #  id: publish_test_summary_pr
-      #  if: github.event_name == 'pull_request_target'
-      #  uses: actions/upload-artifact@v3
-      #  with:
-      #    name: test-summary
-      #    path: test-summary.md
+      - name: PR - Upload Test Summary
+        id: publish_test_summary_pr
+        if: github.event_name == 'pull_request_target'
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-summary.md
 
       #### Update PR request ####
 
-      #- name: Update Pull Request with a comment
-      #  id: publish_pr_comment
-      #  if: github.event_name == 'pull_request_target'
-      #  uses: thollander/actions-comment-pull-request@v2
-      #  with:
-      #    filePath: test-summary.md
+      - name: Update Pull Request with a comment
+        id: publish_pr_comment
+        if: github.event_name == 'pull_request_target'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: test-summary.md
 
 
       ########################
@@ -189,19 +189,19 @@ jobs:
 
       #### Run tests ####
 
-      #- name: "Running all PyTest tests on Self-Hosted k8s ARC Runner"
-      #  id: pytest
-      #  working-directory: ${{ github.workspace }}
-      #  if: github.event_name == 'workflow_dispatch'
-      #  run: |
-      #    echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
-      #    python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+      - name: "Running all PyTest tests on Self-Hosted k8s ARC Runner"
+        id: pytest
+        working-directory: ${{ github.workspace }}
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
+          python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
 
       #### Create test summary ####
 
-      #- name: Manual - Test Summary
-      #  id: create_test_summary_manual
-      #  if: github.event_name == 'workflow_dispatch'
-      #  uses: test-summary/action@v2
-      #  with:
-      #    paths: "${{ github.workspace }}/result.xml"
+      - name: Manual - Test Summary
+        id: create_test_summary_manual
+        if: github.event_name == 'workflow_dispatch'
+        uses: test-summary/action@v2
+        with:
+          paths: "${{ github.workspace }}/result.xml"
