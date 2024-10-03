@@ -33,7 +33,7 @@ on:
       require_model:
         description: 'Determine whether or not a model is required for this run'
         required: true
-        default: false
+        default: "false"
 
       model_vision:
         description: 'Llama vision model to use for testing'
