@@ -79,7 +79,7 @@ jobs:
 
       - name: "Check if models exist in EFS volume"
         id: check_if_model_exists
-        if: ${{ github.events.input.require_model == 'true' }}
+        #if: ${{ github.events.input.require_model == 'true' }}
         run: |
           MODEL_PATH=${{ env.MODELS_PATH }}
 
@@ -161,6 +161,7 @@ jobs:
           pip install xmlrunner
           pip install pytest 
           pip install numpy
+          pip install torch
 
       ############################################
       #### AUTOMATIC TESTING ON PULL REQUESTS ####
