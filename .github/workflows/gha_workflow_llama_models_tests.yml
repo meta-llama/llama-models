@@ -232,7 +232,7 @@ jobs:
 
       - name: Manual - Test Summary
         id: create_test_summary_manual
-        if: github.event_name == 'workflow_dispatch'
+        if: always() && github.event_name == 'workflow_dispatch'
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
