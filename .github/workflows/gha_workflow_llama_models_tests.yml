@@ -162,6 +162,7 @@ jobs:
           pip install pytest 
           pip install numpy
           pip install torch
+          pip install fairscale
 
       ############################################
       #### AUTOMATIC TESTING ON PULL REQUESTS ####
