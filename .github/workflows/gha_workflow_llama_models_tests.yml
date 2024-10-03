@@ -30,9 +30,19 @@ on:
         required: false
         default: "---"
 
-      model:
-        description: 'Llama model to use for testing'
+      require_model:
+        description: 'Determine whether or not a model is required for this run'
         required: true
+        default: false
+
+      model_vision:
+        description: 'Llama vision model to use for testing'
+        required: false
+        default: "Llama3.2-11B-Vision-Instruct"
+
+      model_text:
+        description: 'Llama text model to use for testing'
+        required: false
         default: "Llama3.2-3B-Instruct"
 
       branch:
@@ -42,7 +52,9 @@ on:
 
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
-  MODELS_PATH: '/data/llama3/models'
+  MODELS_PATH: '/data/llama3.2'
+  MODEL_VISION: ${{ github.events.inputs.model_vision }}
+  MODEL_TEXT: ${{ github.events.inputs.model_text }}
   API_KEY: ${{ github.event.inputs.api_key }}
 
 jobs:
@@ -65,18 +77,33 @@ jobs:
             echo "========= Content of the EFS mount ============="
             ls -la ${{ env.MODELS_PATH }}
 
-      - name: "Check if selected model exists in EFS volume"
+      - name: "Check if models exist in EFS volume"
         id: check_if_model_exists
-        continue-on-error: true
+        if: ${{ github.events.input.require_model == 'true' }}
         run: |
-            if [ ! -d ${{ env.MODELS_PATH }}/${{ inputs.model }} ]; then
-                echo "Model '${{ inputs.model }}' does not exist in mounted EFS volume, Terminating workflow."
-                exit 1
-            fi
-            echo "Content of '${{ inputs.model }}' model"
-            ls -la ${{ env.MODELS_PATH }}/${{ inputs.model }}
+          MODEL_PATH=${{ env.MODELS_PATH }}
 
-            exit 0
+          # Check if vision model is provided and exists
+          if [ -n "${{ inputs.model_vision }}" ]; then
+            if [ ! -d "${MODEL_PATH}/${{ inputs.model_vision }}" ]; then
+              echo "Model '${{ inputs.model_vision }}' does not exist in mounted EFS volume, Terminating workflow."
+              exit 1
+            else
+              echo "Content of '${{ inputs.model_vision }}' model"
+              ls -la "${MODEL_PATH}/${{ inputs.model_vision }}"
+            fi
+          fi
+
+          # Check if text model is provided and exists
+          if [ -n "${{ inputs.model_text }}" ]; then
+            if [ ! -d "${MODEL_PATH}/${{ inputs.model_text }}" ]; then
+              echo "Model '${{ inputs.model_text }}' does not exist in mounted EFS volume, Terminating workflow."
+              exit 1
+            else
+              echo "Content of '${{ inputs.model_text }}' model"
+              ls -la "${MODEL_PATH}/${{ inputs.model_text }}"
+            fi
+          fi
 
       - name: "[DEBUG] Get runner container OS information"
         id: os_info
