@@ -64,6 +64,7 @@ jobs:
       run:
         shell: bash # default shell to run all steps for a given job.
     runs-on: ${{ github.event.inputs.runner != '' && github.event.inputs.runner || 'llama-models-fork-gha-runnes-gpu' }}
+    if: always()
     steps:
 
       ##############################
@@ -171,7 +172,6 @@ jobs:
           pip install fairscale
           pip install termcolor
 
-
       ############################################
       #### AUTOMATIC TESTING ON PULL REQUESTS ####
       ############################################
@@ -223,7 +223,6 @@ jobs:
       - name: "Running all PyTest tests on Self-Hosted k8s ARC Runner"
         id: pytest
         working-directory: ${{ github.workspace }}
-        continue-on-error: true
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
