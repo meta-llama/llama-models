@@ -163,6 +163,8 @@ jobs:
           pip install numpy
           pip install torch
           pip install fairscale
+          pip install termcolor
+
 
       ############################################
       #### AUTOMATIC TESTING ON PULL REQUESTS ####
