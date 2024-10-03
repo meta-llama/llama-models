@@ -53,8 +53,8 @@ on:
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: '/data/llama3.2'
-  MODEL_VISION: ${{ github.events.inputs.model_vision }}
-  MODEL_TEXT: ${{ github.events.inputs.model_text }}
+  VISION_MODEL_CHECKPOINT_DIR: ${{ github.events.inputs.model_vision }}
+  TEXT_MODEL_CHECKPOINT_DIR: ${{ github.events.inputs.model_text }}
   API_KEY: ${{ github.event.inputs.api_key }}
 
 jobs:
@@ -159,7 +159,13 @@ jobs:
           pip install blobfile
           pip install llama-models
           pip install xmlrunner
-          pip install pytest 
+          pip install pytest
+
+      - name: "Installing specific manual_dispatch dependencies"
+        id: pip_install_manual
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "[STEP] Installing specific dependencies for manual dispatch workflows"
           pip install numpy
           pip install torch
           pip install fairscale
@@ -178,7 +184,7 @@ jobs:
         if: github.event_name == 'pull_request_target'
         run: |
           echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
-          python3 -m pytest models/llama3/ --junitxml="${{ github.workspace }}/result.xml"
+          python3 -m pytest models/llama3/ -k "not test_generation.py" --junitxml="${{ github.workspace }}/result.xml"
 
       #### Create test summary ####
 
