@@ -146,14 +146,7 @@ jobs:
         if: github.event_name == 'pull_request_target'
         run: |
           echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
-          python3 -m pytest models/llama3/api/test_tokenizer.py
-
-      - name: Run tool utils tests
-        id: run_tests_tool_utils
-        if: github.event_name == 'pull_request_target'
-        run: |
-          echo "[STEP] Running tool utils test on Self-Hosted k8s ARC Runner"
-          cd $GITHUB_WORKSPACE && python3 -m unittest models/llama3/tests/api/test_tool_utils.py --junitxml="$GITHUB_WORKSPACE/result.xml"
+          python3 -m pytest models/llama3/ --junitxml="${{ github.workspace }}/result.xml"
 
       #### Create test summary ####
 
