@@ -4,6 +4,8 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
+import unittest
+
 from llama_models.llama3.api.tool_utils import (
     is_valid_python_list,
     parse_python_list_for_function_calls,
@@ -11,7 +13,7 @@ from llama_models.llama3.api.tool_utils import (
 )
 
 
-class TestToolUtils:
+class TestToolUtils(unittest.TestCase):
 
     def test_maybe_extract_custom_tool_call(self):
         single_tool_call = (
@@ -23,7 +25,7 @@ class TestToolUtils:
         assert args == {"location": "New York", "date": "2023-08-05"}
 
 
-class TestPythonListCheck:
+class TestPythonListCheck(unittest.TestCase):
 
     def test_valid_list_with_single_function_call(self):
         input_string = '[get_boiling_point(liquid_name="water", celcius=True)]'
@@ -76,7 +78,7 @@ class TestPythonListCheck:
         assert is_valid_python_list(input_string) is False
 
 
-class TestParsePythonList:
+class TestParsePythonList(unittest.TestCase):
 
     def test_single_function_call(self):
         input_string = '[get_boiling_point(liquid_name="water", celcius=True)]'

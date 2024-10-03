@@ -1,5 +1,5 @@
 PyYAML
 jinja2
 tiktoken
-pydantic
+pydantic>=2
 Pillow

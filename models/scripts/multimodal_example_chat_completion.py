@@ -46,9 +46,6 @@ def run_main(
     with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
         img = PIL_Image.open(f).convert("RGB")
 
-    with open(THIS_DIR / "resources/pasta.jpeg", "rb") as f:
-        img2 = PIL_Image.open(f).convert("RGB")
-
     dialogs = [
         [
             UserMessage(
