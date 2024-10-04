@@ -78,7 +78,7 @@ jobs:
             echo "========= Content of the EFS mount ============="
             ls -la ${{ env.MODELS_PATH }}
 
-      - name: Check if models exist in EFS volume
+      - name: "Check if models exist in EFS volume"
         id: check_if_models_exist
         if: ${{ inputs.require_model == 'true' }}
         run: |
@@ -104,7 +104,7 @@ jobs:
             fi
           fi
 
-      - name: [DEBUG] Get runner container OS information
+      - name: "[DEBUG] Get runner container OS information"
         id: debug_os_info
         if: ${{ inputs.debug == 'true' }}
         run: |
@@ -113,13 +113,13 @@ jobs:
       #######################
       #### CODE CHECKOUT ####
       #######################
-      - name: Checkout 'meta-llama/llama-models' repository
+      - name: "Checkout 'meta-llama/llama-models' repository"
         id: checkout_repo
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
 
-      - name: [DEBUG] Content of the repository after checkout
+      - name: "[DEBUG] Content of the repository after checkout"
         id: debug_content_after_checkout
         if: ${{ inputs.debug == 'true' }}
         run: |
@@ -132,7 +132,7 @@ jobs:
       # manually to identify what dependencies are being used. #
       #                                                        #
       ##########################################################
-      - name: [DEBUG] sleep
+      - name: "[DEBUG] sleep"
         id: debug_sleep
         if: ${{ inputs.debug == 'true' && inputs.sleep_time != '' }}
         run: |
@@ -141,7 +141,7 @@ jobs:
       ##################################
       #### DEPENDENCY INSTALLATIONS ####
       ##################################
-      - name: Installing 'apt' required packages
+      - name: "Installing 'apt' required packages"
         id: install_apt
         run: |
           echo "[STEP] Installing 'apt' required packages"
@@ -149,7 +149,7 @@ jobs:
           sudo apt upgrade -y
           sudo apt install python3-pip -y
 
-      - name: Installing 'llama-models' dependencies
+      - name: "Installing 'llama-models' dependencies"
         id: install_pip_generic
         run: |
           echo "[STEP] Installing 'llama-models' models"
@@ -160,7 +160,7 @@ jobs:
           pip install xmlrunner
           pip install pytest
 
-      - name: Installing specific manual_dispatch dependencies
+      - name: "Installing specific manual_dispatch dependencies"
         id: manual_install_pip
         if: github.event_name == 'workflow_dispatch'
         run: |
@@ -177,7 +177,7 @@ jobs:
 
       #### Run tests ####
       
-      - name: PR - Run Tests
+      - name: "PR - Run Tests"
         id: pr_run_tests
         working-directory: "${{ github.workspace }}"
         if: github.event_name == 'pull_request_target'
@@ -187,7 +187,7 @@ jobs:
 
       #### Create test summary ####
 
-      - name: PR - Test Summary
+      - name: "PR - Test Summary"
         id: pr_test_summary_create
         if: github.event_name == 'pull_request_target'
         uses: test-summary/action@v2
@@ -195,7 +195,7 @@ jobs:
           paths: "${{ github.workspace }}/result.xml"
           output: test-summary.md
 
-      - name: PR - Upload Test Summary
+      - name: "PR - Upload Test Summary"
         id: pr_test_summary_upload
         if: github.event_name == 'pull_request_target'
         uses: actions/upload-artifact@v3
@@ -205,7 +205,7 @@ jobs:
 
       #### Update PR request ####
 
-      - name: PR - Update comment
+      - name: "PR - Update comment"
         id: pr_update_comment
         if: github.event_name == 'pull_request_target'
         uses: thollander/actions-comment-pull-request@v2
@@ -219,7 +219,7 @@ jobs:
 
       #### Run tests ####
 
-      - name: Manual - Run Tests
+      - name: "Manual - Run Tests"
         id: manual_run_tests
         working-directory: "${{ github.workspace }}"
         if: github.event_name == 'workflow_dispatch'
@@ -230,7 +230,7 @@ jobs:
 
       #### Create test summary ####
 
-      - name: Manual - Test Summary
+      - name: "Manual - Test Summary"
         id: manual_test_summary
         if: always() && github.event_name == 'workflow_dispatch'
         uses: test-summary/action@v2
