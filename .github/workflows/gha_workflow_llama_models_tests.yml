@@ -1,0 +1,237 @@
+name: "Run Llama-models Tests"
+
+on:
+  pull_request_target:
+    types: ["opened"]
+    branches:
+      - 'main'
+    paths:
+      - 'models/**/*.py'
+
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'GHA Runner Scale Set label to run workflow on.'
+        required: true
+        default: "llama-models-gha-runner-gpu"
+
+      branch:
+        description: "Branch to checkout"
+        required: true
+        default: "main"
+
+      debug:
+        description: 'Run debugging steps?'
+        required: false
+        default: "true"
+
+      sleep_time:
+        description: '[DEBUG] sleep time for debugging'
+        required: true
+        default: "0"
+
+      require_model:
+        description: 'Is a model required?'
+        required: true
+        default: "true"
+
+      model_vision:
+        description: 'Llama vision model ID'
+        required: false
+        default: "Llama3.2-11B-Vision-Instruct"
+
+      model_text:
+        description: 'Llama text model ID'
+        required: false
+        default: "Llama3.2-3B-Instruct"
+
+      api_key:
+        description: 'Provider API key'
+        required: true
+        default: "---"
+
+env: 
+  TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
+  MODELS_PATH: "/data/llama3.2"
+  VISION_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_vision }}"
+  TEXT_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_text }}"
+  API_KEY: "${{ inputs.api_key }}"
+
+jobs:
+  execute_workflow:
+    name: Execute workload on Self-Hosted CPU k8s runner
+    defaults:
+      run:
+        shell: bash # default shell to run all steps for a given job.
+    runs-on: ${{ inputs.runner != '' && inputs.runner || 'llama-models-gha-runner-cpu' }}
+    if: always()
+    steps:
+
+      ##############################
+      #### INITIAL DEBUG CHECKS ####
+      ##############################
+      - name: "[DEBUG] Check content of the EFS mount"
+        id: debug_efs_volume
+        continue-on-error: true
+        if: inputs.debug == 'true'
+        run: |
+            echo "========= Content of the EFS mount ============="
+            ls -la ${{ env.MODELS_PATH }}
+
+      - name: "Check if models exist in EFS volume"
+        id: check_if_models_exist
+        if: ${{ inputs.require_model == 'true' }}
+        run: |
+          # Check if vision model is provided and exists
+          if [ -n "${{ inputs.model_vision }}" ]; then
+            if [ ! -d "${{ env.VISION_MODEL_CHECKPOINT_DIR }}" ]; then
+              echo "Model '${{ inputs.model_vision }}' does not exist in mounted EFS volume, Terminating workflow."
+              exit 1
+            else
+              echo "Content of '${{ inputs.model_vision }}' model"
+              ls -la "${{ env.VISION_MODEL_CHECKPOINT_DIR }}"
+            fi
+          fi
+
+          # Check if text model is provided and exists
+          if [ -n "${{ inputs.model_text }}" ]; then
+            if [ ! -d "${{ env.TEXT_MODEL_CHECKPOINT_DIR }}" ]; then
+              echo "Model '${{ inputs.model_text }}' does not exist in mounted EFS volume, Terminating workflow."
+              exit 1
+            else
+              echo "Content of '${{ inputs.model_text }}' model"
+              ls -la "${{ env.TEXT_MODEL_CHECKPOINT_DIR }}"
+            fi
+          fi
+
+      - name: "[DEBUG] Get runner container OS information"
+        id: debug_os_info
+        if: ${{ inputs.debug == 'true' }}
+        run: |
+            cat /etc/os-release
+
+      #######################
+      #### CODE CHECKOUT ####
+      #######################
+      - name: "Checkout 'meta-llama/llama-models' repository"
+        id: checkout_repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: "[DEBUG] Content of the repository after checkout"
+        id: debug_content_after_checkout
+        if: ${{ inputs.debug == 'true' }}
+        run: |
+            ls -la ${GITHUB_WORKSPACE}
+
+      ##########################################################
+      ####              OPTIONAL SLEEP DEBUG                ####
+      #                                                        #
+      # Use to "exec" into the test k8s POD and run tests      #
+      # manually to identify what dependencies are being used. #
+      #                                                        #
+      ##########################################################
+      - name: "[DEBUG] sleep"
+        id: debug_sleep
+        if: ${{ inputs.debug == 'true' && inputs.sleep_time != '' }}
+        run: |
+            sleep ${{ inputs.sleep_time }}
+
+      ##################################
+      #### DEPENDENCY INSTALLATIONS ####
+      ##################################
+      - name: "Installing 'apt' required packages"
+        id: install_apt
+        run: |
+          echo "[STEP] Installing 'apt' required packages"
+          sudo apt update -y
+          sudo apt upgrade -y
+          sudo apt install python3-pip -y
+
+      - name: "Installing 'llama-models' dependencies"
+        id: install_pip_generic
+        run: |
+          echo "[STEP] Installing 'llama-models' models"
+          pip install -U pip setuptools
+          pip install -r requirements.txt
+          pip install blobfile
+          pip install llama-models
+          pip install xmlrunner
+          pip install pytest
+
+      - name: "Installing specific manual_dispatch dependencies"
+        id: manual_install_pip
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "[STEP] Installing specific dependencies for manual dispatch workflows"
+          pip install numpy
+          pip install torch
+          pip install fairscale
+          pip install termcolor
+          pip install torchvision
+
+      ############################################
+      #### AUTOMATIC TESTING ON PULL REQUESTS ####
+      ############################################
+
+      #### Run tests ####
+      
+      - name: "PR - Run Tests"
+        id: pr_run_tests
+        working-directory: "${{ github.workspace }}"
+        if: github.event_name == 'pull_request_target'
+        run: |
+          echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
+          python3 -m pytest --ignore=models/llama3/tests/api/test_generation.py --junitxml="${{ github.workspace }}/result.xml"
+
+      #### Create test summary ####
+
+      - name: "PR - Test Summary"
+        id: pr_test_summary_create
+        if: github.event_name == 'pull_request_target'
+        uses: test-summary/action@v2
+        with:
+          paths: "${{ github.workspace }}/result.xml"
+          output: test-summary.md
+
+      - name: "PR - Upload Test Summary"
+        id: pr_test_summary_upload
+        if: github.event_name == 'pull_request_target'
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-summary.md
+
+      #### Update PR request ####
+
+      - name: "PR - Update comment"
+        id: pr_update_comment
+        if: github.event_name == 'pull_request_target'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: test-summary.md
+
+      ########################
+      #### MANUAL TESTING ####
+      ########################
+
+      #### Run tests ####
+
+      - name: "Manual - Run Tests"
+        id: manual_run_tests
+        working-directory: "${{ github.workspace }}"
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
+          free -m
+          python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+
+      #### Create test summary ####
+
+      - name: "Manual - Test Summary"
+        id: manual_test_summary
+        if: always() && github.event_name == 'workflow_dispatch'
+        uses: test-summary/action@v2
+        with:
+          paths: "${{ github.workspace }}/result.xml"
