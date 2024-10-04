@@ -80,7 +80,7 @@ jobs:
 
       - name: "Check if models exist in EFS volume"
         id: check_if_model_exists
-        if: ${{ github.event.inputs.require_model == "true" }}
+        if: ${{ github.event.inputs.require_model == 'true' }}
         run: |
           MODEL_PATH=${{ env.MODELS_PATH }}
 
