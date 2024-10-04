@@ -56,6 +56,7 @@ env:
   VISION_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ github.event.inputs.model_vision }}"
   TEXT_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ github.event.inputs.model_text }}"
   API_KEY: "${{ github.event.inputs.api_key }}"
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
 
 jobs:
   execute_workflow:
