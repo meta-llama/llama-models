@@ -53,9 +53,9 @@ on:
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: "/data/llama3.2"
-  VISION_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.event.inputs.model_vision }}"
-  TEXT_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.event.inputs.model_text }}"
-  API_KEY: ${{ github.event.inputs.api_key }}
+  VISION_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ github.event.inputs.model_vision }}"
+  TEXT_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ github.event.inputs.model_text }}"
+  API_KEY: "${{ github.event.inputs.api_key }}"
 
 jobs:
   execute_workflow:
