@@ -52,9 +52,9 @@ on:
 
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
-  MODELS_PATH: '/data/llama3.2'
-  VISION_MODEL_CHECKPOINT_DIR: ${{ github.events.inputs.model_vision }}
-  TEXT_MODEL_CHECKPOINT_DIR: ${{ github.events.inputs.model_text }}
+  MODELS_PATH: "/data/llama3.2"
+  VISION_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.events.inputs.model_vision }}"
+  TEXT_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.events.inputs.model_text }}"
   API_KEY: ${{ github.event.inputs.api_key }}
 
 jobs:
