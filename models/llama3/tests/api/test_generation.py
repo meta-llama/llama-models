@@ -78,6 +78,7 @@ class TestVisionModelInference(unittest.TestCase):
         cls.generator = build_generator("VISION_MODEL_CHECKPOINT_DIR")
 
     @unittest.skip("Disabling vision model test")
+    @pytest.mark.skip(reason="Disabling vision model test")
     def test_run_generation(self):
         with open(
             THIS_DIR.parent.parent.parent / "scripts/resources/dog.jpg", "rb"
