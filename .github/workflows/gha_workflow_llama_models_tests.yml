@@ -226,6 +226,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
+          free -m
           python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
 
       #### Create test summary ####
