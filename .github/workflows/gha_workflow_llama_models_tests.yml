@@ -70,7 +70,7 @@ jobs:
       ##############################
       #### INITIAL DEBUG CHECKS ####
       ##############################
-      - name: [DEBUG] Check content of the EFS mount
+      - name: "[DEBUG] Check content of the EFS mount"
         id: debug_efs_volume
         continue-on-error: true
         if: inputs.debug == 'true'
