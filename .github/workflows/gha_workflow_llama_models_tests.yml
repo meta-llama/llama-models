@@ -171,6 +171,7 @@ jobs:
           pip install torch
           pip install fairscale
           pip install termcolor
+          pip install torchvision
 
       ############################################
       #### AUTOMATIC TESTING ON PULL REQUESTS ####
