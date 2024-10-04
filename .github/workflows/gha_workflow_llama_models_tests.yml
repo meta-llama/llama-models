@@ -182,8 +182,8 @@ jobs:
         working-directory: "${{ github.workspace }}"
         if: github.event_name == 'pull_request_target'
         run: |
-          echo "[STEP]Running Tokenizer tests on Self-Hosted k8s ARC Runner"
-          python3 -m pytest -k "not test_generation.py" --junitxml="${{ github.workspace }}/result.xml"
+          echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
+          python3 -m pytest --ignore=models/llama3/tests/api/test_generation.py --junitxml="${{ github.workspace }}/result.xml"
 
       #### Create test summary ####
 
@@ -211,7 +211,6 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: test-summary.md
-
 
       ########################
       #### MANUAL TESTING ####
