@@ -53,8 +53,8 @@ on:
 env: 
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
   MODELS_PATH: "/data/llama3.2"
-  VISION_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.events.inputs.model_vision }}"
-  TEXT_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.events.inputs.model_text }}"
+  VISION_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.event.inputs.model_vision }}"
+  TEXT_MODEL_CHECKPOINT_DIR: "${{ env.MODELS_PATH }}/${{ github.event.inputs.model_text }}"
   API_KEY: ${{ github.event.inputs.api_key }}
 
 jobs:
@@ -80,7 +80,7 @@ jobs:
 
       - name: "Check if models exist in EFS volume"
         id: check_if_model_exists
-        #if: ${{ github.events.input.require_model == 'true' }}
+        if: ${{ github.event.inputs.require_model == "true" }}
         run: |
           MODEL_PATH=${{ env.MODELS_PATH }}
 
