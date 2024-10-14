@@ -659,7 +659,7 @@ def llama3_2_instruct_models() -> List[Model]:
                 "norm_eps": 1e-05,
                 "rope_theta": 500000.0,
                 "use_scaled_rope": True,
-                "vision_chunk_size": 448,
+                "vision_chunk_size": 560,
                 "vision_max_num_chunks": 4,
                 "vision_num_cross_attention_layers": 8,
             },
