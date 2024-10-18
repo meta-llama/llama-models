@@ -73,7 +73,7 @@ def interleaved_text_media_as_str(content: InterleavedTextMedia, sep: str = " ")
 def interleaved_text_media_localize(
     content: InterleavedTextMedia,
 ) -> InterleavedTextMedia:
-    def _localize_single(c: str | ImageMedia) -> str | ImageMedia:
+    def _localize_single(c):
         if isinstance(c, ImageMedia):
             # load image and return PIL version
             img = c.image
