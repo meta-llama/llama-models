@@ -11,14 +11,8 @@
 import math
 from typing import Optional, Tuple
 
-import fairscale.nn.model_parallel.initialize as fs_init
 import torch
 import torch.nn.functional as F
-from fairscale.nn.model_parallel.layers import (
-    ColumnParallelLinear,
-    RowParallelLinear,
-    VocabParallelEmbedding,
-)
 from torch import nn
 
 from ..api import ModelArgs
@@ -27,7 +21,23 @@ from ..api import ModelArgs
 # dependencies. These dependencies are not part of the default dependencies
 # (requirements.txt) of the `llama-models` package.
 
+class FakeParallelLinear(nn.Linear):
+    def __init__(
+        self,
+        in_features,
+        out_features,
+        bias=True,
+        gather_output=False,
+        input_is_parallel=False,
+        init_method=None):
+        super().__init__(in_features, out_features, bias=bias)
 
+ColumnParallelLinear = RowParallelLinear = FakeParallelLinear
+
+class VocabParallelEmbedding(nn.Embedding):
+    def __init__(self, num_embeddings, embedding_dim, init_method=None):
+        super().__init__(num_embeddings, embedding_dim)
+        
 class RMSNorm(torch.nn.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
         super().__init__()
@@ -116,7 +126,7 @@ class Attention(nn.Module):
     def __init__(self, args: ModelArgs):
         super().__init__()
         self.n_kv_heads = args.n_heads if args.n_kv_heads is None else args.n_kv_heads
-        model_parallel_size = fs_init.get_model_parallel_world_size()
+        model_parallel_size = 1
         self.n_local_heads = args.n_heads // model_parallel_size
         self.n_local_kv_heads = self.n_kv_heads // model_parallel_size
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
@@ -158,7 +168,7 @@ class Attention(nn.Module):
                 self.n_local_kv_heads,
                 self.head_dim,
             )
-        ).cuda()
+        )
         self.cache_v = torch.zeros(
             (
                 args.max_batch_size,
@@ -166,7 +176,7 @@ class Attention(nn.Module):
                 self.n_local_kv_heads,
                 self.head_dim,
             )
-        ).cuda()
+        )
 
     def forward(
         self,

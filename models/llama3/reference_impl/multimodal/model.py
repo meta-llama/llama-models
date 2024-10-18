@@ -13,20 +13,13 @@ import math
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import fairscale.nn.model_parallel.initialize as fs_init
 
 import torch
 import torch.nn.functional as F
-from fairscale.nn.model_parallel.layers import (
-    ColumnParallelLinear,
-    RowParallelLinear,
-    VocabParallelEmbedding,
-)
 
 from PIL import Image as PIL_Image
 
 from torch import nn, Tensor
-from torch.distributed import _functional_collectives as funcol
 
 from ..model import apply_rotary_emb, ModelArgs, precompute_freqs_cis, RMSNorm
 
@@ -41,6 +34,23 @@ from .encoder_utils import (
 from .image_transform import VariableSizeImageTransform
 from .utils import get_negative_inf_value, to_2tuple
 
+
+class FakeParallelLinear(nn.Linear):
+    def __init__(
+        self,
+        in_features,
+        out_features,
+        bias=True,
+        gather_output=False,
+        input_is_parallel=False,
+        init_method=None):
+        super().__init__(in_features, out_features, bias=bias)
+
+ColumnParallelLinear = RowParallelLinear = FakeParallelLinear
+
+class VocabParallelEmbedding(nn.Embedding):
+    def __init__(self, num_embeddings, embedding_dim, init_method=None):
+        super().__init__(num_embeddings, embedding_dim)
 
 logger = logging.getLogger(__name__)
 MP_SCALE = 8
@@ -131,7 +141,6 @@ class ColumnParallelConv2dPatch(torch.nn.Module):
         x = self._unfold(x)
         x = x.permute(0, 2, 1)
         x = F.linear(x, self._linear.weight)
-        x = gather_from_tensor_model_parallel_region(x)
         return x
 
 
@@ -166,7 +175,6 @@ class ImageFeedForward(torch.nn.Module):
         hidden = F.linear(x, self.c_fc.weight, self.c_fc.bias)
         hidden = self.non_linearity(hidden)
         hidden = F.linear(hidden, self.c_proj.weight)
-        hidden = reduce_from_tensor_model_parallel_region(hidden)
         hidden += self.c_proj.bias
         return hidden
 
@@ -179,7 +187,7 @@ class ImageAttention(nn.Module):
         n_heads,
     ):
         super().__init__()
-        model_parallel_size = fs_init.get_model_parallel_world_size()
+        model_parallel_size = 1
         qkvo_replication = 1
         if model_parallel_size > 16:
             qkvo_replication = model_parallel_size // 8
@@ -250,7 +258,6 @@ class ImageAttention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous().reshape(bs, slen, -1)
 
         out = F.linear(attn_output, self.wo.weight)
-        out = reduce_from_tensor_model_parallel_region(out)
         out = out / self.qkvo_replication
         return out
 
@@ -561,7 +568,7 @@ class Attention(nn.Module):
             cache_v (torch.Tensor): Cached values for attention.
         """
         super().__init__()
-        model_parallel_size = fs_init.get_model_parallel_world_size()
+        model_parallel_size = 1
         replication_factor = 1
         if model_parallel_size > 8:
             replication_factor = model_parallel_size // MP_SCALE
@@ -671,7 +678,6 @@ class Attention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous().reshape(bs, slen, -1)
 
         out = F.linear(attn_output, self.wo.weight)
-        out = reduce_from_tensor_model_parallel_region(out)
         return out
 
 
@@ -717,7 +723,6 @@ class FeedForward(nn.Module):
         x1 = F.silu(x1)
         x_in = x1 * x3
         out = F.linear(x_in, self.w2.weight)
-        out = reduce_from_tensor_model_parallel_region(out)
         return out
 
 
@@ -874,7 +879,7 @@ class CrossAttention(torch.nn.Module):
         norm_eps: float,
     ):
         super().__init__()
-        self.model_parallel_size = fs_init.get_model_parallel_world_size()
+        self.model_parallel_size = 1
         replication_factor = 1
         if self.model_parallel_size > 8:
             replication_factor = self.model_parallel_size // MP_SCALE
@@ -983,7 +988,6 @@ class CrossAttention(torch.nn.Module):
         output = output.transpose(1, 2).contiguous().reshape(bsz, seqlen, -1)
 
         out = F.linear(output, self.wo.weight)
-        out = reduce_from_tensor_model_parallel_region(out)
         return out
 
 
@@ -1113,13 +1117,12 @@ class CrossAttentionTransformerVision(torch.nn.Module):
         # aspect_ratios: (B, T)
         # h: (B, T, D)
         vision_tokens = self.vision_encoder(
-            images.to(dtype=torch.bfloat16), aspect_ratios
+            images.to(dtype=torch.float32), aspect_ratios
         )
 
         vision_tokens = F.linear(
             vision_tokens, self.vision_projection.weight, self.vision_projection.bias
         )
-        vision_tokens = gather_from_tensor_model_parallel_region(vision_tokens)
         return vision_tokens
 
 
@@ -1128,7 +1131,7 @@ class CrossAttentionTransformerText(torch.nn.Module):
 
     def __init__(self, args: ModelArgs) -> None:
         super().__init__()
-        self.model_parallel_size = fs_init.get_model_parallel_world_size()
+        self.model_parallel_size = 1
         assert args.vocab_size > 0
         self.vocab_size = args.vocab_size
         self.n_layers = args.n_layers
@@ -1158,7 +1161,7 @@ class CrossAttentionTransformerText(torch.nn.Module):
             args.vision_num_cross_attention_layers
         )
         self.learnable_embedding = VocabParallelEmbedding(
-            max(fs_init.get_model_parallel_world_size(), 8),
+            8,
             args.dim,
             init_method=lambda x: x,
         )
@@ -1270,10 +1273,9 @@ class CrossAttentionTransformerText(torch.nn.Module):
         h = self.norm(h)
 
         output = F.linear(h, self.output.weight)
-        output = gather_from_tensor_model_parallel_region(output)
         return output.float()
 
-    def setup_cache(self, max_batch_size: int, dtype=torch.bfloat16):
+    def setup_cache(self, max_batch_size: int, dtype=torch.float32):
         # Set up the text kv caches
         device = next(self.parameters()).device
         ones = torch.ones(
@@ -1407,7 +1409,6 @@ class CrossAttentionTransformer(torch.nn.Module):
         else:
             vision_tokens = self.vision_model(stacked_images, aspect_ratios)
 
-        vision_tokens = vision_tokens.to("cuda")
 
         bsz, nimg, nchunk, ntok, image_token_dim = tuple(vision_tokens.shape)
         xattn_caches = torch.stack(
@@ -1428,7 +1429,7 @@ class CrossAttentionTransformer(torch.nn.Module):
         cross_attention_masks, full_text_row_masked_out_mask = (
             self.text_model._get_xattn_mask(
                 num_tokens=total_len,
-                text_device="cuda",
+                text_device="cpu",
                 text_dtype=next(self.text_model.parameters()).dtype,
                 vision_tokens=vision_tokens,
                 cross_attention_masks=padded_masks,
@@ -1495,7 +1496,7 @@ def _pad_masks(
     total_len: int,
     max_num_chunks: int,
 ) -> torch.Tensor:
-    dtype = torch.bfloat16
+    dtype = torch.float32
     inf_value = get_negative_inf_value(dtype)
 
     bsz = len(all_masks)
