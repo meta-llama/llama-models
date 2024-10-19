@@ -41,7 +41,7 @@ def run_main(
     `max_gen_len` is optional because finetuned models are able to stop generations naturally.
     """
     generator = Llama.build(
-        tokenizer_path=tokenizer_path,
+        ckpt_dir=ckpt_dir,
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
         model_parallel_size=model_parallel_size,
