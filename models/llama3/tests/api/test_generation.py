@@ -7,11 +7,11 @@
 
 import os
 import unittest
-import pytest
 
 from pathlib import Path
 
 import numpy as np
+import pytest
 from llama_models.llama3.api.datatypes import ImageMedia, SystemMessage, UserMessage
 
 from llama_models.llama3.reference_impl.generation import Llama
@@ -21,7 +21,6 @@ THIS_DIR = Path(__file__).parent
 
 
 def build_generator(env_var: str):
-    tokenizer_path = str(THIS_DIR.parent.parent / "api/tokenizer.model")
     if env_var not in os.environ:
         raise ValueError(f"{env_var} must be specified for this test")
 
@@ -31,7 +30,6 @@ def build_generator(env_var: str):
     os.environ["MASTER_PORT"] = "29501"
     return Llama.build(
         ckpt_dir=os.environ[env_var],
-        tokenizer_path=tokenizer_path,
         max_seq_len=128,
         max_batch_size=1,
         model_parallel_size=1,
