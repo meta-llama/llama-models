@@ -69,10 +69,10 @@ class Llama:
     @staticmethod
     def build(
         ckpt_dir: str,
-        tokenizer_path: str,
         max_seq_len: int,
         max_batch_size: int,
         model_parallel_size: Optional[int] = None,
+        tokenizer_path: Optional[str] = None,
         seed: int = 1,
     ):
         """
@@ -132,7 +132,11 @@ class Llama:
             max_batch_size=max_batch_size,
             **params,
         )
-        tokenizer = Tokenizer(model_path=tokenizer_path)
+        if tokenizer_path:
+            tokenizer = Tokenizer(model_path=tokenizer_path)
+        else:
+            tokenizer = Tokenizer.get_instance()
+
         assert model_args.vocab_size == tokenizer.n_words
         if torch.cuda.is_bf16_supported():
             torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
