@@ -10,6 +10,17 @@ from typing import Optional
 
 
 @dataclass
+class QuantizationArgs:
+    group_size: Optional[int] = None
+
+
+@dataclass
+class LoRAArgs:
+    rank: int
+    scale: float
+
+
+@dataclass
 class ModelArgs:
     dim: int = 4096
     n_layers: int = 32
@@ -30,10 +41,18 @@ class ModelArgs:
     vision_max_num_chunks: int = 4
     vision_num_cross_attention_layers: int = -1
 
+    quantization_args: Optional[QuantizationArgs] = None
+    lora_args: Optional[LoRAArgs] = None
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
+            if k == "lora_args":
+                setattr(self, k, LoRAArgs(**v))
+            elif k == "quantization_args":
+                setattr(self, k, QuantizationArgs(**v))
+            else:
+                if hasattr(self, k):
+                    setattr(self, k, v)
 
         if self.n_kv_heads is None:
             self.n_kv_heads = self.n_heads
