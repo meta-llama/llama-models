@@ -609,7 +609,7 @@ def arch_args_3b() -> dict:
 def llama3_2_quantized_models() -> List[Model]:
     return [
         Model(
-            core_model_id=CoreModelId.llama3_2_1b,
+            core_model_id=CoreModelId.llama3_2_1b_instruct,
             variant="int4-qlora-eo8",
             quantization_format=CheckpointQuantizationFormat.int4,
             description="Llama 3.2 1b INT4 quantized LoRA",
@@ -628,7 +628,7 @@ def llama3_2_quantized_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.llama3_2_1b,
+            core_model_id=CoreModelId.llama3_2_1b_instruct,
             variant="int4-spinquant-eo8",
             quantization_format=CheckpointQuantizationFormat.int4,
             description="Llama 3.2 1b INT4 quantized SpinQuant",
@@ -643,7 +643,7 @@ def llama3_2_quantized_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.llama3_2_3b,
+            core_model_id=CoreModelId.llama3_2_3b_instruct,
             variant="int4-qlora-eo8",
             quantization_format=CheckpointQuantizationFormat.int4,
             description="Llama 3.2 3b INT4 quantized LoRA",
@@ -662,7 +662,7 @@ def llama3_2_quantized_models() -> List[Model]:
             pth_file_count=1,
         ),
         Model(
-            core_model_id=CoreModelId.llama3_2_3b,
+            core_model_id=CoreModelId.llama3_2_3b_instruct,
             variant="int4-spinquant-eo8",
             quantization_format=CheckpointQuantizationFormat.int4,
             description="Llama 3.2 3b INT4 quantized SpinQuant",
