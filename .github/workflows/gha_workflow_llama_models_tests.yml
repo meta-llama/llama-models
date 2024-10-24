@@ -50,8 +50,8 @@ on:
         required: false
         default: "---"
 
-env: 
-  TOKENIZER_PATH: "models/llama3/api/tokenizer.model"  
+env:
+  TOKENIZER_PATH: "models/llama3/api/tokenizer.model"
   MODELS_PATH: "/data/llama3.2"
   VISION_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_vision }}"
   TEXT_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_text }}"
@@ -178,7 +178,6 @@ jobs:
       ############################################
 
       #### Run tests ####
-      
       - name: "PR - Run Tests"
         id: pr_run_tests
         working-directory: "${{ github.workspace }}"
