@@ -12,12 +12,11 @@ from typing import Optional
 
 import fire
 
-from PIL import Image as PIL_Image
-from termcolor import cprint
-
-from models.llama3.api.datatypes import ImageMedia
+from models.llama3.api.datatypes import ImageMedia, UserMessage
 
 from models.llama3.reference_impl.generation import Llama
+
+from PIL import Image as PIL_Image
 
 
 def run_main(
@@ -36,32 +35,41 @@ def run_main(
         model_parallel_size=model_parallel_size,
     )
 
+    # image understanding
+    dialogs = []
     with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
         img = PIL_Image.open(f).convert("RGB")
 
-    with open(THIS_DIR / "resources/pasta.jpeg", "rb") as f:
-        img2 = PIL_Image.open(f).convert("RGB")
-
-    interleaved_contents = [
-        # text only
-        "The color of the sky is blue but sometimes it can also be",
-        # image understanding
+    dialogs = [
         [
-            ImageMedia(image=img),
-            "If I had to write a haiku for this one",
+            UserMessage(
+                content=[
+                    ImageMedia(image=img),
+                    "Describe this image in two sentences",
+                ],
+            )
         ],
     ]
+    # text only
+    dialogs += [
+        [UserMessage(content="what is the recipe of mayonnaise in two sentences?")],
+    ]
 
-    for content in interleaved_contents:
-        result = generator.text_completion(
-            content,
+    for dialog in dialogs:
+        result = generator.chat_completion(
+            dialog,
             max_gen_len=max_gen_len,
             temperature=temperature,
             top_p=top_p,
         )
 
-        cprint(f"{content}", end="")
-        cprint(f"{result.generation}", color="yellow")
+        for msg in dialog:
+            print(f"{msg.role.capitalize()}: {msg.content}\n")
+
+        out_message = result.generation
+        print(f"> {out_message.role.capitalize()}: {out_message.content}")
+        for t in out_message.tool_calls:
+            print(f"  Tool call: {t.tool_name} ({t.arguments})")
         print("\n==================================\n")
 
 

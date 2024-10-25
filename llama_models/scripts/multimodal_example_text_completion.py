@@ -12,11 +12,12 @@ from typing import Optional
 
 import fire
 
-from PIL import Image as PIL_Image
-
-from models.llama3.api.datatypes import ImageMedia, UserMessage
+from models.llama3.api.datatypes import ImageMedia
 
 from models.llama3.reference_impl.generation import Llama
+
+from PIL import Image as PIL_Image
+from termcolor import cprint
 
 
 def run_main(
@@ -35,41 +36,32 @@ def run_main(
         model_parallel_size=model_parallel_size,
     )
 
-    # image understanding
-    dialogs = []
     with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
         img = PIL_Image.open(f).convert("RGB")
 
-    dialogs = [
+    with open(THIS_DIR / "resources/pasta.jpeg", "rb") as f:
+        img2 = PIL_Image.open(f).convert("RGB")
+
+    interleaved_contents = [
+        # text only
+        "The color of the sky is blue but sometimes it can also be",
+        # image understanding
         [
-            UserMessage(
-                content=[
-                    ImageMedia(image=img),
-                    "Describe this image in two sentences",
-                ],
-            )
+            ImageMedia(image=img),
+            "If I had to write a haiku for this one",
         ],
     ]
-    # text only
-    dialogs += [
-        [UserMessage(content="what is the recipe of mayonnaise in two sentences?")],
-    ]
 
-    for dialog in dialogs:
-        result = generator.chat_completion(
-            dialog,
+    for content in interleaved_contents:
+        result = generator.text_completion(
+            content,
             max_gen_len=max_gen_len,
             temperature=temperature,
             top_p=top_p,
         )
 
-        for msg in dialog:
-            print(f"{msg.role.capitalize()}: {msg.content}\n")
-
-        out_message = result.generation
-        print(f"> {out_message.role.capitalize()}: {out_message.content}")
-        for t in out_message.tool_calls:
-            print(f"  Tool call: {t.tool_name} ({t.arguments})")
+        cprint(f"{content}", end="")
+        cprint(f"{result.generation}", color="yellow")
         print("\n==================================\n")
 
 
