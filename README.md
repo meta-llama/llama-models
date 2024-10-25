@@ -24,11 +24,11 @@ Our mission is to empower individuals and industry through this opportunity whil
 
 |  **Model** | **Launch date** | **Model sizes** | **Context Length** | **Tokenizer** | **Acceptable use policy**  |  **License** | **Model Card** |
 | :----: | :----: | :----: | :----:|:----:|:----:|:----:|:----:|
-| Llama 2 | 7/18/2023 | 7B, 13B, 70B | 4K | Sentencepiece | [Use Policy](models/llama2/USE_POLICY.md) | [License](models/llama2/LICENSE) | [Model Card](models/llama2/MODEL_CARD.md) |
-| Llama 3 | 4/18/2024 | 8B, 70B | 8K | TikToken-based | [Use Policy](models/llama3/USE_POLICY.md) | [License](models/llama3/LICENSE) | [Model Card](models/llama3/MODEL_CARD.md) |
-| Llama 3.1 | 7/23/2024 | 8B, 70B, 405B | 128K | TikToken-based | [Use Policy](models/llama3_1/USE_POLICY.md) | [License](models/llama3_1/LICENSE) | [Model Card](models/llama3_1/MODEL_CARD.md) |
-| Llama 3.2 | 9/25/2024 | 1B, 3B | 128K | TikToken-based | [Use Policy](models/llama3_2/USE_POLICY.md) | [License](models/llama3_2/LICENSE) | [Model Card](models/llama3_2/MODEL_CARD.md) |
-| Llama 3.2-Vision | 9/25/2024 | 11B, 90B | 128K | TikToken-based | [Use Policy](models/llama3_2/USE_POLICY.md) | [License](models/llama3_2/LICENSE) | [Model Card](models/llama3_2/MODEL_CARD_VISION.md) |
+| Llama 2 | 7/18/2023 | 7B, 13B, 70B | 4K | Sentencepiece | [Use Policy](llama_models/llama2/USE_POLICY.md) | [License](llama_models/llama2/LICENSE) | [Model Card](llama_models/llama2/MODEL_CARD.md) |
+| Llama 3 | 4/18/2024 | 8B, 70B | 8K | TikToken-based | [Use Policy](llama_models/llama3/USE_POLICY.md) | [License](llama_models/llama3/LICENSE) | [Model Card](llama_models/llama3/MODEL_CARD.md) |
+| Llama 3.1 | 7/23/2024 | 8B, 70B, 405B | 128K | TikToken-based | [Use Policy](llama_models/llama3_1/USE_POLICY.md) | [License](llama_models/llama3_1/LICENSE) | [Model Card](llama_models/llama3_1/MODEL_CARD.md) |
+| Llama 3.2 | 9/25/2024 | 1B, 3B | 128K | TikToken-based | [Use Policy](llama_models/llama3_2/USE_POLICY.md) | [License](llama_models/llama3_2/LICENSE) | [Model Card](llama_models/llama3_2/MODEL_CARD.md) |
+| Llama 3.2-Vision | 9/25/2024 | 11B, 90B | 128K | TikToken-based | [Use Policy](llama_models/llama3_2/USE_POLICY.md) | [License](llama_models/llama3_2/LICENSE) | [Model Card](llama_models/llama3_2/MODEL_CARD_VISION.md) |
 
 ## Download
 
@@ -53,15 +53,15 @@ You need to install the following dependencies (in addition to the `requirements
 pip install torch fairscale fire blobfile
 ```
 
-After installing the dependencies, you can run the example scripts (within `models/scripts/` sub-directory) as follows:
+After installing the dependencies, you can run the example scripts (within `llama_models/scripts/` sub-directory) as follows:
 ```bash
 #!/bin/bash
 
 CHECKPOINT_DIR=~/.llama/checkpoints/Meta-Llama3.1-8B-Instruct
-PYTHONPATH=$(git rev-parse --show-toplevel) torchrun models/scripts/example_chat_completion.py $CHECKPOINT_DIR
+PYTHONPATH=$(git rev-parse --show-toplevel) torchrun llama_models/scripts/example_chat_completion.py $CHECKPOINT_DIR
 ```
 
-The above script should be used with an Instruct (Chat) model. For a Base model, use the script `models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
+The above script should be used with an Instruct (Chat) model. For a Base model, use the script `llama_models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
 
 For running larger models with tensor parallelism, you should modify as:
 ```bash
@@ -70,7 +70,7 @@ For running larger models with tensor parallelism, you should modify as:
 NGPUS=8
 PYTHONPATH=$(git rev-parse --show-toplevel) torchrun \
   --nproc_per_node=$NGPUS \
-  models/scripts/example_chat_completion.py $CHECKPOINT_DIR \
+  llama_models/scripts/example_chat_completion.py $CHECKPOINT_DIR \
   --model_parallel_size $NGPUS
 ```
 
