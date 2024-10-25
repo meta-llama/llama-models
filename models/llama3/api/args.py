@@ -6,12 +6,27 @@
 # the top-level of this source tree.
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional
+
+
+class QuantizationScheme(Enum):
+    int4_weight_int8_dynamic_activation = "int4_weight_int8_dynamic_activation"
 
 
 @dataclass
 class QuantizationArgs:
+    scheme: Optional[QuantizationScheme] = None
     group_size: Optional[int] = None
+    spinquant: bool = False
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            if k == "scheme":
+                setattr(self, k, QuantizationScheme(v))
+            else:
+                if hasattr(self, k):
+                    setattr(self, k, v)
 
 
 @dataclass
