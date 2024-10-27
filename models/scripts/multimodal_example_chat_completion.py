@@ -12,11 +12,11 @@ from typing import Optional
 
 import fire
 
+from llama_models.llama3.api.datatypes import ImageMedia, UserMessage
+
+from llama_models.llama3.reference_impl.generation import Llama
+
 from PIL import Image as PIL_Image
-
-from models.llama3.api.datatypes import ImageMedia, UserMessage
-
-from models.llama3.reference_impl.generation import Llama
 
 
 def run_main(

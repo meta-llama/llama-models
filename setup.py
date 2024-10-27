@@ -37,7 +37,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/meta-llama/llama-models",
-    package_dir={"llama_models": "models"},
+    package_dir={"llama_models": "llama_models"},
     classifiers=[],
     python_requires=">=3.10",
     install_requires=read_requirements(),

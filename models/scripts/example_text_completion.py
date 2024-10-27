@@ -11,9 +11,9 @@
 from typing import Optional
 
 import fire
-from termcolor import cprint
 
-from models.llama3.reference_impl.generation import Llama
+from llama_models.llama3.reference_impl.generation import Llama
+from termcolor import cprint
 
 
 def run_main(
