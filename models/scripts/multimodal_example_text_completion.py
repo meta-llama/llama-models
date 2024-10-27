@@ -12,12 +12,12 @@ from typing import Optional
 
 import fire
 
+from llama_models.llama3.api.datatypes import ImageMedia
+
+from llama_models.llama3.reference_impl.generation import Llama
+
 from PIL import Image as PIL_Image
 from termcolor import cprint
-
-from models.llama3.api.datatypes import ImageMedia
-
-from models.llama3.reference_impl.generation import Llama
 
 
 def run_main(

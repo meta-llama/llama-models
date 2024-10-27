@@ -53,15 +53,15 @@ You need to install the following dependencies (in addition to the `requirements
 pip install torch fairscale fire blobfile
 ```
 
-After installing the dependencies, you can run the example scripts (within `models/scripts/` sub-directory) as follows:
+After installing the dependencies, you can run the example scripts (within `llama_models/scripts/` sub-directory) as follows:
 ```bash
 #!/bin/bash
 
 CHECKPOINT_DIR=~/.llama/checkpoints/Meta-Llama3.1-8B-Instruct
-PYTHONPATH=$(git rev-parse --show-toplevel) torchrun models/scripts/example_chat_completion.py $CHECKPOINT_DIR
+PYTHONPATH=$(git rev-parse --show-toplevel) torchrun llama_models/scripts/example_chat_completion.py $CHECKPOINT_DIR
 ```
 
-The above script should be used with an Instruct (Chat) model. For a Base model, use the script `models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
+The above script should be used with an Instruct (Chat) model. For a Base model, use the script `llama_models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
 
 For running larger models with tensor parallelism, you should modify as:
 ```bash
@@ -70,7 +70,7 @@ For running larger models with tensor parallelism, you should modify as:
 NGPUS=8
 PYTHONPATH=$(git rev-parse --show-toplevel) torchrun \
   --nproc_per_node=$NGPUS \
-  models/scripts/example_chat_completion.py $CHECKPOINT_DIR \
+  llama_models/scripts/example_chat_completion.py $CHECKPOINT_DIR \
   --model_parallel_size $NGPUS
 ```
 
