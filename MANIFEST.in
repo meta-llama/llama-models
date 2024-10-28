@@ -1,7 +1,7 @@
 include requirements.txt
-include models/llama3/api/tokenizer.model
-include models/scripts/resources/dog.jpg
-include models/scripts/resources/pasta.jpeg
-include models/llama3_1/prompt_format.md
-include models/llama3_2/text_prompt_format.md
-include models/llama3_2/vision_prompt_format.md
+include llama_models/llama3/api/tokenizer.model
+include llama_models/scripts/resources/dog.jpg
+include llama_models/scripts/resources/pasta.jpeg
+include llama_models/llama3_1/prompt_format.md
+include llama_models/llama3_2/text_prompt_format.md
+include llama_models/llama3_2/vision_prompt_format.md
