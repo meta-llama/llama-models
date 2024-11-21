@@ -8,7 +8,7 @@
 from enum import Enum
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from typing_extensions import Annotated
 from ...datatypes import *  # noqa
@@ -44,8 +44,7 @@ class URL(BaseModel):
 class ImageMedia(BaseModel):
     image: Union[PIL_Image.Image, URL]
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 InterleavedTextMedia = Union[
@@ -117,7 +116,7 @@ class ToolCall(BaseModel):
     tool_name: Union[BuiltinTool, str]
     arguments: Dict[str, RecursiveType]
 
-    @validator("tool_name", pre=True)
+    @field_validator("tool_name", mode="before")
     @classmethod
     def validate_field(cls, v):
         if isinstance(v, str):
@@ -134,7 +133,7 @@ class ToolResponse(BaseModel):
     tool_name: Union[BuiltinTool, str]
     content: InterleavedTextMedia
 
-    @validator("tool_name", pre=True)
+    @field_validator("tool_name", mode="before")
     @classmethod
     def validate_field(cls, v):
         if isinstance(v, str):
@@ -159,7 +158,7 @@ class ToolDefinition(BaseModel):
     description: Optional[str] = None
     parameters: Optional[Dict[str, ToolParamDefinition]] = None
 
-    @validator("tool_name", pre=True)
+    @field_validator("tool_name", mode="before")
     @classmethod
     def validate_field(cls, v):
         if isinstance(v, str):
