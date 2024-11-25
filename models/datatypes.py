@@ -175,7 +175,7 @@ class Model(BaseModel):
     huggingface_repo: Optional[str] = None
     recommended_sampling_params: Optional[SamplingParams] = None
     arch_args: Dict[str, Any]
-    is_default_variant: bool
+    variant: str = ""
 
     quantization_format: CheckpointQuantizationFormat = (
         CheckpointQuantizationFormat.bf16
@@ -190,23 +190,10 @@ class Model(BaseModel):
     def model_family(self) -> ModelFamily:
         return model_family(self.core_model_id)
 
-    # The variant is a string representation of other parameters which helps
-    # uniquely identify the model. this typically includes the quantization
-    # format, model parallel size, etc.
-    @property
-    def variant(self) -> str:
-        parts = [
-            self.quantization_format.value,
-            f"mp{self.pth_file_count}",
-        ]
-
-        return "-".join(parts)
-
     # The SKU is uniquely identified by (model_id, variant) combo
     def descriptor(self, shorten_default_variant: bool = True) -> str:
-        if shorten_default_variant and self.is_default_variant:
+        if not self.variant:
             return self.core_model_id.value
-
         return f"{self.core_model_id.value}:{self.variant}"
 
     @property
@@ -233,6 +220,8 @@ class Model(BaseModel):
         elif self.model_family == ModelFamily.llama3_1:
             return 131072
         elif self.model_family == ModelFamily.llama3_2:
+            if self.quantization_format == CheckpointQuantizationFormat.int4:
+                return 8192
             return 131072
         elif self.core_model_id in [
             CoreModelId.llama_guard_3_8b,

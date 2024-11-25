@@ -6,7 +6,33 @@
 # the top-level of this source tree.
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional
+
+
+class QuantizationScheme(Enum):
+    int4_weight_int8_dynamic_activation = "int4_weight_int8_dynamic_activation"
+
+
+@dataclass
+class QuantizationArgs:
+    scheme: Optional[QuantizationScheme] = None
+    group_size: Optional[int] = None
+    spinquant: bool = False
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            if k == "scheme":
+                setattr(self, k, QuantizationScheme(v))
+            else:
+                if hasattr(self, k):
+                    setattr(self, k, v)
+
+
+@dataclass
+class LoRAArgs:
+    rank: int
+    scale: float
 
 
 @dataclass
@@ -30,10 +56,18 @@ class ModelArgs:
     vision_max_num_chunks: int = 4
     vision_num_cross_attention_layers: int = -1
 
+    quantization_args: Optional[QuantizationArgs] = None
+    lora_args: Optional[LoRAArgs] = None
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
+            if k == "lora_args":
+                setattr(self, k, LoRAArgs(**v))
+            elif k == "quantization_args":
+                setattr(self, k, QuantizationArgs(**v))
+            else:
+                if hasattr(self, k):
+                    setattr(self, k, v)
 
         if self.n_kv_heads is None:
             self.n_kv_heads = self.n_heads
