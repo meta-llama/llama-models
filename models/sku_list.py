@@ -23,7 +23,7 @@ LLAMA3_VOCAB_SIZE = 128256
 
 def resolve_model(descriptor: str) -> Optional[Model]:
     for m in all_registered_models():
-        if descriptor == m.descriptor():
+        if descriptor in (m.descriptor(), m.huggingface_repo):
             return m
     return None
 
