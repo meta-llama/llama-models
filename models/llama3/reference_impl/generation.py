@@ -68,6 +68,7 @@ class Llama:
         model_parallel_size: Optional[int] = None,
         tokenizer_path: Optional[str] = None,
         seed: int = 1,
+        device: str = "cuda"
     ):
         """
         Build a Llama instance by initializing and loading a model checkpoint.
@@ -79,6 +80,7 @@ class Llama:
             max_batch_size (int): Maximum batch size for inference.
             model_parallel_size (Optional[int], optional): Number of model parallel processes.
                 If not provided, it's determined from the environment. Defaults to None.
+            device (str, optional): Device to use, e.g. cuda (default), xpu, cpu, etc.
 
         Returns:
             Llama: An instance of the Llama class with the loaded model and tokenizer.
@@ -86,6 +88,7 @@ class Llama:
         Raises:
             AssertionError: If there are no checkpoint files in the specified directory,
                 or if the model parallel size does not match the number of checkpoint files.
+            RuntimeError: If PyTorch backend for the specified device is not available.
 
 
         Note:
@@ -93,8 +96,16 @@ class Llama:
             and loads the pre-trained model and tokenizer.
         """
 
+        device = torch.device(device)
+        if (device.type == "cuda" and not torch.cuda.is_available() or
+            device.type == "xpu" and not torch.xpu.is_available()):
+            raise RuntimeError(f"PyTorch backend for {device.type} device type is not available")
+
         if not torch.distributed.is_initialized():
-            torch.distributed.init_process_group("nccl")
+            if device.type == "cuda":
+                torch.distributed.init_process_group("nccl")
+            else:
+                torch.distributed.init_process_group("gloo")
 
         if not model_parallel_is_initialized():
             if model_parallel_size is None:
@@ -102,7 +113,10 @@ class Llama:
             initialize_model_parallel(model_parallel_size)
 
         local_rank = int(os.environ.get("LOCAL_RANK", 0))
-        torch.cuda.set_device(local_rank)
+        if device.type == "cuda":
+            torch.cuda.set_device(local_rank)
+        elif device.type == "xpu":
+            torch.xpu.set_device(local_rank)
 
         torch.manual_seed(seed)
 
@@ -132,10 +146,20 @@ class Llama:
             tokenizer = Tokenizer.get_instance()
 
         assert model_args.vocab_size == tokenizer.n_words
-        if torch.cuda.is_bf16_supported():
-            torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
+        torch.set_default_device(device)
+        if device.type == "cuda":
+            if torch.cuda.is_bf16_supported():
+                torch.set_default_dtype(torch.bfloat16)
+            else:
+                torch.set_default_dtype(torch.half)
+        elif device.type == "xpu":
+            if torch.xpu.is_bf16_supported():
+                torch.set_default_dtype(torch.bfloat16)
+            else:
+                torch.set_default_dtype(torch.half)
         else:
-            torch.set_default_tensor_type(torch.cuda.HalfTensor)
+            torch.set_default_dtype(torch.half)
+
         if model_args.vision_chunk_size > 0:
             from .multimodal.model import CrossAttentionTransformer
 
@@ -144,6 +168,7 @@ class Llama:
         else:
             model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=True)
+        model.to(device)
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
         return Llama(model, tokenizer, model_args)
@@ -207,14 +232,14 @@ class Llama:
             )
 
         pad_id = self.tokenizer.pad_id
-        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device="cuda")
+        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long)
         for k, t in enumerate(prompt_tokens):
-            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
+            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long)
         if logprobs:
             token_logprobs = torch.zeros_like(tokens, dtype=torch.float)
 
         prev_pos = 0
-        eos_reached = torch.tensor([False] * bsz, device="cuda")
+        eos_reached = torch.tensor([False] * bsz)
         input_text_mask = tokens != pad_id
 
         if echo:
@@ -231,7 +256,7 @@ class Llama:
         for cur_pos in range(min_prompt_len, total_len):
             if is_vision:
                 position_ids = torch.arange(
-                    prev_pos, cur_pos, dtype=torch.long, device="cuda"
+                    prev_pos, cur_pos, dtype=torch.long
                 )
                 text_only_inference = model_input.vision is None
                 logits = self.model.forward(

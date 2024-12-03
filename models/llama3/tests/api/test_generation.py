@@ -32,6 +32,7 @@ def build_generator(env_var: str):
         max_seq_len=128,
         max_batch_size=1,
         model_parallel_size=1,
+        device=os.getenv("DEVICE", "cuda")
     )
 
 
