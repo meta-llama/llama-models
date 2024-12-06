@@ -164,7 +164,7 @@ class Llama:
             from .multimodal.model import CrossAttentionTransformer
 
             model = CrossAttentionTransformer(model_args)
-            model.setup_cache(model_args.max_batch_size, torch.bfloat16)
+            model.setup_cache(model_args.max_batch_size, torch.get_default_dtype())
         else:
             model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=True)
