@@ -34,6 +34,7 @@ def all_registered_models() -> List[Model]:
         + llama3_family()
         + llama3_1_family()
         + llama3_2_family()
+        + llama3_3_family()
         + safety_models()
     )
 
@@ -71,6 +72,12 @@ def llama3_2_family() -> List[Model]:
     return [
         *llama3_2_base_models(),
         *llama3_2_instruct_models(),
+    ]
+
+
+def llama3_3_family() -> List[Model]:
+    return [
+        *llama3_3_instruct_models(),
     ]
 
 
@@ -739,6 +746,30 @@ def llama3_2_instruct_models() -> List[Model]:
                 "vision_chunk_size": 560,
                 "vision_max_num_chunks": 4,
                 "vision_num_cross_attention_layers": 20,
+            },
+            pth_file_count=8,
+        ),
+    ]
+
+
+def llama3_3_instruct_models() -> List[Model]:
+    return [
+        Model(
+            core_model_id=CoreModelId.llama3_3_70b_instruct,
+            description="Llama 3.3 70b instruct",
+            huggingface_repo="meta-llama/Llama-3.3-70B-Instruct",
+            recommended_sampling_params=recommended_sampling_params(),
+            arch_args={
+                "dim": 8192,
+                "n_layers": 80,
+                "n_heads": 64,
+                "n_kv_heads": 8,
+                "vocab_size": LLAMA3_VOCAB_SIZE,
+                "ffn_dim_multiplier": 1.3,
+                "multiple_of": 4096,
+                "norm_eps": 1e-05,
+                "rope_theta": 500000.0,
+                "use_scaled_rope": True,
             },
             pth_file_count=8,
         ),
