@@ -96,22 +96,22 @@ class ChatFormat:
             tokens.extend(toks)
             images.extend(imgs)
 
-        if isinstance(message, CompletionMessage) and len(message.tool_calls) > 0:
+        if message.role == "assistant" and len(message.tool_calls) > 0:
             tokens.append(self.tokenizer.special_tokens["<|python_tag|>"])
 
         _process_content(message.content)
 
-        if isinstance(message, UserMessage) and message.context is not None:
+        if message.role == "user" and message.context is not None:
             _process_content("\n\n")
             _process_content(message.context)
 
-        if isinstance(message, CompletionMessage):
+        if message.role == "assistant":
             for t in message.tool_calls:
                 content = ToolUtils.encode_tool_call(t, tool_prompt_format)
                 _process_content(content)
 
         eom = False
-        if isinstance(message, CompletionMessage):
+        if message.role == "assistant":
             eom = message.stop_reason == StopReason.end_of_message
 
         tokens.append(
@@ -140,14 +140,14 @@ class ChatFormat:
     # TODO(this should be generic, not only for assistant messages)
     def decode_assistant_message(
         self, tokens: List[int], stop_reason: StopReason
-    ) -> CompletionMessage:
+    ) -> Message:
         content = self.tokenizer.decode(tokens)
 
         return self.decode_assistant_message_from_content(content, stop_reason)
 
     def decode_assistant_message_from_content(
         self, content: str, stop_reason: StopReason
-    ) -> CompletionMessage:
+    ) -> Message:
         content = content.strip(" ")
         header_str = self.possible_headers[Role.assistant]
         if content.startswith(header_str):
