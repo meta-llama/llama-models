@@ -119,7 +119,6 @@ class StopReason(Enum):
 
 class RawMediaItem(BaseModel):
     type: Literal["image"]
-    format: Literal["png", "jpeg", "webp"]
     data: bytes | BytesIO
 
 
@@ -132,7 +131,7 @@ RawContentItem = Annotated[
     Union[RawTextItem, RawMediaItem], Field(discriminator="type")
 ]
 
-RawContent = List[RawContentItem]
+RawContent = str | RawContentItem | List[RawContentItem]
 
 
 class ModelInputMessage(BaseModel):

@@ -8,15 +8,16 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
+from io import BytesIO
+from pathlib import Path
 from typing import Optional
 
 import fire
-
-from llama_models.llama3.api.datatypes import ImageMedia, UserMessage
+from llama_models.llama3.api.datatypes import ModelInputMessage, RawMediaItem
 
 from llama_models.llama3.reference_impl.generation import Llama
 
-from PIL import Image as PIL_Image
+THIS_DIR = Path(__file__).parent
 
 
 def run_main(
@@ -38,13 +39,14 @@ def run_main(
     # image understanding
     dialogs = []
     with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
-        img = PIL_Image.open(f).convert("RGB")
+        img = f.read()
 
     dialogs = [
         [
-            UserMessage(
+            ModelInputMessage(
+                role="user",
                 content=[
-                    ImageMedia(image=img),
+                    RawMediaItem(type="image", data=BytesIO(img)),
                     "Describe this image in two sentences",
                 ],
             )
@@ -52,7 +54,12 @@ def run_main(
     ]
     # text only
     dialogs += [
-        [UserMessage(content="what is the recipe of mayonnaise in two sentences?")],
+        [
+            ModelInputMessage(
+                role="user",
+                content="what is the recipe of mayonnaise in two sentences?",
+            )
+        ],
     ]
 
     for dialog in dialogs:
