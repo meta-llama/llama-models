@@ -13,11 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 import fire
-from llama_models.llama3.api.datatypes import (
-    ModelInputMessage,
-    RawMediaItem,
-    RawTextItem,
-)
+from llama_models.llama3.api.datatypes import RawMediaItem, RawMessage, RawTextItem
 
 from llama_models.llama3.reference_impl.generation import Llama
 
@@ -47,7 +43,7 @@ def run_main(
 
     dialogs = [
         [
-            ModelInputMessage(
+            RawMessage(
                 role="user",
                 content=[
                     RawMediaItem(data=BytesIO(img)),
@@ -59,7 +55,7 @@ def run_main(
     # text only
     dialogs += [
         [
-            ModelInputMessage(
+            RawMessage(
                 role="user",
                 content="what is the recipe of mayonnaise in two sentences?",
             )

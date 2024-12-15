@@ -12,11 +12,7 @@ from typing import Optional
 
 import fire
 
-from llama_models.llama3.api.datatypes import (
-    ModelInputMessage,
-    ModelOutputMessage,
-    StopReason,
-)
+from llama_models.llama3.api.datatypes import RawMessage, StopReason
 
 from llama_models.llama3.reference_impl.generation import Llama
 
@@ -47,13 +43,14 @@ def run_main(
     )
 
     dialogs = [
-        [ModelInputMessage(role="user", content="what is the recipe of mayonnaise?")],
+        [RawMessage(role="user", content="what is the recipe of mayonnaise?")],
         [
-            ModelInputMessage(
+            RawMessage(
                 role="user",
                 content="I am going to Paris, what should I see?",
             ),
-            ModelOutputMessage(
+            RawMessage(
+                role="assistant",
                 content="""\
 Paris, the capital of France, is known for its stunning architecture, art museums, historical landmarks, and romantic atmosphere. Here are some of the top attractions to see in Paris:
 
@@ -64,17 +61,15 @@ Paris, the capital of France, is known for its stunning architecture, art museum
 These are just a few of the many attractions that Paris has to offer. With so much to see and do, it's no wonder that Paris is one of the most popular tourist destinations in the world.""",
                 stop_reason=StopReason.end_of_turn,
             ),
-            ModelInputMessage(role="user", content="What is so great about #1?"),
+            RawMessage(role="user", content="What is so great about #1?"),
         ],
         [
-            ModelInputMessage(role="system", content="Always answer with Haiku"),
-            ModelInputMessage(
-                role="user", content="I am going to Paris, what should I see?"
-            ),
+            RawMessage(role="system", content="Always answer with Haiku"),
+            RawMessage(role="user", content="I am going to Paris, what should I see?"),
         ],
         [
-            ModelInputMessage(role="system", content="Always answer with emojis"),
-            ModelInputMessage(role="user", content="How to go from Beijing to NY?"),
+            RawMessage(role="system", content="Always answer with emojis"),
+            RawMessage(role="user", content="How to go from Beijing to NY?"),
         ],
     ]
     for dialog in dialogs:

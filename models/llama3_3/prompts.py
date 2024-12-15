@@ -7,7 +7,14 @@
 
 import textwrap
 from typing import List
-from ..llama3.api.datatypes import *  # noqa: F403
+
+from ..llama3.api.datatypes import (
+    BuiltinTool,
+    RawMessage,
+    StopReason,
+    ToolCall,
+    ToolPromptFormat,
+)
 from ..prompt_format import (
     llama3_1_builtin_tool_call_dialog,
     llama3_1_custom_tool_call_dialog,
@@ -104,8 +111,11 @@ def usecases() -> List[UseCase | str]:
             description="Here is a regular multi-turn user assistant conversation and how its formatted.",
             dialogs=[
                 [
-                    SystemMessage(content="You are a helpful assistant"),
-                    UserMessage(content="Answer who are you in the form of jeopardy?"),
+                    RawMessage(role="system", content="You are a helpful assistant"),
+                    RawMessage(
+                        role="user",
+                        content="Answer who are you in the form of jeopardy?",
+                    ),
                 ]
             ],
             notes="",
@@ -141,9 +151,10 @@ def usecases() -> List[UseCase | str]:
             description="Here is an actual example of model responding with code",
             dialogs=[
                 [
-                    SystemMessage(content="Environment: ipython"),
-                    UserMessage(
-                        content="Write code to check if number is prime, use that to see if the number 7 is prime"
+                    RawMessage(role="system", content="Environment: ipython"),
+                    RawMessage(
+                        role="user",
+                        content="Write code to check if number is prime, use that to see if the number 7 is prime",
                     ),
                 ],
             ],
@@ -159,11 +170,12 @@ def usecases() -> List[UseCase | str]:
             description="Here is a full interaction with the built-in tools including the tool response and the final assistant response.",
             dialogs=[
                 [
-                    SystemMessage(
-                        content="Environment: ipython\nTools: brave_search, wolfram_alpha\n"
+                    RawMessage(
+                        role="system",
+                        content="Environment: ipython\nTools: brave_search, wolfram_alpha\n",
                     ),
-                    UserMessage(content="What is the 100th decimal of pi?"),
-                    CompletionMessage(
+                    RawMessage(role="user", content="What is the 100th decimal of pi?"),
+                    RawMessage(
                         content="",
                         stop_reason=StopReason.end_of_message,
                         tool_calls=[
@@ -174,9 +186,8 @@ def usecases() -> List[UseCase | str]:
                             )
                         ],
                     ),
-                    ToolResponseMessage(
-                        call_id="wolfram_alpha_id",
-                        tool_name=BuiltinTool.wolfram_alpha,
+                    RawMessage(
+                        role="ipython",
                         content=wolfram_alpha_response(),
                     ),
                 ],

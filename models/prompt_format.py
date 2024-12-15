@@ -10,21 +10,29 @@ import textwrap
 from pathlib import Path
 from typing import List
 
-from PIL import Image as PIL_Image
+from llama_models.llama3.api.interface import LLama31Interface
+
 from pydantic import BaseModel, Field
 
-from .llama3.api.datatypes import *  # noqa: F403
-from llama_models.llama3.api.interface import LLama31Interface
+from .llama3.api.datatypes import (
+    RawContent,
+    RawMediaItem,
+    RawMessage,
+    RawTextItem,
+    StopReason,
+    ToolCall,
+    ToolPromptFormat,
+)
 
 
 class TextCompletionContent(BaseModel):
-    content: InterleavedTextMedia = ""
+    content: RawContent = ""
 
 
 class UseCase(BaseModel):
     title: str = ""
     description: str = ""
-    dialogs: List[List[Message] | TextCompletionContent | str] = Field(
+    dialogs: List[List[RawMessage] | TextCompletionContent | str] = Field(
         default_factory=list
     )
     notes: str = ""
@@ -134,13 +142,13 @@ def llama3_1_builtin_tool_call_with_image_dialog(
 
     this_dir = Path(__file__).parent.resolve()
     with open(this_dir / "scripts/resources/dog.jpg", "rb") as f:
-        img = PIL_Image.open(f).convert("RGB")
+        img = f.read()
 
     interface = LLama31Interface(tool_prompt_format)
 
     messages = interface.system_messages(**system_message_builtin_tools_only())
     messages += interface.user_message(
-        content=[ImageMedia(image=img), "What is this dog breed?"]
+        content=[RawMediaItem(data=img), RawTextItem(text="What is this dog breed?")]
     )
     messages += interface.assistant_response_messages(
         "Based on the description of the dog in the image, it appears to be a small breed dog, possibly a terrier mix",
@@ -173,7 +181,8 @@ def llama3_1_e2e_tool_call_dialog(tool_prompt_format=ToolPromptFormat.json):
     messages = interface.system_messages(**system_message_custom_tools_only())
     messages += interface.user_message(content="Use tools to get latest trending songs")
     messages.append(
-        CompletionMessage(
+        RawMessage(
+            role="assistant",
             content="",
             stop_reason=StopReason.end_of_message,
             tool_calls=[
@@ -186,9 +195,8 @@ def llama3_1_e2e_tool_call_dialog(tool_prompt_format=ToolPromptFormat.json):
         ),
     )
     messages.append(
-        ToolResponseMessage(
-            call_id="tool_response",
-            tool_name="trending_songs",
+        RawMessage(
+            role="assistant",
             content=tool_response,
         )
     )
@@ -201,8 +209,8 @@ def llama3_2_user_assistant_conversation():
         description="Here is a regular multi-turn user assistant conversation and how its formatted.",
         dialogs=[
             [
-                SystemMessage(content="You are a helpful assistant"),
-                UserMessage(content="Who are you?"),
+                RawMessage(role="system", content="You are a helpful assistant"),
+                RawMessage(role="user", content="Who are you?"),
             ]
         ],
         notes="This format is unchanged from Llama3.1",

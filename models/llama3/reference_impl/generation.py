@@ -33,13 +33,7 @@ from termcolor import cprint
 
 from ..api.args import ModelArgs
 from ..api.chat_format import ChatFormat, LLMInput
-from ..api.datatypes import (
-    ModelMessage,
-    ModelOutputMessage,
-    RawContent,
-    StopReason,
-    ToolPromptFormat,
-)
+from ..api.datatypes import RawContent, RawMessage, StopReason, ToolPromptFormat
 from ..api.tokenizer import Tokenizer
 from .model import Transformer
 
@@ -53,7 +47,7 @@ class CompletionPrediction:
 
 @dataclass
 class ChatPrediction:
-    generation: ModelOutputMessage
+    generation: RawMessage
     decoded_tokens: Optional[List[str]] = None
     logprobs: Optional[List[List[float]]] = None
 
@@ -347,7 +341,7 @@ class Llama:
 
     def chat_completion(
         self,
-        messages: List[ModelMessage],
+        messages: List[RawMessage],
         temperature: float = 0.6,
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
@@ -403,7 +397,7 @@ class Llama:
 
     def chat_completion_raw(
         self,
-        messages: List[ModelMessage],
+        messages: List[RawMessage],
         temperature: float = 0.6,
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,

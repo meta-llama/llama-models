@@ -5,6 +5,7 @@
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
 
+import io
 import uuid
 
 from dataclasses import dataclass
@@ -14,10 +15,9 @@ from PIL import Image as PIL_Image
 
 from .datatypes import (
     BuiltinTool,
-    ModelMessage,
-    ModelOutputMessage,
     RawContent,
     RawMediaItem,
+    RawMessage,
     RawTextItem,
     Role,
     StopReason,
@@ -90,7 +90,9 @@ class ChatFormat:
                     tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
                     added_bos = True
                 tokens.append(self.vision_token)
-                image = PIL_Image.open(c.data)
+
+                bytes_io = io.BytesIO(c.data) if isinstance(c.data, bytes) else c.data
+                image = PIL_Image.open(bytes_io)
                 image = image.convert("RGB")
                 images.append(image)
 
@@ -103,7 +105,7 @@ class ChatFormat:
         return tokens, images
 
     def encode_message(
-        self, message: ModelMessage, tool_prompt_format: ToolPromptFormat
+        self, message: RawMessage, tool_prompt_format: ToolPromptFormat
     ) -> Tuple[List[int], List[PIL_Image.Image]]:
         tokens = self._encode_header(message.role)
         images = []
@@ -140,7 +142,7 @@ class ChatFormat:
 
     def encode_dialog_prompt(
         self,
-        messages: List[ModelMessage],
+        messages: List[RawMessage],
         tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
     ) -> LLMInput:
         tokens = []
@@ -159,14 +161,14 @@ class ChatFormat:
     # TODO(this should be generic, not only for assistant messages)
     def decode_assistant_message(
         self, tokens: List[int], stop_reason: StopReason
-    ) -> ModelOutputMessage:
+    ) -> RawMessage:
         content = self.tokenizer.decode(tokens)
 
         return self.decode_assistant_message_from_content(content, stop_reason)
 
     def decode_assistant_message_from_content(
         self, content: str, stop_reason: StopReason
-    ) -> ModelOutputMessage:
+    ) -> RawMessage:
         content = content.strip(" ")
         header_str = self.possible_headers[Role.assistant]
         if content.startswith(header_str):
@@ -224,7 +226,8 @@ class ChatFormat:
             )
             content = ""
 
-        return ModelOutputMessage(
+        return RawMessage(
+            role="assistant",
             content=content,
             stop_reason=stop_reason,
             tool_calls=tool_calls,

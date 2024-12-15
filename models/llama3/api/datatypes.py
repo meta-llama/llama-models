@@ -136,21 +136,13 @@ RawContentItem = Annotated[
 RawContent = str | RawContentItem | List[RawContentItem]
 
 
-class ModelInputMessage(BaseModel):
-    role: Literal["user", "system", "ipython"]
+class RawMessage(BaseModel):
+    role: Literal["user", "system", "ipython", "assistant"]
     content: RawContent
 
     # This is for RAG but likely should be absorbed into content
     context: Optional[RawContent] = None
 
-
-class ModelOutputMessage(BaseModel):
-    role: Literal["assistant"] = "assistant"
-    content: RawContent
-    stop_reason: StopReason
+    # These are for the output message coming from the assistant
+    stop_reason: Optional[StopReason] = None
     tool_calls: List[ToolCall] = Field(default_factory=list)
-
-
-ModelMessage = Annotated[
-    Union[ModelInputMessage, ModelOutputMessage], Field(discriminator="role")
-]
