@@ -8,7 +8,7 @@
 from enum import Enum
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from typing_extensions import Annotated
 from ...datatypes import *  # noqa
@@ -118,12 +118,14 @@ class StopReason(Enum):
 
 
 class RawMediaItem(BaseModel):
-    type: Literal["image"]
+    type: Literal["image"] = "image"
     data: bytes | BytesIO
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class RawTextItem(BaseModel):
-    type: Literal["text"]
+    type: Literal["text"] = "text"
     text: str
 
 
@@ -138,9 +140,12 @@ class ModelInputMessage(BaseModel):
     role: Literal["user", "system", "ipython"]
     content: RawContent
 
+    # This is for RAG but likely should be absorbed into content
+    context: Optional[RawContent] = None
+
 
 class ModelOutputMessage(BaseModel):
-    role: Literal["assistant"]
+    role: Literal["assistant"] = "assistant"
     content: RawContent
     stop_reason: StopReason
     tool_calls: List[ToolCall] = Field(default_factory=list)

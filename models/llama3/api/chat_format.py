@@ -225,7 +225,6 @@ class ChatFormat:
             content = ""
 
         return ModelOutputMessage(
-            role="assistant",
             content=content,
             stop_reason=stop_reason,
             tool_calls=tool_calls,

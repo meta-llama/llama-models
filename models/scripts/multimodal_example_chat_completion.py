@@ -13,7 +13,11 @@ from pathlib import Path
 from typing import Optional
 
 import fire
-from llama_models.llama3.api.datatypes import ModelInputMessage, RawMediaItem
+from llama_models.llama3.api.datatypes import (
+    ModelInputMessage,
+    RawMediaItem,
+    RawTextItem,
+)
 
 from llama_models.llama3.reference_impl.generation import Llama
 
@@ -46,8 +50,8 @@ def run_main(
             ModelInputMessage(
                 role="user",
                 content=[
-                    RawMediaItem(type="image", data=BytesIO(img)),
-                    "Describe this image in two sentences",
+                    RawMediaItem(data=BytesIO(img)),
+                    RawTextItem(text="Describe this image in two sentences"),
                 ],
             )
         ],
