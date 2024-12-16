@@ -17,7 +17,9 @@ from llama_models.llama3.api.datatypes import ImageMedia, UserMessage
 from llama_models.llama3.reference_impl.generation import Llama
 
 from PIL import Image as PIL_Image
+from pathlib import Path
 
+THIS_DIR = Path(__file__).parent.resolve()
 
 def run_main(
     ckpt_dir: str,
