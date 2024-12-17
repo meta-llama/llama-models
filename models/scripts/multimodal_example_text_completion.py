@@ -8,16 +8,19 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
+from io import BytesIO
+from pathlib import Path
 from typing import Optional
 
 import fire
-
-from llama_models.llama3.api.datatypes import ImageMedia
+from llama_models.llama3.api.datatypes import RawMediaItem
 
 from llama_models.llama3.reference_impl.generation import Llama
 
-from PIL import Image as PIL_Image
 from termcolor import cprint
+
+
+THIS_DIR = Path(__file__).parent
 
 
 def run_main(
@@ -37,17 +40,14 @@ def run_main(
     )
 
     with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
-        img = PIL_Image.open(f).convert("RGB")
-
-    with open(THIS_DIR / "resources/pasta.jpeg", "rb") as f:
-        img2 = PIL_Image.open(f).convert("RGB")
+        img = f.read()
 
     interleaved_contents = [
         # text only
         "The color of the sky is blue but sometimes it can also be",
         # image understanding
         [
-            ImageMedia(image=img),
+            RawMediaItem(type="image", data=BytesIO(img)),
             "If I had to write a haiku for this one",
         ],
     ]

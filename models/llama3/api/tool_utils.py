@@ -100,7 +100,6 @@ def parse_python_list_for_function_calls(input_string):
 
 
 class ToolUtils:
-
     @staticmethod
     def is_builtin_tool_call(message_body: str) -> bool:
         match = re.search(ToolUtils.BUILTIN_TOOL_PATTERN, message_body)
