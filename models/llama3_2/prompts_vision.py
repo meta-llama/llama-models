@@ -8,9 +8,7 @@
 import textwrap
 from pathlib import Path
 
-from PIL import Image as PIL_Image
-
-from ..llama3.api.datatypes import *  # noqa: F403
+from ..llama3.api.datatypes import RawMediaItem, RawMessage, RawTextItem
 from ..prompt_format import (
     llama3_1_builtin_tool_call_dialog,
     # llama3_1_builtin_tool_call_with_image_dialog,
@@ -23,7 +21,7 @@ from ..prompt_format import (
 def usecases():
     this_dir = Path(__file__).parent.parent.resolve()
     with open(this_dir / "scripts/resources/dog.jpg", "rb") as f:
-        img = PIL_Image.open(f).convert("RGB")
+        img = f.read()
 
     return [
         llama3_2_user_assistant_conversation(),
@@ -32,10 +30,11 @@ def usecases():
             description="This example shows how to pass and image to the model as part of the messages.",
             dialogs=[
                 [
-                    UserMessage(
+                    RawMessage(
+                        role="user",
                         content=[
-                            ImageMedia(image=img),
-                            "Describe this image in two sentences",
+                            RawMediaItem(data=img),
+                            RawTextItem(text="Describe this image in two sentences"),
                         ],
                     )
                 ],
@@ -115,8 +114,8 @@ def usecases():
             dialogs=[
                 TextCompletionContent(
                     content=[
-                        ImageMedia(image=img),
-                        "If I had to write a haiku for this one",
+                        RawMediaItem(data=img),
+                        RawTextItem(text="If I had to write a haiku for this one"),
                     ]
                 ),
             ],

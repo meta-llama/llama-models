@@ -8,16 +8,12 @@
 from enum import Enum
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from typing_extensions import Annotated
 from ...datatypes import *  # noqa
 
-import base64
-import re
 from io import BytesIO
-
-from PIL import Image as PIL_Image
 
 from ...schema_utils import json_schema_type
 
@@ -28,74 +24,6 @@ class Role(Enum):
     user = "user"
     assistant = "assistant"
     ipython = "ipython"
-
-
-@json_schema_type(
-    schema={"type": "string", "format": "uri", "pattern": "^(https?://|file://|data:)"}
-)
-class URL(BaseModel):
-    uri: str
-
-    def __str__(self) -> str:
-        return self.uri
-
-
-@json_schema_type
-class ImageMedia(BaseModel):
-    image: Union[PIL_Image.Image, URL]
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
-InterleavedTextMedia = Union[
-    str,
-    # Specific modalities can be placed here, but not generic attachments
-    # since models don't consume them in a generic way
-    ImageMedia,
-    List[Union[str, ImageMedia]],
-]
-
-
-def interleaved_text_media_as_str(content: InterleavedTextMedia, sep: str = " ") -> str:
-    def _process(c) -> str:
-        if isinstance(c, str):
-            return c
-        else:
-            return "<media>"
-
-    if isinstance(content, list):
-        return sep.join(_process(c) for c in content)
-    else:
-        return _process(content)
-
-
-def interleaved_text_media_localize(
-    content: InterleavedTextMedia,
-) -> InterleavedTextMedia:
-    def _localize_single(c: str | ImageMedia) -> str | ImageMedia:
-        if isinstance(c, ImageMedia):
-            # load image and return PIL version
-            img = c.image
-            if isinstance(img, URL):
-                if img.uri.startswith("file://"):
-                    img = PIL_Image.open(img.uri[len("file://") :]).convert("RGB")
-                elif img.uri.startswith("data"):
-                    match = re.match(r"data:image/(\w+);base64,(.+)", img.uri)
-                    if not match:
-                        raise ValueError("Invalid data URL format")
-                    image_type, image_data = match.groups()
-                    image_data = base64.b64decode(image_data)
-                    img = PIL_Image.open(BytesIO(image_data))
-                else:
-                    raise ValueError("Unsupported URL type")
-            return ImageMedia(image=img)
-        else:
-            return c
-
-    if isinstance(content, list):
-        return [_localize_single(c) for c in content]
-    else:
-        return _localize_single(content)
 
 
 @json_schema_type
@@ -115,23 +43,6 @@ class ToolCall(BaseModel):
     call_id: str
     tool_name: Union[BuiltinTool, str]
     arguments: Dict[str, RecursiveType]
-
-    @field_validator("tool_name", mode="before")
-    @classmethod
-    def validate_field(cls, v):
-        if isinstance(v, str):
-            try:
-                return BuiltinTool(v)
-            except ValueError:
-                return v
-        return v
-
-
-@json_schema_type
-class ToolResponse(BaseModel):
-    call_id: str
-    tool_name: Union[BuiltinTool, str]
-    content: InterleavedTextMedia
 
     @field_validator("tool_name", mode="before")
     @classmethod
@@ -170,12 +81,6 @@ class ToolDefinition(BaseModel):
 
 
 @json_schema_type
-class ToolChoice(Enum):
-    auto = "auto"
-    required = "required"
-
-
-@json_schema_type
 class ToolPromptFormat(Enum):
     """This Enum refers to the prompt format for calling custom / zero shot tools
 
@@ -206,54 +111,38 @@ class ToolPromptFormat(Enum):
 
 
 @json_schema_type
-class UserMessage(BaseModel):
-    role: Literal[Role.user.value] = Role.user.value
-    content: InterleavedTextMedia
-    context: Optional[InterleavedTextMedia] = None
-
-
-@json_schema_type
-class SystemMessage(BaseModel):
-    role: Literal[Role.system.value] = Role.system.value
-    content: InterleavedTextMedia
-
-
-@json_schema_type
-class ToolResponseMessage(BaseModel):
-    role: Literal[Role.ipython.value] = Role.ipython.value
-    # it was nice to re-use the ToolResponse type, but having all messages
-    # have a `content` type makes things nicer too
-    call_id: str
-    tool_name: Union[BuiltinTool, str]
-    content: InterleavedTextMedia
-
-
-@json_schema_type
 class StopReason(Enum):
     end_of_turn = "end_of_turn"
     end_of_message = "end_of_message"
     out_of_tokens = "out_of_tokens"
 
 
-@json_schema_type
-class TokenLogProbs(BaseModel):
-    logprobs_by_token: Dict[str, float]
+class RawMediaItem(BaseModel):
+    type: Literal["image"] = "image"
+    data: bytes | BytesIO
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-@json_schema_type
-class CompletionMessage(BaseModel):
-    role: Literal[Role.assistant.value] = Role.assistant.value
-    content: InterleavedTextMedia
-    stop_reason: StopReason
-    tool_calls: List[ToolCall] = Field(default_factory=list)
+class RawTextItem(BaseModel):
+    type: Literal["text"] = "text"
+    text: str
 
 
-Message = Annotated[
-    Union[
-        UserMessage,
-        SystemMessage,
-        ToolResponseMessage,
-        CompletionMessage,
-    ],
-    Field(discriminator="role"),
+RawContentItem = Annotated[
+    Union[RawTextItem, RawMediaItem], Field(discriminator="type")
 ]
+
+RawContent = str | RawContentItem | List[RawContentItem]
+
+
+class RawMessage(BaseModel):
+    role: Literal["user", "system", "ipython", "assistant"]
+    content: RawContent
+
+    # This is for RAG but likely should be absorbed into content
+    context: Optional[RawContent] = None
+
+    # These are for the output message coming from the assistant
+    stop_reason: Optional[StopReason] = None
+    tool_calls: List[ToolCall] = Field(default_factory=list)

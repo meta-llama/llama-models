@@ -58,6 +58,7 @@ class ModelFamily(Enum):
     llama3 = "llama3"
     llama3_1 = "llama3_1"
     llama3_2 = "llama3_2"
+    llama3_3 = "llama3_3"
     safety = "safety"
 
 
@@ -96,6 +97,9 @@ class CoreModelId(Enum):
     llama3_2_90b_vision = "Llama3.2-90B-Vision"
     llama3_2_11b_vision_instruct = "Llama3.2-11B-Vision-Instruct"
     llama3_2_90b_vision_instruct = "Llama3.2-90B-Vision-Instruct"
+
+    # Llama 3.3 family
+    llama3_3_70b_instruct = "Llama3.3-70B-Instruct"
 
     # Safety models
     llama_guard_3_8b = "Llama-Guard-3-8B"
@@ -154,6 +158,10 @@ def model_family(model_id) -> ModelFamily:
     ]:
         return ModelFamily.llama3_2
     elif model_id in [
+        CoreModelId.llama3_3_70b_instruct,
+    ]:
+        return ModelFamily.llama3_3
+    elif model_id in [
         CoreModelId.llama_guard_3_8b,
         CoreModelId.llama_guard_2_8b,
         CoreModelId.llama_guard_3_11b_vision,
@@ -161,7 +169,7 @@ def model_family(model_id) -> ModelFamily:
     ]:
         return ModelFamily.safety
     else:
-        raise ValueError(f"Unknown model family for {CoreModelId}")
+        raise ValueError(f"Unknown model family for {model_id}")
 
 
 @json_schema_type(
@@ -206,6 +214,7 @@ class Model(BaseModel):
         return self.model_family in [
             ModelFamily.llama3_1,
             ModelFamily.llama3_2,
+            ModelFamily.llama3_3,
             ModelFamily.safety,
         ]
 
@@ -217,7 +226,7 @@ class Model(BaseModel):
             return 4096
         elif self.model_family == ModelFamily.llama3:
             return 8192
-        elif self.model_family == ModelFamily.llama3_1:
+        elif self.model_family in [ModelFamily.llama3_1, ModelFamily.llama3_3]:
             return 131072
         elif self.model_family == ModelFamily.llama3_2:
             if self.quantization_format == CheckpointQuantizationFormat.int4:

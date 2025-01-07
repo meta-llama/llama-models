@@ -13,10 +13,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from llama_models.llama3.api.datatypes import ImageMedia, SystemMessage, UserMessage
+from llama_models.llama3.api.datatypes import RawMediaItem, RawMessage, RawTextItem
 
 from llama_models.llama3.reference_impl.generation import Llama
-from PIL import Image as PIL_Image
 
 THIS_DIR = Path(__file__).parent
 
@@ -38,7 +37,6 @@ def build_generator(env_var: str):
 
 
 class TestTextModelInference(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.generator = build_generator("TEXT_MODEL_CHECKPOINT_DIR")
@@ -46,14 +44,14 @@ class TestTextModelInference(unittest.TestCase):
     def test_run_generation(self):
         dialogs = [
             [
-                SystemMessage(content="Always answer with Haiku"),
-                UserMessage(content="I am going to Paris, what should I see?"),
+                RawMessage(role="system", content="Always answer with Haiku"),
+                RawMessage(
+                    role="user", content="I am going to Paris, what should I see?"
+                ),
             ],
             [
-                SystemMessage(
-                    content="Always answer with emojis",
-                ),
-                UserMessage(content="How to go from Beijing to NY?"),
+                RawMessage(role="system", content="Always answer with emojis"),
+                RawMessage(role="user", content="How to go from Beijing to NY?"),
             ],
         ]
         for dialog in dialogs:
@@ -72,7 +70,6 @@ class TestTextModelInference(unittest.TestCase):
 
 
 class TestVisionModelInference(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.generator = build_generator("VISION_MODEL_CHECKPOINT_DIR")
@@ -83,21 +80,23 @@ class TestVisionModelInference(unittest.TestCase):
         with open(
             THIS_DIR.parent.parent.parent / "scripts/resources/dog.jpg", "rb"
         ) as f:
-            img = PIL_Image.open(f).convert("RGB")
+            img = f.read()
 
         dialogs = [
             [
-                UserMessage(
+                RawMessage(
+                    role="user",
                     content=[
-                        ImageMedia(image=img),
-                        "Describe this image in two sentences",
+                        RawMediaItem(data=img),
+                        RawTextItem(text="Describe this image in two sentences"),
                     ],
                 )
             ],
             [
-                UserMessage(
-                    content="what is the recipe of mayonnaise in two sentences?"
-                ),
+                RawMessage(
+                    role="user",
+                    content="what is the recipe of mayonnaise in two sentences?",
+                )
             ],
         ]
 

@@ -25,15 +25,11 @@ from .chat_format import ChatFormat
 
 from .datatypes import (
     BuiltinTool,
-    CompletionMessage,
-    Message,
+    RawMessage,
     StopReason,
-    SystemMessage,
     ToolCall,
     ToolDefinition,
     ToolPromptFormat,
-    ToolResponseMessage,
-    UserMessage,
 )
 from .tokenizer import Tokenizer
 
@@ -134,7 +130,7 @@ class LLama31Interface:
         self.formatter = ChatFormat(self.tokenizer)
         self.tool_prompt_format = tool_prompt_format
 
-    def get_tokens(self, messages: List[Message]) -> List[int]:
+    def get_tokens(self, messages: List[RawMessage]) -> List[int]:
         model_input = self.formatter.encode_dialog_prompt(
             messages,
             self.tool_prompt_format,
@@ -144,9 +140,8 @@ class LLama31Interface:
     def tool_response_messages(self, *args, **kwargs):
         template = ToolResponseGenerator().gen(*args, **kwargs)
         return [
-            ToolResponseMessage(
-                call_id="call_id",
-                tool_name="tool_name",
+            RawMessage(
+                role="ipython",
                 content=template.render(),
             )
         ]
@@ -156,7 +151,7 @@ class LLama31Interface:
         builtin_tools: List[BuiltinTool],
         custom_tools: List[ToolDefinition],
         instruction: Optional[str] = None,
-    ) -> List[Message]:
+    ) -> List[RawMessage]:
         messages = []
 
         default_gen = SystemDefaultGenerator()
@@ -179,7 +174,7 @@ class LLama31Interface:
             sys_content += instruction
 
         sys_content += "\n"
-        messages.append(SystemMessage(content=sys_content))
+        messages.append(RawMessage(role="system", content=sys_content))
 
         if custom_tools:
             if self.tool_prompt_format == ToolPromptFormat.json:
@@ -188,11 +183,11 @@ class LLama31Interface:
                 tool_gen = FunctionTagCustomToolGenerator()
             else:
                 raise ValueError(
-                    f"Non supported ToolPromptFormat {request.tool_prompt_format}"
+                    f"Non supported ToolPromptFormat {self.tool_prompt_format}"
                 )
 
             custom_template = tool_gen.gen(custom_tools)
-            messages.append(UserMessage(content=custom_template.render()))
+            messages.append(RawMessage(role="user", content=custom_template.render()))
 
         return messages
 
@@ -201,22 +196,23 @@ class LLama31Interface:
         content: str,
         stop_reason: StopReason,
         tool_call: Optional[ToolCall] = None,
-    ) -> List[CompletionMessage]:
+    ) -> List[RawMessage]:
         tool_calls = []
         if tool_call:
             tool_calls.append(tool_call)
         return [
-            CompletionMessage(
+            RawMessage(
+                role="assistant",
                 content=content,
                 tool_calls=tool_calls,
                 stop_reason=stop_reason,
             )
         ]
 
-    def user_message(self, content: str) -> List[UserMessage]:
-        return [UserMessage(content=content)]
+    def user_message(self, content: str) -> List[RawMessage]:
+        return [RawMessage(role="user", content=content)]
 
-    def display_message_as_tokens(self, message: Message) -> None:
+    def display_message_as_tokens(self, message: RawMessage) -> None:
         """Util to print tokenized string to shell"""
         tokens = self.formatter.encode_message(message, self.tool_prompt_format)
         on_colors = [

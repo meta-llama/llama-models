@@ -5,14 +5,27 @@
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
 
+import io
 import uuid
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+
+from PIL import Image as PIL_Image
+
+from .datatypes import (
+    BuiltinTool,
+    RawContent,
+    RawMediaItem,
+    RawMessage,
+    RawTextItem,
+    Role,
+    StopReason,
+    ToolCall,
+    ToolPromptFormat,
+)
 
 from .tokenizer import Tokenizer
-from .datatypes import *  # noqa: F403
-from PIL import Image as PIL_Image
 
 from .tool_utils import ToolUtils
 
@@ -24,7 +37,7 @@ class VisionInput:
 
 
 @dataclass
-class ModelInput:
+class LLMInput:
     tokens: List[int]
     vision: Optional[VisionInput] = None
 
@@ -48,12 +61,12 @@ class ChatFormat:
         tokens.extend(self.tokenizer.encode("\n\n", bos=False, eos=False))
         return tokens
 
-    def encode_content(self, content: InterleavedTextMedia) -> ModelInput:
+    def encode_content(self, content: RawContent) -> LLMInput:
         tokens, images = self._encode_content(content, bos=True)
         return self._model_input_from_tokens_images(tokens, images)
 
     def _encode_content(
-        self, content: InterleavedTextMedia, bos: bool = False
+        self, content: RawContent, bos: bool = False
     ) -> Tuple[List[int], List[PIL_Image.Image]]:
         tokens = []
         images = []
@@ -63,30 +76,36 @@ class ChatFormat:
         def _process(c):
             nonlocal added_bos, bos
 
-            if isinstance(c, str):
+            if isinstance(c, str) or isinstance(c, RawTextItem):
+                if isinstance(c, RawTextItem):
+                    c = c.text
                 tokens.extend(
                     self.tokenizer.encode(c, bos=False if added_bos else bos, eos=False)
                 )
                 added_bos = True
-            elif isinstance(c, ImageMedia):
+
+            elif isinstance(c, RawMediaItem):
                 bos = False if added_bos else bos
                 if bos:
                     tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
                     added_bos = True
                 tokens.append(self.vision_token)
-                cc = interleaved_text_media_localize(c)
-                images.append(cc.image)
 
-        if isinstance(content, str):
-            _process(content)
-        elif isinstance(content, list):
+                bytes_io = io.BytesIO(c.data) if isinstance(c.data, bytes) else c.data
+                image = PIL_Image.open(bytes_io)
+                image = image.convert("RGB")
+                images.append(image)
+
+        if isinstance(content, list):
             for c in content:
                 _process(c)
+        else:
+            _process(content)
 
         return tokens, images
 
     def encode_message(
-        self, message: Message, tool_prompt_format: ToolPromptFormat
+        self, message: RawMessage, tool_prompt_format: ToolPromptFormat
     ) -> Tuple[List[int], List[PIL_Image.Image]]:
         tokens = self._encode_header(message.role)
         images = []
@@ -96,22 +115,24 @@ class ChatFormat:
             tokens.extend(toks)
             images.extend(imgs)
 
-        if isinstance(message, CompletionMessage) and len(message.tool_calls) > 0:
+        if message.role == "assistant" and len(message.tool_calls) > 0:
             tokens.append(self.tokenizer.special_tokens["<|python_tag|>"])
 
         _process_content(message.content)
 
-        if isinstance(message, UserMessage) and message.context is not None:
+        if message.role == "user" and message.context is not None:
+            # This is RAG context; why is it here in the chat format? I don't think
+            # this is needed and can be moved upwards
             _process_content("\n\n")
             _process_content(message.context)
 
-        if isinstance(message, CompletionMessage):
+        if message.role == "assistant":
             for t in message.tool_calls:
                 content = ToolUtils.encode_tool_call(t, tool_prompt_format)
                 _process_content(content)
 
         eom = False
-        if isinstance(message, CompletionMessage):
+        if message.role == "assistant":
             eom = message.stop_reason == StopReason.end_of_message
 
         tokens.append(
@@ -121,9 +142,9 @@ class ChatFormat:
 
     def encode_dialog_prompt(
         self,
-        messages: List[Message],
+        messages: List[RawMessage],
         tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
-    ) -> ModelInput:
+    ) -> LLMInput:
         tokens = []
         images = []
         tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
@@ -140,14 +161,14 @@ class ChatFormat:
     # TODO(this should be generic, not only for assistant messages)
     def decode_assistant_message(
         self, tokens: List[int], stop_reason: StopReason
-    ) -> CompletionMessage:
+    ) -> RawMessage:
         content = self.tokenizer.decode(tokens)
 
         return self.decode_assistant_message_from_content(content, stop_reason)
 
     def decode_assistant_message_from_content(
         self, content: str, stop_reason: StopReason
-    ) -> CompletionMessage:
+    ) -> RawMessage:
         content = content.strip(" ")
         header_str = self.possible_headers[Role.assistant]
         if content.startswith(header_str):
@@ -205,7 +226,8 @@ class ChatFormat:
             )
             content = ""
 
-        return CompletionMessage(
+        return RawMessage(
+            role="assistant",
             content=content,
             stop_reason=stop_reason,
             tool_calls=tool_calls,
@@ -213,7 +235,7 @@ class ChatFormat:
 
     def _model_input_from_tokens_images(
         self, tokens: List[int], images: List[PIL_Image.Image]
-    ) -> ModelInput:
+    ) -> LLMInput:
         vision_input = None
         if len(images) > 0:
             vision_input = VisionInput(
@@ -221,7 +243,7 @@ class ChatFormat:
                 images=images,
             )
 
-        return ModelInput(
+        return LLMInput(
             tokens=[
                 128256 if token == self.vision_token else token for token in tokens
             ],

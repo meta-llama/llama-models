@@ -32,14 +32,8 @@ from fairscale.nn.model_parallel.initialize import (
 from termcolor import cprint
 
 from ..api.args import ModelArgs
-from ..api.chat_format import ChatFormat, ModelInput
-from ..api.datatypes import (
-    CompletionMessage,
-    InterleavedTextMedia,
-    Message,
-    StopReason,
-    ToolPromptFormat,
-)
+from ..api.chat_format import ChatFormat, LLMInput
+from ..api.datatypes import RawContent, RawMessage, StopReason, ToolPromptFormat
 from ..api.tokenizer import Tokenizer
 from .model import Transformer
 
@@ -53,7 +47,7 @@ class CompletionPrediction:
 
 @dataclass
 class ChatPrediction:
-    generation: CompletionMessage
+    generation: RawMessage
     decoded_tokens: Optional[List[str]] = None
     logprobs: Optional[List[List[float]]] = None
 
@@ -163,7 +157,7 @@ class Llama:
     @torch.inference_mode()
     def generate(
         self,
-        model_input: ModelInput,
+        model_input: LLMInput,
         max_gen_len: int,
         temperature: float = 0.6,
         top_p: float = 0.9,
@@ -303,7 +297,7 @@ class Llama:
 
     def text_completion(
         self,
-        content: InterleavedTextMedia,
+        content: RawContent,
         temperature: float = 0.6,
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
@@ -347,7 +341,7 @@ class Llama:
 
     def chat_completion(
         self,
-        messages: List[Message],
+        messages: List[RawMessage],
         temperature: float = 0.6,
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
@@ -403,7 +397,7 @@ class Llama:
 
     def chat_completion_raw(
         self,
-        messages: List[Message],
+        messages: List[RawMessage],
         temperature: float = 0.6,
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
@@ -432,7 +426,7 @@ class Llama:
 
     def text_completion_raw(
         self,
-        content: InterleavedTextMedia,
+        content: RawContent,
         temperature: float = 0.6,
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
@@ -448,8 +442,6 @@ class Llama:
         input_tokens = model_input.tokens
 
         output_tokens = []
-        token_logprobs = []
-        decoded_tokens = []
         for result in self.generate(
             model_input=model_input,
             max_gen_len=max_gen_len,

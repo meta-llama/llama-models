@@ -6,7 +6,8 @@
 # the top-level of this source tree.
 import json
 import textwrap
-from ..llama3.api.datatypes import *  # noqa: F403
+
+from ..llama3.api.datatypes import RawMessage, StopReason, ToolCall, ToolPromptFormat
 from ..prompt_format import (
     llama3_1_builtin_code_interpreter_dialog,
     TextCompletionContent,
@@ -99,8 +100,8 @@ def usecases():
             description="Here is a regular multi-turn user assistant conversation and how its formatted.",
             dialogs=[
                 [
-                    SystemMessage(content="You are a helpful assistant"),
-                    UserMessage(content="Who are you?"),
+                    RawMessage(role="system", content="You are a helpful assistant"),
+                    RawMessage(role="user", content="Who are you?"),
                 ]
             ],
             notes="This format is unchanged from Llama3.1",
@@ -119,8 +120,10 @@ def usecases():
             dialogs=[
                 # Zero shot tool calls as system message
                 [
-                    SystemMessage(content=system_tool_call()),
-                    UserMessage(content="What is the weather in SF and Seattle?"),
+                    RawMessage(role="system", content=system_tool_call()),
+                    RawMessage(
+                        role="user", content="What is the weather in SF and Seattle?"
+                    ),
                 ],
             ],
             notes=textwrap.dedent(
@@ -140,7 +143,7 @@ def usecases():
             dialogs=[
                 # Zero shot tool call as user message
                 [
-                    UserMessage(content=user_tool_call()),
+                    RawMessage(role="user", content=user_tool_call()),
                 ],
             ],
             notes=textwrap.dedent(
@@ -175,9 +178,10 @@ def usecases():
             ),
             dialogs=[
                 [
-                    SystemMessage(content=system_tool_call()),
-                    UserMessage(content="What is the weather in SF?"),
-                    CompletionMessage(
+                    RawMessage(role="system", content=system_tool_call()),
+                    RawMessage(role="user", content="What is the weather in SF?"),
+                    RawMessage(
+                        role="assistant",
                         content="",
                         stop_reason=StopReason.end_of_turn,
                         tool_calls=[
@@ -191,9 +195,8 @@ def usecases():
                             )
                         ],
                     ),
-                    ToolResponseMessage(
-                        call_id="call",
-                        tool_name="get_weather",
+                    RawMessage(
+                        role="ipython",
                         content=json.dumps("25 C"),
                     ),
                 ],

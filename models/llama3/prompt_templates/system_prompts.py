@@ -19,7 +19,6 @@ from .base import PromptTemplate, PromptTemplateGeneratorBase
 
 
 class SystemDefaultGenerator(PromptTemplateGeneratorBase):
-
     def gen(self, *args, **kwargs) -> PromptTemplate:
         template_str = textwrap.dedent(
             """
@@ -37,7 +36,6 @@ class SystemDefaultGenerator(PromptTemplateGeneratorBase):
 
 
 class BuiltinToolGenerator(PromptTemplateGeneratorBase):
-
     def _tool_breakdown(self, tools: List[ToolDefinition]):
         builtin_tools, custom_tools = [], []
         for dfn in tools:
@@ -50,7 +48,6 @@ class BuiltinToolGenerator(PromptTemplateGeneratorBase):
 
     def gen(self, tools: List[ToolDefinition]) -> PromptTemplate:
         builtin_tools, custom_tools = self._tool_breakdown(tools)
-        data = []
         template_str = textwrap.dedent(
             """
             {% if builtin_tools or custom_tools -%}
@@ -86,7 +83,6 @@ class BuiltinToolGenerator(PromptTemplateGeneratorBase):
 
 
 class JsonCustomToolGenerator(PromptTemplateGeneratorBase):
-
     def gen(self, custom_tools: List[ToolDefinition]) -> PromptTemplate:
         template_str = textwrap.dedent(
             """
@@ -157,7 +153,6 @@ class JsonCustomToolGenerator(PromptTemplateGeneratorBase):
 
 
 class FunctionTagCustomToolGenerator(PromptTemplateGeneratorBase):
-
     def gen(self, custom_tools: List[ToolDefinition]) -> PromptTemplate:
         template_str = textwrap.dedent(
             """
@@ -220,7 +215,6 @@ class FunctionTagCustomToolGenerator(PromptTemplateGeneratorBase):
 
 
 class PythonListCustomToolGenerator(PromptTemplateGeneratorBase):  # noqa: N801
-
     def gen(self, custom_tools: List[ToolDefinition]) -> PromptTemplate:
         template_str = textwrap.dedent(
             """

@@ -12,7 +12,7 @@ import os
 from unittest import TestCase
 
 from .chat_format import ChatFormat
-from .datatypes import SystemMessage, ToolPromptFormat, UserMessage
+from .datatypes import RawMessage, ToolPromptFormat
 from .tokenizer import Tokenizer
 
 
@@ -45,7 +45,8 @@ class TokenizerTests(TestCase):
         )
 
     def test_encode_message(self):
-        message = UserMessage(
+        message = RawMessage(
+            role="user",
             content="This is a test sentence.",
         )
         self.assertEqual(
@@ -69,10 +70,12 @@ class TokenizerTests(TestCase):
 
     def test_encode_dialog(self):
         messages = [
-            SystemMessage(
+            RawMessage(
+                role="system",
                 content="This is a test sentence.",
             ),
-            UserMessage(
+            RawMessage(
+                role="user",
                 content="This is a response.",
             ),
         ]
