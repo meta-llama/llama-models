@@ -1,6 +1,9 @@
 name: "Run Llama-models Tests"
 
 on:
+  schedule:
+    - cron: '30 7 * * *'
+    - cron: '55 22 * * *'
   pull_request_target:
     types: ["opened"]
     branches:
@@ -65,7 +68,7 @@ jobs:
     defaults:
       run:
         shell: bash # default shell to run all steps for a given job.
-    runs-on: ${{ inputs.runner != '' && inputs.runner || 'llama-models-gha-runner-cpu' }}
+    runs-on: ${{ inputs.runner != '' && inputs.runner || 'llama-models-fork-gha-runner-cpu' }}
     if: always()
     steps:
 
