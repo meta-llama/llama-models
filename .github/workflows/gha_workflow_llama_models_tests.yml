@@ -52,9 +52,9 @@ on:
 
 env:
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"
-  MODELS_PATH: "/data/llama3.2"
-  VISION_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_vision }}"
-  TEXT_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_text }}"
+  MODELS_PATH: "/data/llama"
+  VISION_MODEL_CHECKPOINT_DIR: "/data/llama/${{ inputs.model_vision }}"
+  TEXT_MODEL_CHECKPOINT_DIR: "/data/llama/${{ inputs.model_text }}"
   API_KEY: "${{ inputs.api_key || '' }}"
 
 jobs:
