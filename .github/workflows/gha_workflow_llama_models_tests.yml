@@ -165,6 +165,7 @@ jobs:
           pip install llama-models
           pip install xmlrunner
           pip install pytest
+          pip install numpy
 
       - name: "Installing specific manual_dispatch dependencies"
         id: manual_install_pip
