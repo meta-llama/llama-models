@@ -1,6 +1,10 @@
 name: "Run Llama-models Tests"
 
 on:
+  # Schedule cron job at 2:30 am EST every day of the week.
+  # Will run a manual workflow off of 'main' branch.
+  schedule:
+    - cron: '30 7 * * *'
   pull_request_target:
     types: ["opened"]
     branches:
@@ -15,8 +19,8 @@ on:
         required: true
         default: "llama-models-gha-runner-gpu"
 
-      branch:
-        description: "Branch to checkout"
+      checkout_reference:
+        description: "The branch, tag, or SHA to checkout"
         required: true
         default: "main"
 
@@ -52,9 +56,9 @@ on:
 
 env:
   TOKENIZER_PATH: "models/llama3/api/tokenizer.model"
-  MODELS_PATH: "/data/llama3.2"
-  VISION_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_vision }}"
-  TEXT_MODEL_CHECKPOINT_DIR: "/data/llama3.2/${{ inputs.model_text }}"
+  MODELS_PATH: "/data/llama"
+  VISION_MODEL_CHECKPOINT_DIR: "/data/llama/${{ inputs.model_vision }}"
+  TEXT_MODEL_CHECKPOINT_DIR: "/data/llama/${{ inputs.model_text }}"
   API_KEY: "${{ inputs.api_key || '' }}"
 
 jobs:
@@ -119,7 +123,7 @@ jobs:
         id: checkout_repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.checkout_reference }}
 
       - name: "[DEBUG] Content of the repository after checkout"
         id: debug_content_after_checkout
@@ -199,7 +203,7 @@ jobs:
       - name: "PR - Upload Test Summary"
         id: pr_test_summary_upload
         if: github.event_name == 'pull_request_target'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-summary
           path: test-summary.md
