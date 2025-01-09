@@ -1,4 +1,4 @@
-name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
+name: Publish Python 🐍 distribution 📦 to TestPyPI
 
 on:
   workflow_dispatch:  # Keep manual trigger
