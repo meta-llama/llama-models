@@ -1,7 +1,7 @@
 name: Publish Python 🐍 distribution 📦 to TestPyPI
 
 on:
-  workflow_dispatch:  # Keep manual trigger
+  push:  # Keep manual trigger
     inputs:
       rc_version:
         description: 'RC version number (e.g., 1, 2, 3)'
