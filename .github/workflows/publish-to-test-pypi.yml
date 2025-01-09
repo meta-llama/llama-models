@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: testpypi
+      name: testrelease
       url: https://test.pypi.org/p/llama-models
 
     permissions:
