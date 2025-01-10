@@ -6,8 +6,8 @@ on:
   
   workflow_dispatch:  # Keep manual trigger
     inputs:
-      rc_version:
-        description: 'RC version number (e.g., 1, 2, 3)'
+      version:
+        description: 'Version number (e.g. 0.0.63.dev20250111)'
         required: true
         type: string
 
@@ -26,11 +26,11 @@ jobs:
     - name: Update version for repository_dispatch
       if: github.event_name == 'repository_dispatch' && github.event.client_payload.source == 'llama-stack-nightly'
       run: |
-        sed -i 's/version="\([^"]*\)"/version="\1${{ github.event.client_payload.version }}"/' setup.py
+        sed -i 's/version="\([^"]*\)"/version="${{ github.event.client_payload.version }}"/' setup.py
     - name: Update version for manual RC
       if: github.event_name == 'workflow_dispatch'
       run: |
-        sed -i 's/version="\([^"]*\)"/version="\1rc${{ inputs.rc_version }}"/' setup.py
+        sed -i 's/version="\([^"]*\)"/version="${{ inputs.version }}"/' setup.py
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
