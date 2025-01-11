@@ -203,7 +203,7 @@ What is the 100th decimal of pi?<|eot_id|><|start_header_id|>assistant<|end_head
         ]
     }
 }
-<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+<|eom_id|><|start_header_id|>assistant<|end_header_id|>
 
 
 ```
