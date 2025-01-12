@@ -61,7 +61,7 @@ CHECKPOINT_DIR=~/.llama/checkpoints/Meta-Llama3.1-8B-Instruct
 PYTHONPATH=$(git rev-parse --show-toplevel) torchrun llama_models/scripts/example_chat_completion.py $CHECKPOINT_DIR
 ```
 
-The above script should be used with an Instruct (Chat) model. For a Base model, use the script `llama_models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
+The above script should be used with an Instruct (Chat) model. For a Base model, update the `CHECKPOINT_DIR` path and use the script `llama_models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
 
 For running larger models with tensor parallelism, you should modify as:
 ```bash
