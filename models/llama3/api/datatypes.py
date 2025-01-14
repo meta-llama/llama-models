@@ -23,7 +23,7 @@ class Role(Enum):
     system = "system"
     user = "user"
     assistant = "assistant"
-    ipython = "ipython"
+    tool = "tool"
 
 
 @json_schema_type
@@ -137,7 +137,7 @@ RawContent = str | RawContentItem | List[RawContentItem]
 
 
 class RawMessage(BaseModel):
-    role: Literal["user", "system", "ipython", "assistant"]
+    role: Literal["user"] | Literal["system"] | Literal["tool"] | Literal["assistant"]
     content: RawContent
 
     # This is for RAG but likely should be absorbed into content
