@@ -196,7 +196,7 @@ def usecases():
                         ],
                     ),
                     RawMessage(
-                        role="ipython",
+                        role="tool",
                         content=json.dumps("25 C"),
                     ),
                 ],

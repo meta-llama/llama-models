@@ -141,7 +141,7 @@ class LLama31Interface:
         template = ToolResponseGenerator().gen(*args, **kwargs)
         return [
             RawMessage(
-                role="ipython",
+                role="tool",
                 content=template.render(),
             )
         ]
