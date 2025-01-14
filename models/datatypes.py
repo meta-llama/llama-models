@@ -6,27 +6,42 @@
 # the top-level of this source tree.
 
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
+from typing_extensions import Annotated
 
 from .schema_utils import json_schema_type
 
 
 @json_schema_type
-class SamplingStrategy(Enum):
-    greedy = "greedy"
-    top_p = "top_p"
-    top_k = "top_k"
+class GreedySamplingStrategy(BaseModel):
+    type: Literal["greedy"] = "greedy"
+
+
+@json_schema_type
+class TopPSamplingStrategy(BaseModel):
+    type: Literal["top_p"] = "top_p"
+    temperature: Optional[float] = Field(..., gt=0.0)
+    top_p: Optional[float] = 0.95
+
+
+@json_schema_type
+class TopKSamplingStrategy(BaseModel):
+    type: Literal["top_k"] = "top_k"
+    top_k: int = Field(..., ge=1)
+
+
+SamplingStrategy = Annotated[
+    Union[GreedySamplingStrategy, TopPSamplingStrategy, TopKSamplingStrategy],
+    Field(discriminator="type"),
+]
 
 
 @json_schema_type
 class SamplingParams(BaseModel):
-    strategy: SamplingStrategy = SamplingStrategy.greedy
+    strategy: SamplingStrategy = Field(default_factory=GreedySamplingStrategy)
 
-    temperature: Optional[float] = 0.0
-    top_p: Optional[float] = 0.95
-    top_k: Optional[int] = 0
     max_tokens: Optional[int] = 0
     repetition_penalty: Optional[float] = 1.0
 
