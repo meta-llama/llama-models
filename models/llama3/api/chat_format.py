@@ -67,7 +67,11 @@ class ChatFormat:
     def _encode_header(self, role: str) -> List[int]:
         tokens = []
         tokens.append(self.tokenizer.special_tokens["<|start_header_id|>"])
-        tokens.extend(self.tokenizer.encode(role, bos=False, eos=False))
+        tokens.extend(
+            self.tokenizer.encode(
+                "ipython" if role == "tool" else role, bos=False, eos=False
+            )
+        )
         tokens.append(self.tokenizer.special_tokens["<|end_header_id|>"])
         tokens.extend(self.tokenizer.encode("\n\n", bos=False, eos=False))
         return tokens
@@ -118,7 +122,7 @@ class ChatFormat:
     def encode_message(
         self, message: RawMessage, tool_prompt_format: ToolPromptFormat
     ) -> Tuple[List[int], List[PIL_Image.Image]]:
-        tokens = self._encode_header(role_str(message.role))
+        tokens = self._encode_header(message.role)
         images = []
 
         def _process_content(c):
@@ -165,7 +169,7 @@ class ChatFormat:
             images.extend(imgs)
 
         # Add the start of an assistant message for the model to complete.
-        tokens.extend(self._encode_header(role_str(Role.assistant)))
+        tokens.extend(self._encode_header("assistant"))
 
         return self._model_input_from_tokens_images(tokens, images)
 
