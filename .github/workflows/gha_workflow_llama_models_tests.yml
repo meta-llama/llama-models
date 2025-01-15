@@ -63,7 +63,7 @@ env:
 
 jobs:
   execute_workflow:
-    name: Execute workload on Self-Hosted CPU k8s runner
+    name: Execute workload on Self-Hosted GPU/CPU k8s runner
     permissions:
       pull-requests: write
     defaults:
@@ -230,14 +230,19 @@ jobs:
         if: contains(fromJSON('["workflow_dispatch", "schedule"]'), github.event_name)
         run: |
           echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
-          free -m
-          python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+          if [[ "${{ inputs.runner }}" == *"-cpu"* ]]; then
+            python3 -m pytest --ignore=models/llama3/tests/api/test_generation.py --ignore=llama_models/llama3/tests/api/test_generation.py --junitxml="${{ github.workspace }}/result.xml"
+          elif [[ "${{ inputs.runner }}" == *"-gpu"* ]]; then
+            python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+          else
+            exit 1
+          fi
 
       #### Create test summary ####
 
       - name: "Test Summary"
         id: manual_test_summary
-        if: if:always()
+        if: always()
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
