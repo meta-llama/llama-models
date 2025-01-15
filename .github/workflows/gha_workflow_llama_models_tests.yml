@@ -235,9 +235,9 @@ jobs:
 
       #### Create test summary ####
 
-      - name: "Manual - Test Summary"
+      - name: "Test Summary"
         id: manual_test_summary
-        if: contains(fromJSON('["workflow_dispatch", "schedule"]'), github.event_name)
+        if: if:always()
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
