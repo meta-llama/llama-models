@@ -14,7 +14,7 @@ from .datatypes import (
     CoreModelId,
     Model,
     SamplingParams,
-    SamplingStrategy,
+    TopPSamplingStrategy,
 )
 
 LLAMA2_VOCAB_SIZE = 32000
@@ -41,9 +41,10 @@ def all_registered_models() -> List[Model]:
 
 def recommended_sampling_params() -> SamplingParams:
     return SamplingParams(
-        strategy=SamplingStrategy.top_p,
-        temperature=1.0,
-        top_p=0.9,
+        strategy=TopPSamplingStrategy(
+            temperature=1.0,
+            top_p=0.9,
+        )
     )
 
 

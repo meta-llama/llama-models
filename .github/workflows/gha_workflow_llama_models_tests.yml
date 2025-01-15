@@ -189,7 +189,7 @@ jobs:
         if: github.event_name == 'pull_request_target'
         run: |
           echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
-          python3 -m pytest --ignore=models/llama3/tests/api/test_generation.py --junitxml="${{ github.workspace }}/result.xml"
+          python3 -m pytest --ignore=models/llama3/tests/api/test_generation.py --ignore=llama_models/llama3/tests/api/test_generation.py --junitxml="${{ github.workspace }}/result.xml"
 
       #### Create test summary ####
 
