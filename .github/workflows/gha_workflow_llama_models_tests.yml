@@ -169,7 +169,7 @@ jobs:
 
       - name: "Installing specific manual_dispatch dependencies"
         id: manual_install_pip
-        if: github.event_name == 'workflow_dispatch'
+        if: contains(fromJSON('["workflow_dispatch", "schedule"]'), github.event_name)
         run: |
           echo "[STEP] Installing specific dependencies for manual dispatch workflows"
           pip install numpy
@@ -227,7 +227,7 @@ jobs:
       - name: "Manual - Run Tests"
         id: manual_run_tests
         working-directory: "${{ github.workspace }}"
-        if: github.event_name == 'workflow_dispatch'
+        if: contains(fromJSON('["workflow_dispatch", "schedule"]'), github.event_name)
         run: |
           echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
           free -m
@@ -237,7 +237,7 @@ jobs:
 
       - name: "Manual - Test Summary"
         id: manual_test_summary
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: contains(fromJSON('["workflow_dispatch", "schedule"]'), github.event_name)
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
