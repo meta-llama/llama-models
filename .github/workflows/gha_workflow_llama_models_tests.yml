@@ -238,6 +238,10 @@ jobs:
             exit 1
           fi
 
+      #####################
+      #### ALL TESTING ####
+      #####################
+
       #### Create test summary ####
 
       - name: "Test Summary"
