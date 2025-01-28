@@ -1113,7 +1113,7 @@ class CrossAttentionTransformerVision(torch.nn.Module):
         # aspect_ratios: (B, T)
         # h: (B, T, D)
         vision_tokens = self.vision_encoder(
-            images.to(dtype=torch.bfloat16), aspect_ratios
+            images.to(dtype=torch.get_default_dtype()), aspect_ratios
         )
 
         vision_tokens = F.linear(
@@ -1407,8 +1407,6 @@ class CrossAttentionTransformer(torch.nn.Module):
         else:
             vision_tokens = self.vision_model(stacked_images, aspect_ratios)
 
-        vision_tokens = vision_tokens.to("cuda")
-
         bsz, nimg, nchunk, ntok, image_token_dim = tuple(vision_tokens.shape)
         xattn_caches = torch.stack(
             [
@@ -1428,7 +1426,7 @@ class CrossAttentionTransformer(torch.nn.Module):
         cross_attention_masks, full_text_row_masked_out_mask = (
             self.text_model._get_xattn_mask(
                 num_tokens=total_len,
-                text_device="cuda",
+                text_device=vision_tokens.device.type,
                 text_dtype=next(self.text_model.parameters()).dtype,
                 vision_tokens=vision_tokens,
                 cross_attention_masks=padded_masks,
@@ -1495,7 +1493,7 @@ def _pad_masks(
     total_len: int,
     max_num_chunks: int,
 ) -> torch.Tensor:
-    dtype = torch.bfloat16
+    dtype = torch.get_default_dtype()
     inf_value = get_negative_inf_value(dtype)
 
     bsz = len(all_masks)

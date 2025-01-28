@@ -12,6 +12,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
 from llama_models.llama3.api.datatypes import RawMediaItem, RawMessage, RawTextItem
 
 from llama_models.llama3.reference_impl.generation import Llama
@@ -19,7 +20,18 @@ from llama_models.llama3.reference_impl.generation import Llama
 THIS_DIR = Path(__file__).parent
 
 
-def build_generator(env_var: str):
+def get_device():
+    if 'DEVICE' in os.environ:
+        return os.environ['DEVICE']
+
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.xpu.is_available():
+        return "xpu"
+    return ""
+
+
+def build_generator(env_var: str, device: str):
     if env_var not in os.environ:
         raise ValueError(f"{env_var} must be specified for this test")
 
@@ -32,13 +44,16 @@ def build_generator(env_var: str):
         max_seq_len=128,
         max_batch_size=1,
         model_parallel_size=1,
+        device=device
     )
 
 
 class TestTextModelInference(unittest.TestCase):
+    device = "cpu"
+
     @classmethod
     def setUpClass(cls):
-        cls.generator = build_generator("TEXT_MODEL_CHECKPOINT_DIR")
+        cls.generator = build_generator("TEXT_MODEL_CHECKPOINT_DIR", cls.device)
 
     def test_run_generation(self):
         dialogs = [
@@ -68,10 +83,17 @@ class TestTextModelInference(unittest.TestCase):
             self.assertEqual(shape[1], 1)
 
 
+@pytest.mark.skipif(get_device() == "", reason="No device available and none specified")
+class TestTextModelInferenceOnDevice(TestTextModelInference):
+    device = get_device()
+
+
 class TestVisionModelInference(unittest.TestCase):
+    device = "cpu"
+
     @classmethod
     def setUpClass(cls):
-        cls.generator = build_generator("VISION_MODEL_CHECKPOINT_DIR")
+        cls.generator = build_generator("VISION_MODEL_CHECKPOINT_DIR", cls.device)
 
     @unittest.skip("Disabling vision model test")
     @pytest.mark.skip(reason="Disabling vision model test")
@@ -112,3 +134,8 @@ class TestVisionModelInference(unittest.TestCase):
             # assert at least 10 tokens
             self.assertTrue(shape[0] > 10)
             self.assertEqual(shape[1], 1)
+
+
+@pytest.mark.skipif(get_device() == "", reason="No device available and none specified")
+class TestVisionModelInferenceOnDevice(TestVisionModelInference):
+    device = get_device()
