@@ -11,7 +11,7 @@ from typing import Any, Dict, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import Annotated
 
-from .schema_utils import json_schema_type
+from .schema_utils import json_schema_type, register_schema
 
 
 @json_schema_type
@@ -32,10 +32,13 @@ class TopKSamplingStrategy(BaseModel):
     top_k: int = Field(..., ge=1)
 
 
-SamplingStrategy = Annotated[
-    Union[GreedySamplingStrategy, TopPSamplingStrategy, TopKSamplingStrategy],
-    Field(discriminator="type"),
-]
+SamplingStrategy = register_schema(
+    Annotated[
+        Union[GreedySamplingStrategy, TopPSamplingStrategy, TopKSamplingStrategy],
+        Field(discriminator="type"),
+    ],
+    name="SamplingStrategy",
+)
 
 
 @json_schema_type
@@ -46,15 +49,6 @@ class SamplingParams(BaseModel):
     repetition_penalty: Optional[float] = 1.0
 
 
-@json_schema_type(
-    schema={
-        "description": """
-The format in which weights are specified. This does not necessarily
-always equal what quantization is desired at runtime since there
-can be on-the-fly conversions done.
-""",
-    }
-)
 class CheckpointQuantizationFormat(Enum):
     # default format
     bf16 = "bf16"
@@ -67,7 +61,6 @@ class CheckpointQuantizationFormat(Enum):
     int4 = "int4"
 
 
-@json_schema_type
 class ModelFamily(Enum):
     llama2 = "llama2"
     llama3 = "llama3"
@@ -77,7 +70,6 @@ class ModelFamily(Enum):
     safety = "safety"
 
 
-@json_schema_type
 class CoreModelId(Enum):
     """Each of these models is a unique "SKU". These root models can be served in various garbs (especially by quantizing them)"""
 
@@ -187,11 +179,6 @@ def model_family(model_id) -> ModelFamily:
         raise ValueError(f"Unknown model family for {model_id}")
 
 
-@json_schema_type(
-    schema={
-        "description": "The model family and SKU of the model along with other parameters corresponding to the model."
-    }
-)
 class Model(BaseModel):
     core_model_id: CoreModelId
     description: str

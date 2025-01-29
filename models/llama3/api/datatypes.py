@@ -20,7 +20,6 @@ from ...datatypes import *  # noqa
 from ...schema_utils import json_schema_type
 
 
-@json_schema_type
 class Role(Enum):
     system = "system"
     user = "user"
@@ -28,7 +27,6 @@ class Role(Enum):
     tool = "tool"
 
 
-@json_schema_type
 class BuiltinTool(Enum):
     brave_search = "brave_search"
     wolfram_alpha = "wolfram_alpha"
@@ -82,13 +80,10 @@ class ToolDefinition(BaseModel):
         return v
 
 
-@json_schema_type
 class ToolPromptFormat(Enum):
-    """This Enum refers to the prompt format for calling custom / zero shot tools
+    """Prompt format for calling custom / zero shot tools.
 
-    `json` --
-        Refers to the json format for calling tools.
-        The json format takes the form like
+    :cvar json: JSON format for calling tools. It takes the form:
         {
             "type": "function",
             "function" : {
@@ -97,14 +92,12 @@ class ToolPromptFormat(Enum):
                 "parameters": {...}
             }
         }
-
-    `function_tag` --
-        This is an example of how you could define
-        your own user defined format for making tool calls.
-        The function_tag format looks like this,
+    :cvar function_tag: Function tag format, pseudo-XML. This looks like:
         <function=function_name>(parameters)</function>
 
-    The detailed prompts for each of these formats are added to llama cli
+    :cvar python_list: Python list. The output is a valid Python expression that can be
+        evaluated to a list. Each element in the list is a function call. Example:
+        ["function_name(param1, param2)", "function_name(param1, param2)"]
     """
 
     json = "json"
@@ -112,7 +105,6 @@ class ToolPromptFormat(Enum):
     python_list = "python_list"
 
 
-@json_schema_type
 class StopReason(Enum):
     end_of_turn = "end_of_turn"
     end_of_message = "end_of_message"
