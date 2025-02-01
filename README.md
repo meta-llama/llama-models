@@ -48,12 +48,7 @@ Remember that the links expire after 24 hours and a certain amount of downloads.
 
 ## Running the models
 
-You need to install the following dependencies (in addition to the `requirements.txt` in the root directory of this repository) to run the models:
-```
-pip install torch fairscale fire blobfile
-```
-
-After installing the dependencies, you can run the example scripts (within `llama_models/scripts/` sub-directory) as follows:
+You need to `pip install llama_models[torch]` to run the models. After installing the dependencies, you can run the example scripts (within `llama_models/scripts/` sub-directory) as follows:
 ```bash
 #!/bin/bash
 
