@@ -46,4 +46,4 @@ torch = [
 
 [tool.setuptools]
 package-dir = {"llama_models" = "llama_models"}
-packages = ["llama_models"]
+packages = {find = {}}
