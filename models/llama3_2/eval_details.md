@@ -149,4 +149,3 @@ For post-trained models, we use 0-shot config and report scores over the test se
 ### MathVista
 
 For post-trained models, we use 0-shot config and report scores over the testmini set. Maximum generation length is 2048 tokens. We use an LLM-based answer extractor as recommended by MathVista paper [Lu et al. (2024)](https://arxiv.org/pdf/2310.02255). We use the following system prompt: "&lt;|image|>{question}"
-

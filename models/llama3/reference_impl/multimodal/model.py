@@ -186,9 +186,7 @@ class ImageAttention(nn.Module):
 
         self.n_kv_heads = n_heads
         self.n_local_heads = n_heads * qkvo_replication // model_parallel_size
-        self.n_local_kv_heads = (
-            self.n_kv_heads * qkvo_replication // model_parallel_size
-        )
+        self.n_local_kv_heads = self.n_kv_heads * qkvo_replication // model_parallel_size
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
         self.head_dim = dim // n_heads
 
@@ -227,10 +225,7 @@ class ImageAttention(nn.Module):
         x: torch.Tensor,
         mask: torch.Tensor = None,
     ):
-
-        xq, xk, xv = [
-            F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]
-        ]
+        xq, xk, xv = [F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]]
 
         bs, slen, _ = xq.shape
 
@@ -243,9 +238,7 @@ class ImageAttention(nn.Module):
         xk = xk.repeat_interleave(self.n_rep, dim=1)
         xv = xv.repeat_interleave(self.n_rep, dim=1)
 
-        attn_output = F.scaled_dot_product_attention(
-            xq, xk, xv, attn_mask=mask, dropout_p=0.0
-        )
+        attn_output = F.scaled_dot_product_attention(xq, xk, xv, attn_mask=mask, dropout_p=0.0)
 
         attn_output = attn_output.transpose(1, 2).contiguous().reshape(bs, slen, -1)
 
@@ -372,14 +365,10 @@ class VisionEncoder(nn.Module):
         )
         scale = width**-0.5
         self.class_embedding = nn.Parameter(scale * torch.randn(width))
-        self.positional_embedding = nn.Parameter(
-            scale * torch.randn(self.grid_size[0] * self.grid_size[1] + 1, width)
-        )
+        self.positional_embedding = nn.Parameter(scale * torch.randn(self.grid_size[0] * self.grid_size[1] + 1, width))
         self.ln_post = LayerNorm(width)
         self.ln_pre = LayerNorm(width)
-        self.transformer = ImageTransformer(
-            width, layers, heads, mlp_ratio, act_layer=act_layer
-        )
+        self.transformer = ImageTransformer(width, layers, heads, mlp_ratio, act_layer=act_layer)
         # pre and post tile position embedding
         self.global_transformer = ImageTransformer(
             width, n_global_layers, heads, mlp_ratio, act_layer=act_layer, gated=True
@@ -421,9 +410,7 @@ class VisionEncoder(nn.Module):
     ) -> None:
         orig_pos_embed = state_dict.get(prefix + "positional_embedding")
         if orig_pos_embed is not None:
-            new_pos_embed = resize_local_position_embedding(
-                orig_pos_embed, self.grid_size
-            )
+            new_pos_embed = resize_local_position_embedding(orig_pos_embed, self.grid_size)
             state_dict[prefix + "positional_embedding"] = new_pos_embed
         if hasattr(self, "gated_positional_embedding"):
             if prefix + "gated_positional_embedding" not in state_dict:
@@ -435,12 +422,8 @@ class VisionEncoder(nn.Module):
                     self.max_num_tiles,
                 )
                 state_dict[prefix + "gated_positional_embedding"] = global_pos_embed
-                state_dict[prefix + "gated_positional_embedding_gate"] = torch.zeros(
-                    1, dtype=global_pos_embed.dtype
-                )
-                logger.info(
-                    f"Initialized global positional embedding with size {global_pos_embed.size()}"
-                )
+                state_dict[prefix + "gated_positional_embedding_gate"] = torch.zeros(1, dtype=global_pos_embed.dtype)
+                logger.info(f"Initialized global positional embedding with size {global_pos_embed.size()}")
             else:
                 global_pos_embed = resize_global_position_embedding(
                     state_dict[prefix + "gated_positional_embedding"],
@@ -460,25 +443,19 @@ class VisionEncoder(nn.Module):
         # apply regular position embedding
         bsz, num_chunks, num_tokens, dim = x.shape
         x = x.view(bsz * num_chunks, num_tokens, dim)
-        x = x + self.positional_embedding * (
-            1 - self.gated_positional_embedding_gate.tanh()
-        )
+        x = x + self.positional_embedding * (1 - self.gated_positional_embedding_gate.tanh())
         x = x.view(bsz, num_chunks, num_tokens, dim)
         for idx, arx in enumerate(ar):
             _pos_embed = self.gated_positional_embedding[: arx[0], : arx[1]]
             _pos_embed = _pos_embed.reshape(arx[0] * arx[1], *_pos_embed.shape[2:])
-            x[idx, : arx[0] * arx[1]] += (
-                _pos_embed * self.gated_positional_embedding_gate.tanh()
-            )
+            x[idx, : arx[0] * arx[1]] += _pos_embed * self.gated_positional_embedding_gate.tanh()
         return x
 
     def apply_class_embedding(self, x):
         x = torch.cat(
             [
                 self.class_embedding.to(x.dtype)
-                + torch.zeros(
-                    x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device
-                ),
+                + torch.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device),
                 x,
             ],
             dim=1,
@@ -518,9 +495,7 @@ class VisionEncoder(nn.Module):
         x, npad = expand_num_tokens_to_mult8(x)
         attn_mask = build_encoder_attention_mask(x, ar, ntok, num_chunks, 1)
         x = x.view(bsz * num_concurrent_media, -1, dim)
-        x, int_x = self.transformer(
-            x, return_intermediate=self.return_intermediate, mask=attn_mask
-        )
+        x, int_x = self.transformer(x, return_intermediate=self.return_intermediate, mask=attn_mask)
 
         x = self.ln_post(x)
         x = x.reshape(bsz * num_concurrent_media, num_chunks, ntok + npad, dim)
@@ -639,10 +614,7 @@ class Attention(nn.Module):
         freqs_cis: torch.Tensor,
         position_ids: torch.LongTensor,
     ):
-
-        xq, xk, xv = [
-            F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]
-        ]
+        xq, xk, xv = [F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]]
 
         bs, slen, _ = xq.shape
 
@@ -664,9 +636,7 @@ class Attention(nn.Module):
         xk = xk.repeat_interleave(self.n_rep, dim=1)
         xv = xv.repeat_interleave(self.n_rep, dim=1)
 
-        attn_output = F.scaled_dot_product_attention(
-            xq, xk, xv, attn_mask=mask, dropout_p=0.0
-        )
+        attn_output = F.scaled_dot_product_attention(xq, xk, xv, attn_mask=mask, dropout_p=0.0)
 
         attn_output = attn_output.transpose(1, 2).contiguous().reshape(bs, slen, -1)
 
@@ -702,15 +672,9 @@ class FeedForward(nn.Module):
             hidden_dim = int(ffn_dim_multiplier * hidden_dim)
         hidden_dim = multiple_of * ((hidden_dim + multiple_of - 1) // multiple_of)
 
-        self.w1 = ColumnParallelLinear(
-            dim, hidden_dim, bias=False, gather_output=False, init_method=lambda x: x
-        )
-        self.w2 = RowParallelLinear(
-            hidden_dim, dim, bias=False, input_is_parallel=True, init_method=lambda x: x
-        )
-        self.w3 = ColumnParallelLinear(
-            dim, hidden_dim, bias=False, gather_output=False, init_method=lambda x: x
-        )
+        self.w1 = ColumnParallelLinear(dim, hidden_dim, bias=False, gather_output=False, init_method=lambda x: x)
+        self.w2 = RowParallelLinear(hidden_dim, dim, bias=False, input_is_parallel=True, init_method=lambda x: x)
+        self.w3 = ColumnParallelLinear(dim, hidden_dim, bias=False, gather_output=False, init_method=lambda x: x)
 
     def forward(self, x):
         x1, x3 = [F.linear(x, w) for w in [self.w1.weight, self.w3.weight]]
@@ -794,9 +758,7 @@ class TilePositionEmbedding(nn.Module):
         super().__init__()
         self.num_tiles = num_tiles
         self.width = width
-        self.embedding = nn.Parameter(
-            torch.randn(num_tiles, num_tiles, 1, width) / math.sqrt(width)
-        )
+        self.embedding = nn.Parameter(torch.randn(num_tiles, num_tiles, 1, width) / math.sqrt(width))
         self.gated = gated
         if gated:
             self.gate = nn.Parameter(torch.zeros(1))
@@ -818,9 +780,7 @@ class TilePositionEmbedding(nn.Module):
         if embed is not None:
             # reshape the weights to the correct shape
             nt_old, nt_old, _, w = embed.shape
-            logging.info(
-                f"Resizing tile embedding from {nt_old}x{nt_old} to {self.num_tiles}x{self.num_tiles}"
-            )
+            logging.info(f"Resizing tile embedding from {nt_old}x{nt_old} to {self.num_tiles}x{self.num_tiles}")
             embed_new = TilePositionEmbedding._dynamic_resize(embed, self.num_tiles)
             # assign the weights to the module
             state_dict[prefix + "embedding"] = embed_new
@@ -846,9 +806,7 @@ class TilePositionEmbedding(nn.Module):
             num_tiles = self.num_tiles
         elif num_tiles > self.num_tiles:
             embed = TilePositionEmbedding._dynamic_resize(self.embedding, num_tiles)
-        out_pos_embed = torch.zeros(
-            x.shape[0], num_tiles, 1, self.width, device=x.device, dtype=x.dtype
-        )
+        out_pos_embed = torch.zeros(x.shape[0], num_tiles, 1, self.width, device=x.device, dtype=x.dtype)
         for idx, arx in enumerate(ar):
             h, w = arx
             out_pos_embed[idx, : w * h] = embed[:h, :w].reshape(w * h, 1, self.width)
@@ -976,9 +934,7 @@ class CrossAttention(torch.nn.Module):
 
         xk, xv = xattn_cache
 
-        output = F.scaled_dot_product_attention(
-            xq, xk, xv, attn_mask=xattn_mask, dropout_p=0.0
-        )
+        output = F.scaled_dot_product_attention(xq, xk, xv, attn_mask=xattn_mask, dropout_p=0.0)
         output = output * full_text_row_masked_out_mask
         output = output.transpose(1, 2).contiguous().reshape(bsz, seqlen, -1)
 
@@ -1086,9 +1042,7 @@ class CrossAttentionTransformerVision(torch.nn.Module):
         self.max_num_chunks = args.vision_max_num_chunks
         if return_intermediate is not None:
             return_intermediate = [int(l) for l in return_intermediate.split(",")]
-            self.vision_input_dim = (
-                len(return_intermediate) + 1
-            ) * self.vision_input_dim
+            self.vision_input_dim = (len(return_intermediate) + 1) * self.vision_input_dim
         self.patch_size = 14
         self.vision_encoder = VisionEncoder(
             max_num_tiles=4,
@@ -1106,19 +1060,13 @@ class CrossAttentionTransformerVision(torch.nn.Module):
             init_method=lambda x: x,
         )
 
-    def forward(
-        self, images: torch.Tensor, aspect_ratios: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, images: torch.Tensor, aspect_ratios: torch.Tensor) -> torch.Tensor:
         # vision_tokens: (B, T, D)
         # aspect_ratios: (B, T)
         # h: (B, T, D)
-        vision_tokens = self.vision_encoder(
-            images.to(dtype=torch.get_default_dtype()), aspect_ratios
-        )
+        vision_tokens = self.vision_encoder(images.to(dtype=torch.get_default_dtype()), aspect_ratios)
 
-        vision_tokens = F.linear(
-            vision_tokens, self.vision_projection.weight, self.vision_projection.bias
-        )
+        vision_tokens = F.linear(vision_tokens, self.vision_projection.weight, self.vision_projection.bias)
         vision_tokens = gather_from_tensor_model_parallel_region(vision_tokens)
         return vision_tokens
 
@@ -1137,26 +1085,20 @@ class CrossAttentionTransformerText(torch.nn.Module):
         self.n_kv_heads = args.n_heads if args.n_kv_heads is None else args.n_kv_heads
         self.n_local_kv_heads = self.n_kv_heads // self.model_parallel_size
         assert self.vocab_size % self.model_parallel_size == 0
-        self.tok_embeddings = VocabParallelEmbedding(
-            args.vocab_size, args.dim, init_method=lambda x: x
-        )
+        self.tok_embeddings = VocabParallelEmbedding(args.vocab_size, args.dim, init_method=lambda x: x)
         self.pos_embeddings = None
         # final norm layer (not necessary for post-norm)
         self.norm = RMSNorm(args.dim, eps=args.norm_eps)
 
         # output layer
-        self.output = ColumnParallelLinear(
-            args.dim, args.vocab_size, bias=False, init_method=lambda x: x
-        )
+        self.output = ColumnParallelLinear(args.dim, args.vocab_size, bias=False, init_method=lambda x: x)
 
         self.n_llama_layers = args.n_layers
         self.model_dim = args.dim
 
         # BLOCKS
 
-        self.fusion_schedule = self._init_fusion_schedule(
-            args.vision_num_cross_attention_layers
-        )
+        self.fusion_schedule = self._init_fusion_schedule(args.vision_num_cross_attention_layers)
         self.learnable_embedding = VocabParallelEmbedding(
             max(fs_init.get_model_parallel_world_size(), 8),
             args.dim,
@@ -1223,10 +1165,7 @@ class CrossAttentionTransformerText(torch.nn.Module):
         xz = torch.zeros_like(x, device=x.device)
         oz = torch.ones_like(x, device=x.device)
         x_orig = torch.minimum(x, torch.tensor(self._thresh, device=x.device))
-        x_new = (
-            torch.maximum(x, torch.tensor(self._thresh + 1, device=x.device))
-            - self.num_frozen_embeddings
-        )
+        x_new = torch.maximum(x, torch.tensor(self._thresh + 1, device=x.device)) - self.num_frozen_embeddings
 
         mask_orig = torch.where(x >= self.num_frozen_embeddings, xz, oz).unsqueeze(-1)
         mask_new = torch.where(x < self.num_frozen_embeddings, xz, oz).unsqueeze(-1)
@@ -1304,21 +1243,19 @@ class CrossAttentionTransformerText(torch.nn.Module):
     ) -> Tuple[Tensor, Tensor]:
         assert vision_tokens is not None, "Vision tokens must be provided"
         vision_seqlen = vision_tokens.shape[3]
-        assert (
-            vision_tokens.shape[1] == cross_attention_masks.shape[2]
-        ), f"Mismatch in number of images given and number of masks given {vision_tokens.shape} {cross_attention_masks.shape}"
-        assert (
-            vision_tokens.shape[2] == cross_attention_masks.shape[3]
-        ), f"Vision tokens shape {vision_tokens.shape} mismatch with xattn shape {cross_attention_masks.shape}"
-        assert (
-            num_tokens == cross_attention_masks.shape[1]
-        ), f"Mismatch in text sequence length and cross attention mask sequence length {num_tokens} {cross_attention_masks.shape}"
+        assert vision_tokens.shape[1] == cross_attention_masks.shape[2], (
+            f"Mismatch in number of images given and number of masks given {vision_tokens.shape} {cross_attention_masks.shape}"
+        )
+        assert vision_tokens.shape[2] == cross_attention_masks.shape[3], (
+            f"Vision tokens shape {vision_tokens.shape} mismatch with xattn shape {cross_attention_masks.shape}"
+        )
+        assert num_tokens == cross_attention_masks.shape[1], (
+            f"Mismatch in text sequence length and cross attention mask sequence length {num_tokens} {cross_attention_masks.shape}"
+        )
         _, _, _, num_image_tokens, image_token_dim = tuple(vision_tokens.shape)
         bsz, ntext, nimg, nchunks = cross_attention_masks.shape
         cross_attention_masks = (
-            cross_attention_masks.repeat_interleave(vision_seqlen, dim=3)
-            .view(bsz, ntext, -1)
-            .unsqueeze(1)
+            cross_attention_masks.repeat_interleave(vision_seqlen, dim=3).view(bsz, ntext, -1).unsqueeze(1)
         )
         full_text_row_masked_out_mask = _get_full_row_masked_out_mask(
             cross_attention_masks,
@@ -1358,9 +1295,7 @@ class CrossAttentionTransformer(torch.nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         skip_vision_encoder = False
 
-        assert len(batch_images) == len(
-            batch_masks
-        ), "Images and masks must have the same length"
+        assert len(batch_images) == len(batch_masks), "Images and masks must have the same length"
 
         max_num_images = max(len(x) for x in batch_images)
         bsz = len(batch_images)
@@ -1369,19 +1304,13 @@ class CrossAttentionTransformer(torch.nn.Module):
             num_chunks = [[self.max_num_chunks] for _ in batch_images]
             skip_vision_encoder = True
         else:
-            images_and_aspect_ratios = [
-                [self.image_transform(im) for im in row] for row in batch_images
-            ]
-            transformed_images = [
-                [x[0] for x in row] for row in images_and_aspect_ratios
-            ]
+            images_and_aspect_ratios = [[self.image_transform(im) for im in row] for row in batch_images]
+            transformed_images = [[x[0] for x in row] for row in images_and_aspect_ratios]
 
             aspect_ratios = torch.ones(bsz, max_num_images, 2, dtype=torch.int64)
             for i, row in enumerate(images_and_aspect_ratios):
                 if len(row) > 0:
-                    aspect_ratios[i, : len(row)] = torch.stack(
-                        [torch.tensor(x[1]) for x in row]
-                    )
+                    aspect_ratios[i, : len(row)] = torch.stack([torch.tensor(x[1]) for x in row])
 
             stacked_images, num_chunks = _stack_images(
                 transformed_images,
@@ -1396,11 +1325,7 @@ class CrossAttentionTransformer(torch.nn.Module):
                     bsz,
                     max_num_images,
                     self.max_num_chunks,
-                    int(
-                        (self.vision_model.image_res / self.vision_model.patch_size)
-                        ** 2
-                        + 1
-                    ),
+                    int((self.vision_model.image_res / self.vision_model.patch_size) ** 2 + 1),
                     self.model_dim,
                 ),
             )
@@ -1410,9 +1335,7 @@ class CrossAttentionTransformer(torch.nn.Module):
         bsz, nimg, nchunk, ntok, image_token_dim = tuple(vision_tokens.shape)
         xattn_caches = torch.stack(
             [
-                layer.compute_xattn_kv_cache(
-                    vision_tokens.view(bsz, -1, image_token_dim)
-                )
+                layer.compute_xattn_kv_cache(vision_tokens.view(bsz, -1, image_token_dim))
                 for layer in self.text_model.cross_attention_layers
             ]
         )
@@ -1423,14 +1346,12 @@ class CrossAttentionTransformer(torch.nn.Module):
             self.max_num_chunks,
         )
 
-        cross_attention_masks, full_text_row_masked_out_mask = (
-            self.text_model._get_xattn_mask(
-                num_tokens=total_len,
-                text_device=vision_tokens.device.type,
-                text_dtype=next(self.text_model.parameters()).dtype,
-                vision_tokens=vision_tokens,
-                cross_attention_masks=padded_masks,
-            )
+        cross_attention_masks, full_text_row_masked_out_mask = self.text_model._get_xattn_mask(
+            num_tokens=total_len,
+            text_device=vision_tokens.device.type,
+            text_dtype=next(self.text_model.parameters()).dtype,
+            vision_tokens=vision_tokens,
+            cross_attention_masks=padded_masks,
         )
 
         return (xattn_caches, cross_attention_masks, full_text_row_masked_out_mask)
@@ -1449,9 +1370,7 @@ class CrossAttentionTransformer(torch.nn.Module):
             position_ids=position_ids,
             h=h,
             xattn_mask=cross_attention_masks[:, :, position_ids],
-            full_text_row_masked_out_mask=full_text_row_masked_out_mask[
-                :, :, position_ids
-            ],
+            full_text_row_masked_out_mask=full_text_row_masked_out_mask[:, :, position_ids],
             xattn_caches=xattn_caches,
             text_only_inference=text_only_inference,
         )
@@ -1511,8 +1430,6 @@ def _pad_masks(
                 mask_elem[1] = min(mask_elem[1], total_len)
                 if mask_elem[1] == -1:
                     mask_elem[1] = total_len
-                out_masks[
-                    idx, mask_elem[0] : mask_elem[1], mask_idx, :mask_num_chunks
-                ].fill_(0.0)
+                out_masks[idx, mask_elem[0] : mask_elem[1], mask_idx, :mask_num_chunks].fill_(0.0)
 
     return out_masks

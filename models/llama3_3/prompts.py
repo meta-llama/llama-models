@@ -98,11 +98,7 @@ def usecases() -> List[UseCase | str]:
         UseCase(
             title="Llama 3.1 Base Model",
             description="Text completion for Llama 3.1 base model uses this format.",
-            dialogs=[
-                TextCompletionContent(
-                    content="Color of sky is blue but sometimes can also be"
-                )
-            ],
+            dialogs=[TextCompletionContent(content="Color of sky is blue but sometimes can also be")],
             notes="Note start special tag",
         ),
         "## Llama 3.1 Instruct Model",

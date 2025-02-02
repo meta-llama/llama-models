@@ -31,13 +31,9 @@ def resize_local_position_embedding(orig_pos_embed, grid_size):
         orig_pos_embed[:1],
         orig_pos_embed[1:],
     )
-    logger.info(
-        f"resizing position embedding grid-size from {orig_grid_size} to {new_grid_size}"
-    )
+    logger.info(f"resizing position embedding grid-size from {orig_grid_size} to {new_grid_size}")
 
-    new_pos_emb_img = new_pos_emb_img.reshape(
-        1, orig_grid_size[0], orig_grid_size[1], -1
-    ).permute(0, 3, 1, 2)
+    new_pos_emb_img = new_pos_emb_img.reshape(1, orig_grid_size[0], orig_grid_size[1], -1).permute(0, 3, 1, 2)
 
     new_pos_emb_img = F.interpolate(
         new_pos_emb_img,
@@ -45,16 +41,12 @@ def resize_local_position_embedding(orig_pos_embed, grid_size):
         mode="bilinear",
         align_corners=True,
     )
-    new_pos_emb_img = new_pos_emb_img.permute(0, 2, 3, 1).reshape(
-        1, new_grid_size[0] * new_grid_size[1], -1
-    )[0]
+    new_pos_emb_img = new_pos_emb_img.permute(0, 2, 3, 1).reshape(1, new_grid_size[0] * new_grid_size[1], -1)[0]
     new_pos_embed = torch.cat([new_pos_emb_tok, new_pos_emb_img], dim=0)
     return new_pos_embed
 
 
-def initialize_global_position_embedding_from_local(
-    pos_and_cls_embed, grid_size, x_scale, y_scale
-):
+def initialize_global_position_embedding_from_local(pos_and_cls_embed, grid_size, x_scale, y_scale):
     """
     Takes a local position embedding for vision encoder and uses it
     to initialize the global position embedding.
@@ -65,9 +57,7 @@ def initialize_global_position_embedding_from_local(
     pos_embed = pos_and_cls_embed[1:]
     cls_embed = pos_and_cls_embed[0].view(1, 1, 1, -1)
     grid_size = to_2tuple(grid_size)
-    new_pos_emb_img = pos_embed.reshape(1, grid_size[0], grid_size[1], -1).permute(
-        0, 3, 1, 2
-    )
+    new_pos_emb_img = pos_embed.reshape(1, grid_size[0], grid_size[1], -1).permute(0, 3, 1, 2)
     new_grid_size = (x_scale * grid_size[0], y_scale * grid_size[1])
     new_pos_emb_img = F.interpolate(
         new_pos_emb_img,
@@ -76,13 +66,9 @@ def initialize_global_position_embedding_from_local(
         align_corners=True,
     )
     new_pos_emb_img = new_pos_emb_img.permute(0, 2, 3, 1)
-    new_pos_emb_img = new_pos_emb_img.view(
-        x_scale, grid_size[0], y_scale, grid_size[1], -1
-    )
+    new_pos_emb_img = new_pos_emb_img.view(x_scale, grid_size[0], y_scale, grid_size[1], -1)
     new_pos_emb_img = new_pos_emb_img.permute(0, 2, 1, 3, 4).contiguous()
-    new_pos_emb_img = new_pos_emb_img.reshape(
-        x_scale, y_scale, grid_size[0] * grid_size[1], -1
-    )
+    new_pos_emb_img = new_pos_emb_img.reshape(x_scale, y_scale, grid_size[0] * grid_size[1], -1)
     cls_embed = cls_embed.expand(x_scale, y_scale, -1, -1)
     pos_and_cls_embed = torch.cat([cls_embed, new_pos_emb_img], dim=2)
     return pos_and_cls_embed

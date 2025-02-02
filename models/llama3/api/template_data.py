@@ -106,6 +106,4 @@ def user_images():
 
 
 def user_interleaved_images():
-    return {
-        "content": "<|image|>Describe the image in one sentence.<|image|>Write a haiku about these images"
-    }
+    return {"content": "<|image|>Describe the image in one sentence.<|image|>Write a haiku about these images"}

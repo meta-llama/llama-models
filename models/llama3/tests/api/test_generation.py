@@ -21,8 +21,8 @@ THIS_DIR = Path(__file__).parent
 
 
 def get_device():
-    if 'DEVICE' in os.environ:
-        return os.environ['DEVICE']
+    if "DEVICE" in os.environ:
+        return os.environ["DEVICE"]
 
     if torch.cuda.is_available():
         return "cuda"
@@ -40,11 +40,7 @@ def build_generator(env_var: str, device: str):
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "29501"
     return Llama.build(
-        ckpt_dir=os.environ[env_var],
-        max_seq_len=128,
-        max_batch_size=1,
-        model_parallel_size=1,
-        device=device
+        ckpt_dir=os.environ[env_var], max_seq_len=128, max_batch_size=1, model_parallel_size=1, device=device
     )
 
 
@@ -59,9 +55,7 @@ class TestTextModelInference(unittest.TestCase):
         dialogs = [
             [
                 RawMessage(role="system", content="Always answer with Haiku"),
-                RawMessage(
-                    role="user", content="I am going to Paris, what should I see?"
-                ),
+                RawMessage(role="user", content="I am going to Paris, what should I see?"),
             ],
             [
                 RawMessage(role="system", content="Always answer with emojis"),
@@ -98,9 +92,7 @@ class TestVisionModelInference(unittest.TestCase):
     @unittest.skip("Disabling vision model test")
     @pytest.mark.skip(reason="Disabling vision model test")
     def test_run_generation(self):
-        with open(
-            THIS_DIR.parent.parent.parent / "scripts/resources/dog.jpg", "rb"
-        ) as f:
+        with open(THIS_DIR.parent.parent.parent / "scripts/resources/dog.jpg", "rb") as f:
             img = f.read()
 
         dialogs = [

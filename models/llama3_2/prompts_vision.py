@@ -98,9 +98,7 @@ def usecases():
                 """
             ),
             dialogs=[
-                TextCompletionContent(
-                    content="The color of the sky is blue but sometimes it can also be"
-                ),
+                TextCompletionContent(content="The color of the sky is blue but sometimes it can also be"),
             ],
             notes="- Same as Llama3.1",
         ),

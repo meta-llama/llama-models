@@ -58,20 +58,13 @@ class ChatFormat:
     def __init__(self, tokenizer: Tokenizer):
         self.tokenizer = tokenizer
 
-        self.possible_headers = {
-            role: f"<|start_header_id|>{role_str(role)}<|end_header_id|>\n\n"
-            for role in Role
-        }
+        self.possible_headers = {role: f"<|start_header_id|>{role_str(role)}<|end_header_id|>\n\n" for role in Role}
         self.vision_token = self.tokenizer.special_tokens["<|image|>"]
 
     def _encode_header(self, role: str) -> List[int]:
         tokens = []
         tokens.append(self.tokenizer.special_tokens["<|start_header_id|>"])
-        tokens.extend(
-            self.tokenizer.encode(
-                "ipython" if role == "tool" else role, bos=False, eos=False
-            )
-        )
+        tokens.extend(self.tokenizer.encode("ipython" if role == "tool" else role, bos=False, eos=False))
         tokens.append(self.tokenizer.special_tokens["<|end_header_id|>"])
         tokens.extend(self.tokenizer.encode("\n\n", bos=False, eos=False))
         return tokens
@@ -80,9 +73,7 @@ class ChatFormat:
         tokens, images = self._encode_content(content, bos=True)
         return self._model_input_from_tokens_images(tokens, images)
 
-    def _encode_content(
-        self, content: RawContent, bos: bool = False
-    ) -> Tuple[List[int], List[PIL_Image.Image]]:
+    def _encode_content(self, content: RawContent, bos: bool = False) -> Tuple[List[int], List[PIL_Image.Image]]:
         tokens = []
         images = []
 
@@ -94,9 +85,7 @@ class ChatFormat:
             if isinstance(c, str) or isinstance(c, RawTextItem):
                 if isinstance(c, RawTextItem):
                     c = c.text
-                tokens.extend(
-                    self.tokenizer.encode(c, bos=False if added_bos else bos, eos=False)
-                )
+                tokens.extend(self.tokenizer.encode(c, bos=False if added_bos else bos, eos=False))
                 added_bos = True
 
             elif isinstance(c, RawMediaItem):
@@ -150,9 +139,7 @@ class ChatFormat:
         if message.role == "assistant":
             eom = message.stop_reason == StopReason.end_of_message
 
-        tokens.append(
-            self.tokenizer.special_tokens["<|eom_id|>" if eom else "<|eot_id|>"]
-        )
+        tokens.append(self.tokenizer.special_tokens["<|eom_id|>" if eom else "<|eot_id|>"])
         return tokens, images
 
     def encode_dialog_prompt(
@@ -174,16 +161,12 @@ class ChatFormat:
         return self._model_input_from_tokens_images(tokens, images)
 
     # TODO(this should be generic, not only for assistant messages)
-    def decode_assistant_message(
-        self, tokens: List[int], stop_reason: StopReason
-    ) -> RawMessage:
+    def decode_assistant_message(self, tokens: List[int], stop_reason: StopReason) -> RawMessage:
         content = self.tokenizer.decode(tokens)
 
         return self.decode_assistant_message_from_content(content, stop_reason)
 
-    def decode_assistant_message_from_content(
-        self, content: str, stop_reason: StopReason
-    ) -> RawMessage:
+    def decode_assistant_message_from_content(self, content: str, stop_reason: StopReason) -> RawMessage:
         content = content.strip(" ")
         header_str = self.possible_headers[Role.assistant]
         if content.startswith(header_str):
@@ -248,9 +231,7 @@ class ChatFormat:
             tool_calls=tool_calls,
         )
 
-    def _model_input_from_tokens_images(
-        self, tokens: List[int], images: List[PIL_Image.Image]
-    ) -> LLMInput:
+    def _model_input_from_tokens_images(self, tokens: List[int], images: List[PIL_Image.Image]) -> LLMInput:
         vision_input = None
         if len(images) > 0:
             vision_input = VisionInput(
@@ -259,9 +240,7 @@ class ChatFormat:
             )
 
         return LLMInput(
-            tokens=[
-                128256 if token == self.vision_token else token for token in tokens
-            ],
+            tokens=[128256 if token == self.vision_token else token for token in tokens],
             vision=vision_input,
         )
 
@@ -270,19 +249,14 @@ def create_vision_mask(
     tokens: List[int],
     vision_token: int,
 ) -> List[List[int]]:
-    vision_token_locations = [
-        i for i, token in enumerate(tokens) if token == vision_token
-    ]
+    vision_token_locations = [i for i, token in enumerate(tokens) if token == vision_token]
     if len(vision_token_locations) == 0:
         return []
 
     if len(vision_token_locations) == 1:
         # only one image present, unmask until end of sequence
         return [[vision_token_locations[0], -1]]
-    vision_masks = [
-        [loc1, loc2]
-        for loc1, loc2 in zip(vision_token_locations[:-1], vision_token_locations[1:])
-    ]
+    vision_masks = [[loc1, loc2] for loc1, loc2 in zip(vision_token_locations[:-1], vision_token_locations[1:])]
     # last image will attend to all subsequent text
     vision_masks.append([vision_token_locations[-1], len(tokens)])
 

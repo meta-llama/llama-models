@@ -187,9 +187,7 @@ class Model(BaseModel):
     arch_args: Dict[str, Any]
     variant: str = ""
 
-    quantization_format: CheckpointQuantizationFormat = (
-        CheckpointQuantizationFormat.bf16
-    )
+    quantization_format: CheckpointQuantizationFormat = CheckpointQuantizationFormat.bf16
     pth_file_count: int
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 

@@ -32,9 +32,7 @@ class TextCompletionContent(BaseModel):
 class UseCase(BaseModel):
     title: str = ""
     description: str = ""
-    dialogs: List[List[RawMessage] | TextCompletionContent | str] = Field(
-        default_factory=list
-    )
+    dialogs: List[List[RawMessage] | TextCompletionContent | str] = Field(default_factory=list)
     notes: str = ""
     tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json
 
@@ -82,10 +80,7 @@ class UseCase(BaseModel):
 
             # FIXME: This is added to undo the hack in chat_formatter where
             # vision tokens are replaced with 128256.
-            input_tokens = [
-                generator.formatter.vision_token if t == 128256 else t
-                for t in input_tokens
-            ]
+            input_tokens = [generator.formatter.vision_token if t == 128256 else t for t in input_tokens]
 
             text += _code_block(generator.tokenizer.decode(input_tokens))
             # TODO: Figure out if "↵" needs to be added for newlines or end or some indication
@@ -115,9 +110,7 @@ def llama3_1_builtin_tool_call_dialog(tool_prompt_format=ToolPromptFormat.json):
     interface = LLama31Interface(tool_prompt_format)
 
     messages = interface.system_messages(**system_message_builtin_tools_only())
-    messages += interface.user_message(
-        content="Search the web for the latest price of 1oz gold?"
-    )
+    messages += interface.user_message(content="Search the web for the latest price of 1oz gold?")
 
     return messages
 
@@ -147,16 +140,12 @@ def llama3_1_builtin_tool_call_with_image_dialog(
     interface = LLama31Interface(tool_prompt_format)
 
     messages = interface.system_messages(**system_message_builtin_tools_only())
-    messages += interface.user_message(
-        content=[RawMediaItem(data=img), RawTextItem(text="What is this dog breed?")]
-    )
+    messages += interface.user_message(content=[RawMediaItem(data=img), RawTextItem(text="What is this dog breed?")])
     messages += interface.assistant_response_messages(
         "Based on the description of the dog in the image, it appears to be a small breed dog, possibly a terrier mix",
         StopReason.end_of_turn,
     )
-    messages += interface.user_message(
-        "Search the web for some food recommendations for the indentified breed"
-    )
+    messages += interface.user_message("Search the web for some food recommendations for the indentified breed")
     return messages
 
 

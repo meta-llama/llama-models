@@ -50,9 +50,7 @@ class TokenizerTests(TestCase):
             content="This is a test sentence.",
         )
         self.assertEqual(
-            self.format.encode_message(
-                message, tool_prompt_format=ToolPromptFormat.json
-            )[0],
+            self.format.encode_message(message, tool_prompt_format=ToolPromptFormat.json)[0],
             [
                 128006,  # <|start_header_id|>
                 882,  # "user"

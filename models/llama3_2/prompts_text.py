@@ -121,9 +121,7 @@ def usecases():
                 # Zero shot tool calls as system message
                 [
                     RawMessage(role="system", content=system_tool_call()),
-                    RawMessage(
-                        role="user", content="What is the weather in SF and Seattle?"
-                    ),
+                    RawMessage(role="user", content="What is the weather in SF and Seattle?"),
                 ],
             ],
             notes=textwrap.dedent(
@@ -218,9 +216,7 @@ def usecases():
                 """
             ),
             dialogs=[
-                TextCompletionContent(
-                    content="The color of the sky is blue but sometimes it can also be"
-                ),
+                TextCompletionContent(content="The color of the sky is blue but sometimes it can also be"),
             ],
             notes="Same as Llama3.1",
         ),

@@ -91,9 +91,7 @@ class VariableSizeImageTransform(object):
                 factors_set.add(n // i)
         return factors_set
 
-    def find_supported_resolutions(
-        self, max_num_chunks: int, patch_size: int
-    ) -> torch.Tensor:
+    def find_supported_resolutions(self, max_num_chunks: int, patch_size: int) -> torch.Tensor:
         """
         Computes all of the allowed resoltuions for a fixed number of chunks
         and patch_size. Useful for when dividing an image into chunks.
@@ -244,15 +242,11 @@ class VariableSizeImageTransform(object):
         # If target_size requires upscaling, we might want to limit the upscaling to max_upscaling_size
         if max_upscaling_size is not None:
             new_target_width = min(max(image_width, max_upscaling_size), target_size[0])
-            new_target_height = min(
-                max(image_height, max_upscaling_size), target_size[1]
-            )
+            new_target_height = min(max(image_height, max_upscaling_size), target_size[1])
             target_size = (new_target_width, new_target_height)
 
         # resize to target_size while preserving aspect ratio
-        new_size_without_distortion = self.get_max_res_without_distortion(
-            image_size, target_size
-        )
+        new_size_without_distortion = self.get_max_res_without_distortion(image_size, target_size)
 
         image = F.resize(
             image,
@@ -382,9 +376,7 @@ class VariableSizeImageTransform(object):
         assert isinstance(image, Image.Image), type(image)
         w, h = image.size
 
-        possible_resolutions = self.find_supported_resolutions(
-            max_num_chunks=max_num_chunks, patch_size=self.size
-        )
+        possible_resolutions = self.find_supported_resolutions(max_num_chunks=max_num_chunks, patch_size=self.size)
         possible_resolutions = torch.tensor(possible_resolutions)
 
         best_resolution = self.get_best_fit(
@@ -394,9 +386,7 @@ class VariableSizeImageTransform(object):
         )
 
         max_upscaling_size = None if resize_to_max_canvas else self.size
-        image = self.resize_without_distortion(
-            image, best_resolution, max_upscaling_size
-        )
+        image = self.resize_without_distortion(image, best_resolution, max_upscaling_size)
         image = self._pad(image, best_resolution)
 
         image = self.to_tensor(image)

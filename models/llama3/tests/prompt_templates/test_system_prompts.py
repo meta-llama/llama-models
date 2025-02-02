@@ -19,7 +19,6 @@ from llama_models.llama3.prompt_templates import (
 
 
 class PromptTemplateTests(unittest.TestCase):
-
     def check_generator_output(self, generator, expected_text):
         example = generator.data_examples()[0]
 

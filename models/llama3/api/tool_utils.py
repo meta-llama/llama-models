@@ -12,9 +12,7 @@ from typing import Optional, Tuple
 from .datatypes import BuiltinTool, RecursiveType, ToolCall, ToolPromptFormat
 
 BUILTIN_TOOL_PATTERN = r'\b(?P<tool_name>\w+)\.call\(query="(?P<query>[^"]*)"\)'
-CUSTOM_TOOL_CALL_PATTERN = re.compile(
-    r"<function=(?P<function_name>[^}]+)>(?P<args>{.*?})"
-)
+CUSTOM_TOOL_CALL_PATTERN = re.compile(r"<function=(?P<function_name>[^}]+)>(?P<args>{.*?})")
 
 
 def is_json(s):
@@ -56,9 +54,7 @@ def is_valid_python_list(input_string):
                 return False
 
             # Check if all arguments are keyword arguments
-            if element.args or not all(
-                isinstance(arg, ast.keyword) for arg in element.keywords
-            ):
+            if element.args or not all(isinstance(arg, ast.keyword) for arg in element.keywords):
                 return False
 
         return True
@@ -77,9 +73,7 @@ def parse_python_list_for_function_calls(input_string):
     tree = ast.parse(input_string)
 
     # Ensure the input is a list
-    if not isinstance(tree.body[0], ast.Expr) or not isinstance(
-        tree.body[0].value, ast.List
-    ):
+    if not isinstance(tree.body[0], ast.Expr) or not isinstance(tree.body[0].value, ast.List):
         raise ValueError("Input must be a list of function calls")
 
     result = []
@@ -134,14 +128,10 @@ class ToolUtils:
             try:
                 return tool_name, json.loads(query.replace("'", '"'))
             except Exception as e:
-                print(
-                    "Exception while parsing json query for custom tool call", query, e
-                )
+                print("Exception while parsing json query for custom tool call", query, e)
         elif is_json(message_body):
             response = json.loads(message_body)
-            if ("type" in response and response["type"] == "function") or (
-                "name" in response
-            ):
+            if ("type" in response and response["type"] == "function") or ("name" in response):
                 function_name = response["name"]
                 args = response["parameters"]
                 return function_name, args
@@ -196,7 +186,5 @@ class ToolUtils:
                     else:
                         raise ValueError(f"Unsupported type: {type(value)}")
 
-                args_str = ", ".join(
-                    f"{k}={format_value(v)}" for k, v in t.arguments.items()
-                )
+                args_str = ", ".join(f"{k}={format_value(v)}" for k, v in t.arguments.items())
                 return f"[{fname}({args_str})]"

@@ -60,9 +60,7 @@ class Tokenizer:
         global _INSTANCE
 
         if _INSTANCE is None:
-            _INSTANCE = Tokenizer(
-                os.path.join(os.path.dirname(__file__), "tokenizer.model")
-            )
+            _INSTANCE = Tokenizer(os.path.join(os.path.dirname(__file__), "tokenizer.model"))
         return _INSTANCE
 
     def __init__(self, model_path: str):
@@ -91,14 +89,11 @@ class Tokenizer:
             "<|image|>",
         ]
         reserved_tokens = [
-            f"<|reserved_special_token_{2 + i}|>"
-            for i in range(self.num_reserved_special_tokens - len(special_tokens))
+            f"<|reserved_special_token_{2 + i}|>" for i in range(self.num_reserved_special_tokens - len(special_tokens))
         ]
         special_tokens = special_tokens + reserved_tokens
 
-        self.special_tokens = {
-            token: num_base_tokens + i for i, token in enumerate(special_tokens)
-        }
+        self.special_tokens = {token: num_base_tokens + i for i, token in enumerate(special_tokens)}
         self.model = tiktoken.Encoding(
             name=Path(model_path).name,
             pat_str=self.pat_str,
@@ -190,9 +185,7 @@ class Tokenizer:
         return self.model.decode(cast(List[int], t))
 
     @staticmethod
-    def _split_whitespaces_or_nonwhitespaces(
-        s: str, max_consecutive_slice_len: int
-    ) -> Iterator[str]:
+    def _split_whitespaces_or_nonwhitespaces(s: str, max_consecutive_slice_len: int) -> Iterator[str]:
         """
         Splits the string `s` so that each substring contains no more than `max_consecutive_slice_len`
         consecutive whitespaces or consecutive non-whitespaces.

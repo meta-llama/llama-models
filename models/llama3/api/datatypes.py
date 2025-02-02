@@ -136,9 +136,7 @@ class RawTextItem(BaseModel):
     text: str
 
 
-RawContentItem = Annotated[
-    Union[RawTextItem, RawMediaItem], Field(discriminator="type")
-]
+RawContentItem = Annotated[Union[RawTextItem, RawMediaItem], Field(discriminator="type")]
 
 RawContent = str | RawContentItem | List[RawContentItem]
 

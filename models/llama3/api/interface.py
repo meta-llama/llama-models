@@ -182,9 +182,7 @@ class LLama31Interface:
             elif self.tool_prompt_format == ToolPromptFormat.function_tag:
                 tool_gen = FunctionTagCustomToolGenerator()
             else:
-                raise ValueError(
-                    f"Non supported ToolPromptFormat {self.tool_prompt_format}"
-                )
+                raise ValueError(f"Non supported ToolPromptFormat {self.tool_prompt_format}")
 
             custom_template = tool_gen.gen(custom_tools)
             messages.append(RawMessage(role="user", content=custom_template.render()))

@@ -25,9 +25,7 @@ def run_main(
     model_parallel_size: Optional[int] = None,
 ):
     module = importlib.import_module(module_name)
-    assert hasattr(
-        module, "usecases"
-    ), f"Module {module_name} missing usecases function"
+    assert hasattr(module, "usecases"), f"Module {module_name} missing usecases function"
     tokenizer_path = str(THIS_DIR.parent / "llama3/api/tokenizer.model")
     generator = Llama.build(
         ckpt_dir=ckpt_dir,

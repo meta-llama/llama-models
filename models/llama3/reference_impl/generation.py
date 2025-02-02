@@ -68,7 +68,7 @@ class Llama:
         model_parallel_size: Optional[int] = None,
         tokenizer_path: Optional[str] = None,
         seed: int = 1,
-        device: str = "cuda"
+        device: str = "cuda",
     ):
         """
         Build a Llama instance by initializing and loading a model checkpoint.
@@ -97,8 +97,12 @@ class Llama:
         """
 
         device = torch.device(device)
-        if (device.type == "cuda" and not torch.cuda.is_available() or
-            device.type == "xpu" and not torch.xpu.is_available()):
+        if (
+            device.type == "cuda"
+            and not torch.cuda.is_available()
+            or device.type == "xpu"
+            and not torch.xpu.is_available()
+        ):
             raise RuntimeError(f"PyTorch backend for {device.type} device type is not available")
 
         if not torch.distributed.is_initialized():
@@ -127,9 +131,9 @@ class Llama:
 
         checkpoints = sorted(Path(ckpt_dir).glob("*.pth"))
         assert len(checkpoints) > 0, f"no checkpoint files found in {ckpt_dir}"
-        assert model_parallel_size == len(
-            checkpoints
-        ), f"Loading a checkpoint for MP={len(checkpoints)} but world size is {model_parallel_size}"
+        assert model_parallel_size == len(checkpoints), (
+            f"Loading a checkpoint for MP={len(checkpoints)} but world size is {model_parallel_size}"
+        )
         ckpt_path = checkpoints[get_model_parallel_rank()]
         checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=True)
         with open(Path(ckpt_dir) / "params.json", "r") as f:
@@ -193,10 +197,7 @@ class Llama:
         params = self.model.params
 
         if print_model_input:
-            tokens_to_print = [
-                self.formatter.vision_token if t == 128256 else t
-                for t in model_input.tokens
-            ]
+            tokens_to_print = [self.formatter.vision_token if t == 128256 else t for t in model_input.tokens]
             cprint(
                 "Input to model:\n" + self.tokenizer.decode(tokens_to_print) + "\n",
                 "red",
@@ -210,9 +211,7 @@ class Llama:
         max_prompt_len = max(len(t) for t in prompt_tokens)
 
         if max_prompt_len >= params.max_seq_len:
-            cprint(
-                f"Out of token budget {max_prompt_len} vs {params.max_seq_len}", "red"
-            )
+            cprint(f"Out of token budget {max_prompt_len} vs {params.max_seq_len}", "red")
             return
 
         total_len = min(max_gen_len + max_prompt_len, params.max_seq_len)
@@ -223,12 +222,10 @@ class Llama:
             mask = model_input.vision.mask if model_input.vision is not None else []
 
             # the method works for bsz > 1 so add a batch dimension
-            xattn_caches, cross_attention_masks, full_text_row_masked_out_mask = (
-                self.model.compute_vision_tokens_masks(
-                    batch_images=[images],
-                    batch_masks=[mask],
-                    total_len=total_len,
-                )
+            xattn_caches, cross_attention_masks, full_text_row_masked_out_mask = self.model.compute_vision_tokens_masks(
+                batch_images=[images],
+                batch_masks=[mask],
+                total_len=total_len,
             )
 
         pad_id = self.tokenizer.pad_id
@@ -247,17 +244,13 @@ class Llama:
                 yield TokenResult(
                     token=t,
                     text=self.tokenizer.decode([t]),
-                    logprobs=(
-                        token_logprobs[0, i : i + 1].tolist() if logprobs else None
-                    ),
+                    logprobs=(token_logprobs[0, i : i + 1].tolist() if logprobs else None),
                 )
 
         stop_tokens = torch.tensor(self.tokenizer.stop_tokens)
         for cur_pos in range(min_prompt_len, total_len):
             if is_vision:
-                position_ids = torch.arange(
-                    prev_pos, cur_pos, dtype=torch.long
-                )
+                position_ids = torch.arange(prev_pos, cur_pos, dtype=torch.long)
                 text_only_inference = model_input.vision is None
                 logits = self.model.forward(
                     position_ids,
@@ -278,9 +271,7 @@ class Llama:
 
             next_token = next_token.reshape(-1)
             # only replace token if prompt has already been generated
-            next_token = torch.where(
-                input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token
-            )
+            next_token = torch.where(input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token)
             tokens[:, cur_pos] = next_token
 
             target = tokens[:, prev_pos + 1 : cur_pos + 1]
@@ -303,17 +294,11 @@ class Llama:
                     reduction="none",
                     ignore_index=pad_id,
                 )
-            eos_reached |= (~input_text_mask[:, cur_pos]) & (
-                torch.isin(next_token, stop_tokens)
-            )
+            eos_reached |= (~input_text_mask[:, cur_pos]) & (torch.isin(next_token, stop_tokens))
             yield TokenResult(
                 token=next_token[0].item(),
                 text=self.tokenizer.decode(next_token.tolist()),
-                logprobs=(
-                    token_logprobs[:, cur_pos : cur_pos + 1][0].tolist()
-                    if logprobs
-                    else None
-                ),
+                logprobs=(token_logprobs[:, cur_pos : cur_pos + 1][0].tolist() if logprobs else None),
             )
 
             prev_pos = cur_pos
@@ -329,11 +314,7 @@ class Llama:
         logprobs: bool = False,
         echo: bool = False,
     ) -> CompletionPrediction:
-        if (
-            max_gen_len is None
-            or max_gen_len == 0
-            or max_gen_len >= self.model.params.max_seq_len
-        ):
+        if max_gen_len is None or max_gen_len == 0 or max_gen_len >= self.model.params.max_seq_len:
             max_gen_len = self.model.params.max_seq_len - 1
 
         model_input = self.formatter.encode_content(content)
@@ -374,11 +355,7 @@ class Llama:
         tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
         echo: bool = False,
     ) -> ChatPrediction:
-        if (
-            max_gen_len is None
-            or max_gen_len == 0
-            or max_gen_len >= self.model.params.max_seq_len
-        ):
+        if max_gen_len is None or max_gen_len == 0 or max_gen_len >= self.model.params.max_seq_len:
             max_gen_len = self.model.params.max_seq_len - 1
 
         tokens = []
@@ -387,9 +364,7 @@ class Llama:
 
         stop_reason = None
         for result in self.generate(
-            model_input=self.formatter.encode_dialog_prompt(
-                messages, tool_prompt_format
-            ),
+            model_input=self.formatter.encode_dialog_prompt(messages, tool_prompt_format),
             max_gen_len=max_gen_len,
             temperature=temperature,
             top_p=top_p,
@@ -428,11 +403,7 @@ class Llama:
         max_gen_len: Optional[int] = None,
         tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
     ) -> List[int]:
-        if (
-            max_gen_len is None
-            or max_gen_len == 0
-            or max_gen_len >= self.model.params.max_seq_len
-        ):
+        if max_gen_len is None or max_gen_len == 0 or max_gen_len >= self.model.params.max_seq_len:
             max_gen_len = self.model.params.max_seq_len - 1
 
         output_tokens = []
@@ -456,11 +427,7 @@ class Llama:
         top_p: float = 0.9,
         max_gen_len: Optional[int] = None,
     ):
-        if (
-            max_gen_len is None
-            or max_gen_len == 0
-            or max_gen_len >= self.model.params.max_seq_len
-        ):
+        if max_gen_len is None or max_gen_len == 0 or max_gen_len >= self.model.params.max_seq_len:
             max_gen_len = self.model.params.max_seq_len - 1
 
         model_input = self.formatter.encode_content(content)
