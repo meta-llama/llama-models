@@ -145,3 +145,49 @@ class PromptTemplateTests(unittest.TestCase):
             """
         )
         self.check_generator_output(generator, expected_text.strip("\n"))
+
+    def test_llama_3_2_provided_system_prompt(self):
+        generator = PythonListCustomToolGenerator()
+        expected_text = textwrap.dedent(
+            """
+            Overriding message.
+
+            If you decide to invoke any of the function(s), you MUST put it in the format of [func_name1(params_name1=params_value1, params_name2=params_value2...), func_name2(params)]
+            You SHOULD NOT include any other text in the response.
+
+            Here is a list of functions in JSON format that you can invoke.
+
+            [
+                {
+                    "name": "get_weather",
+                    "description": "Get weather info for places",
+                    "parameters": {
+                        "type": "dict",
+                        "required": ["city"],
+                        "properties": {
+                            "city": {
+                                "type": "string",
+                                "description": "The name of the city to get the weather for"
+                            },
+                            "metric": {
+                                "type": "string",
+                                "description": "The metric for weather. Options are: celsius, fahrenheit",
+                                "default": "celsius"
+                            }
+                        }
+                    }
+                }
+            ]"""
+        )
+        user_system_prompt = textwrap.dedent(
+            """
+            Overriding message.
+            
+            {{ function_description }}
+            """
+        )
+        example = generator.data_examples()[0]
+
+        pt = generator.gen(example, user_system_prompt)
+        text = pt.render()
+        assert text == expected_text, f"Expected:\n{expected_text}\nActual:\n{text}"

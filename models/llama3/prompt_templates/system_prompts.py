@@ -7,7 +7,7 @@
 
 import textwrap
 from datetime import datetime
-from typing import Any, List
+from typing import Any, List, Optional
 
 from llama_models.llama3.api.datatypes import (
     BuiltinTool,
@@ -215,14 +215,33 @@ class FunctionTagCustomToolGenerator(PromptTemplateGeneratorBase):
 
 
 class PythonListCustomToolGenerator(PromptTemplateGeneratorBase):  # noqa: N801
-    def gen(self, custom_tools: List[ToolDefinition]) -> PromptTemplate:
+    DEFAULT_PROMPT = textwrap.dedent(
+        """
+        You are an expert in composing functions. You are given a question and a set of possible functions.
+        Based on the question, you will need to make one or more function/tool calls to achieve the purpose.
+        If none of the function can be used, point it out. If the given question lacks the parameters required by the function,
+        also point it out. You should only return the function call in tools call sections.
+
+        {{ function_description }}
+        """.strip(
+            "\n"
+        )
+    )
+
+    def gen(
+        self, custom_tools: List[ToolDefinition], system_prompt: Optional[str] = None
+    ) -> PromptTemplate:
+        system_prompt = system_prompt or self.DEFAULT_PROMPT
+        return PromptTemplate(
+            system_prompt,
+            {"function_description": self._gen_function_description(custom_tools)},
+        )
+
+    def _gen_function_description(
+        self, custom_tools: List[ToolDefinition]
+    ) -> PromptTemplate:
         template_str = textwrap.dedent(
             """
-            You are an expert in composing functions. You are given a question and a set of possible functions.
-            Based on the question, you will need to make one or more function/tool calls to achieve the purpose.
-            If none of the function can be used, point it out. If the given question lacks the parameters required by the function,
-            also point it out. You should only return the function call in tools call sections.
-
             If you decide to invoke any of the function(s), you MUST put it in the format of [func_name1(params_name1=params_value1, params_name2=params_value2...), func_name2(params)]
             You SHOULD NOT include any other text in the response.
 
@@ -263,7 +282,7 @@ class PythonListCustomToolGenerator(PromptTemplateGeneratorBase):  # noqa: N801
         return PromptTemplate(
             template_str.strip("\n"),
             {"tools": [t.model_dump() for t in custom_tools]},
-        )
+        ).render()
 
     def data_examples(self) -> List[List[ToolDefinition]]:
         return [
