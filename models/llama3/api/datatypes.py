@@ -105,6 +105,17 @@ class ToolPromptFormat(Enum):
     python_list = "python_list"
 
 
+class ResponseOutputParser(Enum):
+    """Output parser for the response from the model.
+
+    :cvar default: Decode response messages and parse tool calls.
+    :cvar react: Decode response with ReACT prompt and parse tool calls.
+    """
+
+    default = "default"
+    react = "react"
+
+
 class StopReason(Enum):
     end_of_turn = "end_of_turn"
     end_of_message = "end_of_message"
