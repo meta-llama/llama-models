@@ -26,9 +26,9 @@ Meta has a [bounty program](http://facebook.com/whitehat/info) for the safe
 disclosure of security bugs. In those cases, please go through the process
 outlined on that page and do not file a public issue.
 
-## Coding Style  
+## Coding Style
 * 2 spaces for indentation rather than tabs
-* 80 character line length
+* 120 character line length
 * ...
 
 ## License
