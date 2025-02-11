@@ -223,23 +223,17 @@ class PythonListCustomToolGenerator(PromptTemplateGeneratorBase):  # noqa: N801
         also point it out. You should only return the function call in tools call sections.
 
         {{ function_description }}
-        """.strip(
-            "\n"
-        )
+        """.strip("\n")
     )
 
-    def gen(
-        self, custom_tools: List[ToolDefinition], system_prompt: Optional[str] = None
-    ) -> PromptTemplate:
+    def gen(self, custom_tools: List[ToolDefinition], system_prompt: Optional[str] = None) -> PromptTemplate:
         system_prompt = system_prompt or self.DEFAULT_PROMPT
         return PromptTemplate(
             system_prompt,
             {"function_description": self._gen_function_description(custom_tools)},
         )
 
-    def _gen_function_description(
-        self, custom_tools: List[ToolDefinition]
-    ) -> PromptTemplate:
+    def _gen_function_description(self, custom_tools: List[ToolDefinition]) -> PromptTemplate:
         template_str = textwrap.dedent(
             """
             If you decide to invoke any of the function(s), you MUST put it in the format of [func_name1(params_name1=params_value1, params_name2=params_value2...), func_name2(params)]
