@@ -40,9 +40,9 @@ Where to send questions or comments about the model Instructions on how to provi
 
 **Training Greenhouse Gas Emissions** Estimated total location-based greenhouse gas emissions were **11,390** tons CO2eq for training. Since 2020, Meta has maintained net zero greenhouse gas emissions in its global operations and matched 100% of its electricity use with renewable energy, therefore the total market-based greenhouse gas emissions for training were 0 tons CO2eq.
 
-|  | Training Time (GPU hours) | Training Power Consumption (W) | Training Location-Based Greenhouse Gas Emissions (tons CO2eq) | Training Market-Based Greenhouse Gas Emissions (tons CO2eq) |
+|  | Training Time (GPU hours) | Training Power Consumption (W) | Training Location-Based Greenhouse Gas Emissions (metric tons CO2eq) | Training Market-Based Greenhouse Gas Emissions (metric tons CO2eq) |
 | :---- | :---: | :---: | :---: | :---: |
-| Llama 3.3 70B | 7.0M | 700 | 2,040 | 0 |
+| Llama 3.3 70B | 7.0M | 700 | 12.9 | 0 |
 
 The methodology used to determine training energy use and greenhouse gas emissions can be found [here](https://arxiv.org/pdf/2204.05149).  Since Meta is openly releasing these models, the training energy use and greenhouse gas emissions  will not be incurred by others.
 
