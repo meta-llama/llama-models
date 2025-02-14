@@ -7,5 +7,4 @@
 
 from .args import *  # noqa
 from .chat_format import *  # noqa
-from .datatypes import *  # noqa
 from .tokenizer import *  # noqa
