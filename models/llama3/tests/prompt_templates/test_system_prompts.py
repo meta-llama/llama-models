@@ -182,7 +182,7 @@ class PromptTemplateTests(unittest.TestCase):
         user_system_prompt = textwrap.dedent(
             """
             Overriding message.
-            
+
             {{ function_description }}
             """
         )
