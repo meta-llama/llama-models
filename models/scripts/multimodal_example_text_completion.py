@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 import fire
-from llama_models.llama3.api.datatypes import RawMediaItem
+from llama_models.datatypes import RawMediaItem
 
 from llama_models.llama3.reference_impl.generation import Llama
 

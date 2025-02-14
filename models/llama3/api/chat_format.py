@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple
 
 from PIL import Image as PIL_Image
 
-from .datatypes import (
+from ...datatypes import (
     BuiltinTool,
     RawContent,
     RawMediaItem,

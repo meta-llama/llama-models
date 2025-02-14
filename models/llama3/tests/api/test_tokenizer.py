@@ -8,20 +8,17 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
-import os
 from unittest import TestCase
 
-from .chat_format import ChatFormat
-from .datatypes import RawMessage, ToolPromptFormat
-from .tokenizer import Tokenizer
+from llama_models.datatypes import RawMessage, ToolPromptFormat
 
-
-# TOKENIZER_PATH=<tokenizer_path> python -m unittest models/llama3/api/test_tokenizer.py
+from llama_models.llama3.api.chat_format import ChatFormat
+from llama_models.llama3.api.tokenizer import Tokenizer
 
 
 class TokenizerTests(TestCase):
     def setUp(self):
-        self.tokenizer = Tokenizer(os.environ["TOKENIZER_PATH"])
+        self.tokenizer = Tokenizer.get_instance()
         self.format = ChatFormat(self.tokenizer)
 
     def test_special_tokens(self):

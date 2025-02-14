@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
-from llama_models.llama3.api.datatypes import RawMediaItem, RawMessage, RawTextItem
+from llama_models.datatypes import RawMediaItem, RawMessage, RawTextItem
 
 from llama_models.llama3.reference_impl.generation import Llama
 
