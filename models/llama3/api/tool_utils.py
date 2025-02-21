@@ -130,6 +130,7 @@ class ToolUtils:
                 return tool_name, json.loads(query.replace("'", '"'))
             except Exception as e:
                 print("Exception while parsing json query for custom tool call", query, e)
+                return None
         elif is_json(message_body):
             response = json.loads(message_body)
             if ("type" in response and response["type"] == "function") or ("name" in response):
