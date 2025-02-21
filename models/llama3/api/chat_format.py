@@ -149,8 +149,9 @@ class ChatFormat:
     def encode_dialog_prompt(
         self,
         messages: List[RawMessage],
-        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
+        tool_prompt_format: Optional[ToolPromptFormat] = None,
     ) -> LLMInput:
+        tool_prompt_format = tool_prompt_format or ToolPromptFormat.json
         tokens = []
         images = []
         tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])

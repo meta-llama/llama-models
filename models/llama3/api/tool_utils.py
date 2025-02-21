@@ -190,3 +190,5 @@ class ToolUtils:
 
                 args_str = ", ".join(f"{k}={format_value(v)}" for k, v in t.arguments.items())
                 return f"[{fname}({args_str})]"
+            else:
+                raise ValueError(f"Unsupported tool prompt format: {tool_prompt_format}")
