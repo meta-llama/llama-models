@@ -119,7 +119,11 @@ class ChatFormat:
             tokens.extend(toks)
             images.extend(imgs)
 
-        if message.role == "assistant" and len(message.tool_calls) > 0:
+        if (
+            message.role == "assistant"
+            and len(message.tool_calls) > 0
+            and message.tool_calls[0].tool_name == BuiltinTool.code_interpreter
+        ):
             tokens.append(self.tokenizer.special_tokens["<|python_tag|>"])
 
         _process_content(message.content)

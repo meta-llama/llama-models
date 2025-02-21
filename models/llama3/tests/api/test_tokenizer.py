@@ -10,7 +10,7 @@
 
 from unittest import TestCase
 
-from llama_models.datatypes import RawMessage, ToolPromptFormat
+from llama_models.datatypes import BuiltinTool, RawMessage, ToolCall, ToolPromptFormat
 
 from llama_models.llama3.api.chat_format import ChatFormat
 from llama_models.llama3.api.tokenizer import Tokenizer
@@ -60,6 +60,51 @@ class TokenizerTests(TestCase):
                 11914,
                 13,  # This is a test sentence.
                 128009,  # <|eot_id|>
+            ],
+        )
+
+    def test_encode_message_with_tool_call(self):
+        message = RawMessage(
+            role="assistant",
+            content="",
+            tool_calls=[
+                ToolCall(
+                    tool_name=BuiltinTool.code_interpreter,
+                    arguments={"code": "print('Hello, world!')"},
+                    call_id="1",
+                )
+            ],
+        )
+        self.assertEqual(
+            self.format.encode_message(message, tool_prompt_format=ToolPromptFormat.python_list)[0][:5],
+            [
+                self.format.tokenizer.special_tokens["<|start_header_id|>"],
+                self.format.tokenizer.encode(message.role, bos=False, eos=False)[0],
+                self.format.tokenizer.special_tokens["<|end_header_id|>"],
+                self.format.tokenizer.encode("\n\n", bos=False, eos=False)[0],
+                self.format.tokenizer.special_tokens["<|python_tag|>"],
+            ],
+        )
+        message = RawMessage(
+            role="assistant",
+            content="",
+            tool_calls=[
+                ToolCall(
+                    tool_name="custom_tool",
+                    arguments={"some_param": "value"},
+                    call_id="1",
+                )
+            ],
+        )
+        self.assertEqual(
+            self.format.encode_message(message, tool_prompt_format=ToolPromptFormat.python_list)[0][:5],
+            [
+                self.format.tokenizer.special_tokens["<|start_header_id|>"],
+                self.format.tokenizer.encode(message.role, bos=False, eos=False)[0],
+                self.format.tokenizer.special_tokens["<|end_header_id|>"],
+                self.format.tokenizer.encode("\n\n", bos=False, eos=False)[0],
+                # beginning of `[custom_tool(...)]`
+                self.format.tokenizer.encode("[", bos=False, eos=False)[0],
             ],
         )
 
