@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llama_models"
-version = "0.1.3"
+version = "0.1.4.dev3"
 authors = [
     {name = "Meta Llama", email = "llama-oss@meta.com"},
 ]
