@@ -72,7 +72,7 @@ Here's my response
 
 ## Tool Calling Formats
 
-Here we describe how to invoke the Llama 3.3 instruction tuned model for tool-calling (also called function-calling). We recommend zero-short function calling over built-in tools.
+Here we describe how to invoke the Llama 3.3 instruction tuned model for tool-calling (also called function-calling). We recommend zero-shot function calling over built-in tools.
 
 ### Zero shot function calling
 
@@ -175,9 +175,9 @@ Here is a list of functions in JSON format that you can invoke:
     }
 ]
 
-Should you decide to return the function call(s),Put it in the format of [func1(params_name=params_value, params_name2=params_value2...), func2(params)]
+Should you decide to return the function call(s), put them in the format of [func1(params_name=params_value, params_name2=params_value2...), func2(params)]
 
-NO other text MUST be included.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+You SHOULD NOT include any other text in the response.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 
 ```
