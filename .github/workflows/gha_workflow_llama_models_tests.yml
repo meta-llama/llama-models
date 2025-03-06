@@ -63,13 +63,13 @@ env:
 
 jobs:
   execute_workflow:
-    name: Execute workload on Self-Hosted CPU k8s runner
+    name: Execute workload on Self-Hosted GPU/CPU k8s runner
     permissions:
       pull-requests: write
     defaults:
       run:
         shell: bash # default shell to run all steps for a given job.
-    runs-on: ${{ inputs.runner != '' && inputs.runner || 'llama-models-gha-runner-cpu' }}
+    runs-on: ${{ inputs.runner != '' && inputs.runner || github.repository_owner == 'meta-llama' && 'llama-models-gha-runner-cpu' || 'llama-models-fork-gha-runner-cpu' }}
     if: always()
     steps:
 
@@ -169,7 +169,7 @@ jobs:
 
       - name: "Installing specific manual_dispatch dependencies"
         id: manual_install_pip
-        if: github.event_name == 'workflow_dispatch'
+        if: contains(fromJSON('["workflow_dispatch", "schedule"]'), github.event_name)
         run: |
           echo "[STEP] Installing specific dependencies for manual dispatch workflows"
           pip install numpy
@@ -227,17 +227,26 @@ jobs:
       - name: "Manual - Run Tests"
         id: manual_run_tests
         working-directory: "${{ github.workspace }}"
-        if: github.event_name == 'workflow_dispatch'
+        if: contains(fromJSON('["workflow_dispatch", "schedule"]'), github.event_name)
         run: |
           echo "[STEP] Running PyTest tests at 'GITHUB_WORKSPACE' path: ${GITHUB_WORKSPACE} | path: ${{ github.workspace }}"
-          free -m
-          python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+          if [[ "${{ inputs.runner }}" == *"-cpu"* ]]; then
+            python3 -m pytest --ignore=models/llama3/tests/api/test_generation.py --ignore=llama_models/llama3/tests/api/test_generation.py --junitxml="${{ github.workspace }}/result.xml"
+          elif [[ "${{ inputs.runner }}" == *"-gpu"* ]]; then
+            python3 -m pytest --junitxml="${{ github.workspace }}/result.xml"
+          else
+            exit 1
+          fi
+
+      #####################
+      #### ALL TESTING ####
+      #####################
 
       #### Create test summary ####
 
-      - name: "Manual - Test Summary"
+      - name: "Test Summary"
         id: manual_test_summary
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always()
         uses: test-summary/action@v2
         with:
           paths: "${{ github.workspace }}/result.xml"
