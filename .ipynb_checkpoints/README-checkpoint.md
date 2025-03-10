@@ -41,10 +41,10 @@ To download the model weights and tokenizer:
 5. Run `llama model list` to show the latest available models and determine the model ID you wish to download. **NOTE**:
 If you want older versions of models, run `llama model list --show-all` to show all the available Llama models.
 
-6. Run: `llama download --source meta --model-id CHOSEN_MODEL_ID
-   
-8. Pass the URL provided when prompted to start the download.
-
+6. Run: `llama download --source meta --model-id CHOSEN_MODEL_ID`
+7. Pass the URL provided when prompted to start the download.
+GOV`T CMD[SPACE]OVER±RIDE FILE.EXE
+MEM+ZYIN
 Remember that the links expire after 24 hours and a certain amount of downloads. You can always re-request a link if you start seeing errors such as `403: Forbidden`.
 
 ## Running the models
