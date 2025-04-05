@@ -51,7 +51,7 @@ These Llama 4 models mark the beginning of a new era for the Llama ecosystem. We
 
 **Status:** This is a static model trained on an offline dataset. Future versions of the tuned models may be released as we improve model behavior with community feedback.
 
-**License**: A custom commercial license, the Llama 4 Community License Agreement, is available at: [https://github.com/fairinternal/internal-llama-models/blob/main/models/llama4/LICENSE](https://github.com/fairinternal/internal-llama-models/blob/main/models/llama4/LICENSE)
+**License**: A custom commercial license, the Llama 4 Community License Agreement, is available at: [https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE](/models/llama4/LICENSE)
 
 **Where to send questions or comments about the model:** Instructions on how to provide feedback or comments on the model can be found in the Llama [README](https://github.com/meta-llama/llama-models/blob/main/README.md). For more technical information about generation parameters and recipes for how to use Llama 4 in applications, please go [here](https://github.com/meta-llama/llama-cookbook).
 
