@@ -7,15 +7,14 @@
 
 import os
 import unittest
-
 from pathlib import Path
 
 import numpy as np
 import pytest
 import torch
-from llama_models.datatypes import RawMediaItem, RawMessage, RawTextItem
 
-from llama_models.llama3.reference_impl.generation import Llama
+from llama_models.datatypes import RawMediaItem, RawMessage, RawTextItem
+from llama_models.llama3.generation import Llama
 
 THIS_DIR = Path(__file__).parent
 
@@ -39,9 +38,7 @@ def build_generator(env_var: str, device: str):
     os.environ["WORLD_SIZE"] = "1"
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "29501"
-    return Llama.build(
-        ckpt_dir=os.environ[env_var], max_seq_len=128, max_batch_size=1, model_parallel_size=1, device=device
-    )
+    return Llama.build(ckpt_dir=os.environ[env_var], max_seq_len=128, max_batch_size=1, world_size=1, device=device)
 
 
 class TestTextModelInference(unittest.TestCase):

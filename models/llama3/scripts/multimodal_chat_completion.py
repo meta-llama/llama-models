@@ -13,12 +13,9 @@ from pathlib import Path
 from typing import Optional
 
 import fire
-from llama_models.datatypes import RawMediaItem
 
-from llama_models.llama3.reference_impl.generation import Llama
-
-from termcolor import cprint
-
+from models.datatypes import RawMediaItem, RawMessage, RawTextItem
+from models.llama3.generation import Llama
 
 THIS_DIR = Path(__file__).parent
 
@@ -30,38 +27,56 @@ def run_main(
     max_seq_len: int = 512,
     max_batch_size: int = 4,
     max_gen_len: Optional[int] = None,
-    model_parallel_size: Optional[int] = None,
+    world_size: Optional[int] = None,
 ):
     generator = Llama.build(
         ckpt_dir=ckpt_dir,
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
-        model_parallel_size=model_parallel_size,
+        world_size=world_size,
     )
 
-    with open(THIS_DIR / "resources/dog.jpg", "rb") as f:
+    # image understanding
+    dialogs = []
+    with open(THIS_DIR / "../../resources/dog.jpg", "rb") as f:
         img = f.read()
 
-    interleaved_contents = [
-        # text only
-        "The color of the sky is blue but sometimes it can also be",
-        # image understanding
+    dialogs = [
         [
-            RawMediaItem(type="image", data=BytesIO(img)),
-            "If I had to write a haiku for this one",
+            RawMessage(
+                role="user",
+                content=[
+                    RawMediaItem(data=BytesIO(img)),
+                    RawTextItem(text="Describe this image in two sentences"),
+                ],
+            )
+        ],
+    ]
+    # text only
+    dialogs += [
+        [
+            RawMessage(
+                role="user",
+                content="what is the recipe of mayonnaise in two sentences?",
+            )
         ],
     ]
 
-    for content in interleaved_contents:
-        result = generator.text_completion(
-            content,
+    for dialog in dialogs:
+        result = generator.chat_completion(
+            dialog,
             max_gen_len=max_gen_len,
             temperature=temperature,
             top_p=top_p,
         )
 
-        cprint(f"{content}", end="")
-        cprint(f"{result.generation}", color="yellow")
+        for msg in dialog:
+            print(f"{msg.role.capitalize()}: {msg.content}\n")
+
+        out_message = result.generation
+        print(f"> {out_message.role.capitalize()}: {out_message.content}")
+        for t in out_message.tool_calls:
+            print(f"  Tool call: {t.tool_name} ({t.arguments})")
         print("\n==================================\n")
 
 

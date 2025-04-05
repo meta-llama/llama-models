@@ -8,38 +8,34 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
+from io import BytesIO
+from pathlib import Path
 from typing import Optional
 
 import fire
+from termcolor import cprint
 
-from llama_models.datatypes import RawMessage, StopReason
+from models.datatypes import RawMediaItem, RawMessage, RawTextItem, StopReason
+from models.llama4.generation import Llama4
 
-from llama_models.llama3.reference_impl.generation import Llama
+THIS_DIR = Path(__file__).parent
 
 
 def run_main(
-    ckpt_dir: str,
+    checkpoint_dir: str,
+    world_size: int = 1,
+    max_seq_len: Optional[int] = 4096,
+    max_batch_size: Optional[int] = 1,
     temperature: float = 0.6,
     top_p: float = 0.9,
-    max_seq_len: int = 512,
-    max_batch_size: int = 4,
-    max_gen_len: Optional[int] = None,
-    model_parallel_size: Optional[int] = None,
+    quantization_mode: Optional[str] = None,
 ):
-    """
-    Examples to run with the models finetuned for chat. Prompts correspond of chat
-    turns between the user and assistant with the final one always being the user.
-
-    An optional system prompt at the beginning to control how the model should respond
-    is also supported.
-
-    `max_gen_len` is optional because finetuned models are able to stop generations naturally.
-    """
-    generator = Llama.build(
-        ckpt_dir=ckpt_dir,
+    generator = Llama4.build(
+        checkpoint_dir,
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
-        model_parallel_size=model_parallel_size,
+        world_size=world_size,
+        quantization_mode=quantization_mode,
     )
 
     dialogs = [
@@ -67,25 +63,48 @@ These are just a few of the many attractions that Paris has to offer. With so mu
             RawMessage(role="system", content="Always answer with Haiku"),
             RawMessage(role="user", content="I am going to Paris, what should I see?"),
         ],
-        [
-            RawMessage(role="system", content="Always answer with emojis"),
-            RawMessage(role="user", content="How to go from Beijing to NY?"),
-        ],
+        # [
+        #     RawMessage(role="system", content="Always answer with emojis"),
+        #     RawMessage(role="user", content="How to go from Beijing to NY?"),
+        # ],
     ]
-    for dialog in dialogs:
-        result = generator.chat_completion(
-            dialog,
-            max_gen_len=max_gen_len,
-            temperature=temperature,
-            top_p=top_p,
+    if generator.args.vision_args:
+        with open(THIS_DIR / "../../resources/dog.jpg", "rb") as f:
+            img1 = f.read()
+
+        with open(THIS_DIR / "../../resources/pasta.jpeg", "rb") as f:
+            img2 = f.read()
+
+        dialogs.append(
+            [
+                RawMessage(
+                    role="user",
+                    content=[
+                        RawMediaItem(data=BytesIO(img1)),
+                        RawMediaItem(data=BytesIO(img2)),
+                        RawTextItem(text="Write a haiku that brings both images together"),
+                    ],
+                ),
+            ]
         )
 
+    for dialog in dialogs:
         for msg in dialog:
             print(f"{msg.role.capitalize()}: {msg.content}\n")
 
-        out_message = result.generation
-        print(f"> {out_message.role.capitalize()}: {out_message.content}")
-        print("\n==================================\n")
+        batch = [dialog]
+        for token_results in generator.chat_completion(
+            batch,
+            temperature=temperature,
+            top_p=top_p,
+            max_gen_len=max_seq_len,
+        ):
+            result = token_results[0]
+            if result.finished:
+                break
+
+            cprint(result.text, color="yellow", end="")
+        print("\n")
 
 
 def main():

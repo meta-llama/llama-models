@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llama_models"
-version = "0.1.4"
+version = "0.2.0"
 authors = [
     {name = "Meta Llama", email = "llama-oss@meta.com"},
 ]
@@ -13,10 +13,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "PyYAML",
-    "jinja2",
+    "jinja2>=3.1.6",
     "tiktoken",
     "pydantic>=2",
     "Pillow",
+    "rich",
 ]
 classifiers = []
 
@@ -28,6 +29,8 @@ multimodal_example_chat_completion = "llama_models.scripts.multimodal_example_ch
 multimodal_example_text_completion = "llama_models.scripts.multimodal_example_text_completion:main"
 example_chat_completion = "llama_models.scripts.example_chat_completion:main"
 example_text_completion = "llama_models.scripts.example_text_completion:main"
+llama4_completion = "llama_models.llama4.scripts.completion:main"
+llama4_chat_completion = "llama_models.llama4.scripts.chat_completion:main"
 
 [project.optional-dependencies]
 dev = [
@@ -39,9 +42,11 @@ dev = [
 ]
 torch = [
     "torch",
+    "torchvision",
     "fairscale",
     "fire",
     "blobfile",
+    "fbgemm-gpu-genai==1.1.2",
 ]
 
 [tool.setuptools]
