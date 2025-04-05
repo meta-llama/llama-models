@@ -102,7 +102,7 @@ For more flexibility in running inference (including using other providers), ple
 
 ## Access to Hugging Face
 
-We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama), in both transformers and native `llama3` formats. To download the weights from Hugging Face, please follow these steps:
+We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama), in both transformers and native `llama4` formats. To download the weights from Hugging Face, please follow these steps:
 
 - Visit one of the repos, for example [meta-llama/Llama-4-Scout-17B-16E](https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E).
 - Read and accept the license. Once your request is approved, you'll be granted access to all Llama 3.1 models as well as previous versions. Note that requests used to take up to one hour to get processed.
@@ -112,7 +112,7 @@ We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama), 
 huggingface-cli download meta-llama/Llama-4-Scout-17B-16E-Instruct-Original --local-dir meta-llama/Llama-4-Scout-17B-16E-Instruct-Original
 ```
 
-- To use with transformers, the following [pipeline](https://huggingface.co/docs/transformers/en/main_classes/pipelines) snippet will download and cache the weights:
+- To use with transformers, the following snippet will download and cache the weights:
 
   ```python
   #inference.py
