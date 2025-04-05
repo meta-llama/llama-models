@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-        🤗 <a href="https://huggingface.co/meta-Llama"> Models on Hugging Face</a>&nbsp | <a href="https://ai.meta.com/blog/"> Blog</a>&nbsp |  <a href="https://llama.meta.com/">Website</a>&nbsp | <a href="https://llama.meta.com/get-started/">Get Started</a>&nbsp
+        🤗 <a href="https://huggingface.co/meta-Llama"> Models on Hugging Face</a>&nbsp | <a href="https://ai.meta.com/blog/"> Blog</a>&nbsp |  <a href="https://llama.meta.com/">Website</a>&nbsp | <a href="https://llama.meta.com/get-started/">Get Started</a>&nbsp | <a href="https://github.com/meta-llama/llama-cookbook">Llama Cookbook</a>&nbsp
 <br>
 
 ---
@@ -104,32 +104,43 @@ For more flexibility in running inference (including using other providers), ple
 
 We also provide downloads on [Hugging Face](https://huggingface.co/meta-llama), in both transformers and native `llama3` formats. To download the weights from Hugging Face, please follow these steps:
 
-- Visit one of the repos, for example [meta-llama/Meta-Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct).
+- Visit one of the repos, for example [meta-llama/Llama-4-Scout-17B-16E](https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E).
 - Read and accept the license. Once your request is approved, you'll be granted access to all Llama 3.1 models as well as previous versions. Note that requests used to take up to one hour to get processed.
 - To download the original native weights to use with this repo, click on the "Files and versions" tab and download the contents of the `original` folder. You can also download them from the command line if you `pip install huggingface-hub`:
 
 ```bash
-huggingface-cli download meta-llama/Meta-Llama-3.1-8B-Instruct --include "original/*" --local-dir meta-llama/Meta-Llama-3.1-8B-Instruct
+huggingface-cli download meta-llama/Llama-4-Scout-17B-16E-Instruct-Original --local-dir meta-llama/Llama-4-Scout-17B-16E-Instruct-Original
 ```
-
-**NOTE** The original native weights of meta-llama/Meta-Llama-3.1-405B would not be available through this HugginFace repo.
-
 
 - To use with transformers, the following [pipeline](https://huggingface.co/docs/transformers/en/main_classes/pipelines) snippet will download and cache the weights:
 
   ```python
-  import transformers
+  #inference.py
+  from transformers import AutoTokenizer, Llama4ForConditionalGeneration
   import torch
 
-  model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+  model_id = "meta-llama/Llama-4-Scout-17B-16E-Instruct"
 
-  pipeline = transformers.pipeline(
-      "text-generation",
-      model="meta-llama/Meta-Llama-3.1-8B-Instruct",
-      model_kwargs={"torch_dtype": torch.bfloat16},
-      device="cuda",
+  tokenizer = AutoTokenizer.from_pretrained(model_id)
+
+  messages = [
+      {"role": "user", "content": "Who are you?"},
+  ]
+  inputs = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", return_dict=True)
+
+  model = Llama4ForConditionalGeneration.from_pretrained(
+      model_id,
+      device_map="auto",
+      torch_dtype=torch.bfloat16
   )
+
+  outputs = model.generate(**inputs.to(model.device), max_new_tokens=100)
+  outputs = tokenizer.batch_decode(outputs[:, inputs["input_ids"].shape[-1]:])
+  print(outputs[0])
   ```
+  ```bash
+   torchrun --nnodes=1 --nproc_per_node=8 inference.py
+   ```
 
 ## Installations
 
