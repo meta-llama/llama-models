@@ -319,7 +319,8 @@ As part of our release approach, we followed a three-pronged strategy to manage 
 * Protect developers against adversarial users aiming to exploit Llama capabilities to potentially cause harm.  
 * Provide protections for the community to help prevent the misuse of our models.
 
-Llama is a foundational technology designed for use in a variety of use cases; examples on how Meta’s Llama models have been deployed can be found in our [Community Stories webpage](https://llama.meta.com/community-stories/). Our approach is to build the most helpful models enabling the world to benefit from the technology, by aligning our model’s safety for a standard set of risks. Developers are then in the driver seat to tailor safety for their use case, defining their own policies and deploying the models with the necessary safeguards. Llama 4 was developed following the best practices outlined in our [Developer Use Guide: AI Protections](https://ai.meta.com/static-resource/developer-use-guide-ai-protections).
+Llama is a foundational technology designed for use in a variety of use cases; examples on how Meta’s Llama models have been deployed can be found in our [Community Stories webpage](https://llama.meta.com/community-stories/). Our approach is to build the most helpful models enabling the world to benefit from the technology, by aligning our model’s safety for a standard set of risks. Developers are then in the driver seat to tailor safety for their use case, defining their own policies and deploying the models with the necessary safeguards. Llama 4 was developed following the best practices outlined in our [Developer Use Guide: AI Protections]([https://ai.meta.com/static-resource/developer-use-guide-ai-protections](https://www.llama.com/static-resource/developer-use-guide/).
+ 
 
 ### Model level fine tuning
 
