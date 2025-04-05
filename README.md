@@ -29,6 +29,8 @@ Our mission is to empower individuals and industry through this opportunity whil
 | Llama 3.1 | 7/23/2024 | 8B, 70B, 405B | 128K | TikToken-based | [Use Policy](models/llama3_1/USE_POLICY.md) | [License](models/llama3_1/LICENSE) | [Model Card](models/llama3_1/MODEL_CARD.md) |
 | Llama 3.2 | 9/25/2024 | 1B, 3B | 128K | TikToken-based | [Use Policy](models/llama3_2/USE_POLICY.md) | [License](models/llama3_2/LICENSE) | [Model Card](models/llama3_2/MODEL_CARD.md) |
 | Llama 3.2-Vision | 9/25/2024 | 11B, 90B | 128K | TikToken-based | [Use Policy](models/llama3_2/USE_POLICY.md) | [License](models/llama3_2/LICENSE) | [Model Card](models/llama3_2/MODEL_CARD_VISION.md) |
+| Llama 3.3 | 12/04/2024 | 11B, 90B | 128K | TikToken-based | [Use Policy](models/llama3_3/USE_POLICY.md) | [License](models/llama3_3/LICENSE) | [Model Card](models/llama3_3/MODEL_CARD.md) |
+| Llama 4 | 4/5/2025 | Scout-17B-16E, Maverick-17B-128E | 10M, 1M | TikToken-based | [Use Policy](models/llama4/USE_POLICY.md) | [License](models/llama4/LICENSE) | [Model Card](models/llama4/MODEL_CARD.md) |
 
 ## Download
 
@@ -48,28 +50,54 @@ Remember that the links expire after 24 hours and a certain amount of downloads.
 
 ## Running the models
 
-You need to `pip install llama_models[torch]` to run the models. After installing the dependencies, you can run the example scripts (within `llama_models/scripts/` sub-directory) as follows:
+In order to run the models, you will need to install dependencies after checking out the repository.
+
+```bash
+# Run this within a suitable Python environment (uv, conda, or virtualenv)
+pip install -e .[torch]
+```
+
+Example scripts are available in `models/{ llama3, llama4 }/scripts/` sub-directory. Note that the Llama4 series of models require at least 4 GPUs to run inference at full (bf16) precision.
+
 ```bash
 #!/bin/bash
 
-CHECKPOINT_DIR=~/.llama/checkpoints/Meta-Llama3.1-8B-Instruct
-PYTHONPATH=$(git rev-parse --show-toplevel) torchrun llama_models/scripts/example_chat_completion.py $CHECKPOINT_DIR
+NGPUS=4
+CHECKPOINT_DIR=~/.llama/checkpoints/Llama-4-Scout-17B-16E-Instruct
+PYTHONPATH=$(git rev-parse --show-toplevel) \
+  torchrun --nproc_per_node=$NGPUS \
+  -m models.llama4.scripts.chat_completion $CHECKPOINT_DIR \
+  --world_size $NGPUS
 ```
 
-The above script should be used with an Instruct (Chat) model. For a Base model, update the `CHECKPOINT_DIR` path and use the script `llama_models/scripts/example_text_completion.py`. Note that you can use these scripts with both Llama3 and Llama3.1 series of models.
+The above script should be used with an Instruct (Chat) model. For a Base model, update the `CHECKPOINT_DIR` path and use the script `models.llama4.scripts.completion`.
 
-For running larger models with tensor parallelism, you should modify as:
+
+## Running inference with FP8 and Int4 Quantization
+
+You can reduce the memory footprint of the models at the cost of minimal loss in accuracy by running inference with FP8 or Int4 quantization. Use the `--quantization-mode` flag to specify the quantization mode. There are two modes:
+- `fp8_mixed`: Mixed precision inference with FP8 for some weights and bfloat16 for activations.
+- `int4_mixed`: Mixed precision inference with Int4 for some weights and bfloat16 for activations.
+
+Using FP8, running Llama-4-Scout-17B-16E-Instruct requires 2 GPUs with 80GB of memory. Using Int4, you need a single GPU with 80GB of memory.
+
 ```bash
-#!/bin/bash
-
-NGPUS=8
-PYTHONPATH=$(git rev-parse --show-toplevel) torchrun \
-  --nproc_per_node=$NGPUS \
-  llama_models/scripts/example_chat_completion.py $CHECKPOINT_DIR \
-  --model_parallel_size $NGPUS
+MODE=fp8_mixed  # or int4_mixed
+if [ $MODE == "fp8_mixed" ]; then
+  NGPUS=2
+else
+  NGPUS=1
+fi
+CHECKPOINT_DIR=~/.llama/checkpoints/Llama-4-Scout-17B-16E-Instruct
+PYTHONPATH=$(git rev-parse --show-toplevel) \
+  torchrun --nproc_per_node=$NGPUS \
+  -m models.llama4.scripts.chat_completion $CHECKPOINT_DIR \
+  --world_size $NGPUS \
+  --quantization-mode $MODE
 ```
 
-For more flexibility in running inference (including running FP8 inference), please see the [`Llama Stack`](https://github.com/meta-llama/llama-stack) repository.
+
+For more flexibility in running inference (including using other providers), please see the [`Llama Stack`](https://github.com/meta-llama/llama-stack) toolset.
 
 
 ## Access to Hugging Face

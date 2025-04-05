@@ -21,7 +21,7 @@ from fairscale.nn.model_parallel.layers import (
 )
 from torch import nn
 
-from ..api import ModelArgs
+from .args import ModelArgs
 
 # **NOTE**: This code is not runnable without installing `torch` and `fairscale`
 # dependencies. These dependencies are not part of the default dependencies
@@ -109,9 +109,9 @@ class Attention(nn.Module):
     def __init__(self, args: ModelArgs):
         super().__init__()
         self.n_kv_heads = args.n_heads if args.n_kv_heads is None else args.n_kv_heads
-        model_parallel_size = fs_init.get_model_parallel_world_size()
-        self.n_local_heads = args.n_heads // model_parallel_size
-        self.n_local_kv_heads = self.n_kv_heads // model_parallel_size
+        world_size = fs_init.get_model_parallel_world_size()
+        self.n_local_heads = args.n_heads // world_size
+        self.n_local_kv_heads = self.n_kv_heads // world_size
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
         self.head_dim = args.dim // args.n_heads
 

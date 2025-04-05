@@ -9,8 +9,7 @@ import json
 import re
 from typing import Optional, Tuple
 
-from ...datatypes import BuiltinTool, RecursiveType, ToolCall, ToolPromptFormat
-
+from ..datatypes import BuiltinTool, RecursiveType, ToolCall, ToolPromptFormat
 
 BUILTIN_TOOL_PATTERN = r'\b(?P<tool_name>\w+)\.call\(query="(?P<query>[^"]*)"\)'
 CUSTOM_TOOL_CALL_PATTERN = re.compile(r"<function=(?P<function_name>[^}]+)>(?P<args>{.*?})")

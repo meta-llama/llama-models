@@ -11,9 +11,9 @@
 from typing import Optional
 
 import fire
-
-from llama_models.llama3.reference_impl.generation import Llama
 from termcolor import cprint
+
+from models.llama3.generation import Llama
 
 
 def run_main(
@@ -23,13 +23,13 @@ def run_main(
     max_seq_len: int = 512,
     max_batch_size: int = 4,
     max_gen_len: int = 64,
-    model_parallel_size: Optional[int] = None,
+    world_size: Optional[int] = None,
 ):
     generator = Llama.build(
         ckpt_dir=ckpt_dir,
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
-        model_parallel_size=model_parallel_size,
+        world_size=world_size,
     )
 
     prompts = [

@@ -65,6 +65,8 @@ class ModelArgs:
                 setattr(self, k, LoRAArgs(**v))
             elif k == "quantization_args":
                 setattr(self, k, QuantizationArgs(**v))
+            elif k == "vision_model" and "cross_attention_adapter" in v:
+                self.vision_num_cross_attention_layers = v["cross_attention_adapter"]["num_layers"]
             else:
                 if hasattr(self, k):
                     setattr(self, k, v)

@@ -6,10 +6,10 @@
 # the top-level of this source tree.
 import unittest
 
-from llama_models.llama3.api.tool_utils import (
+from llama_models.llama3.tool_utils import (
+    ToolUtils,
     is_valid_python_list,
     parse_python_list_for_function_calls,
-    ToolUtils,
 )
 
 

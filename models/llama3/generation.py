@@ -20,7 +20,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generator, List, Optional
+from typing import Callable, Generator, List, Optional
 
 import torch
 import torch.nn.functional as F
@@ -31,12 +31,11 @@ from fairscale.nn.model_parallel.initialize import (
 )
 from termcolor import cprint
 
-from ...datatypes import RawContent, RawMessage, StopReason, ToolPromptFormat
-
-from ..api.args import ModelArgs
-from ..api.chat_format import ChatFormat, LLMInput
-from ..api.tokenizer import Tokenizer
+from ..datatypes import RawContent, RawMessage, StopReason, ToolPromptFormat
+from .args import ModelArgs
+from .chat_format import ChatFormat, LLMInput
 from .model import Transformer
+from .tokenizer import Tokenizer
 
 
 @dataclass
@@ -66,7 +65,7 @@ class Llama:
         ckpt_dir: str,
         max_seq_len: int,
         max_batch_size: int,
-        model_parallel_size: Optional[int] = None,
+        world_size: Optional[int] = None,
         tokenizer_path: Optional[str] = None,
         seed: int = 1,
         device: str = "cuda",
@@ -79,7 +78,7 @@ class Llama:
             tokenizer_path (str): Path to the tokenizer file.
             max_seq_len (int): Maximum sequence length for input text.
             max_batch_size (int): Maximum batch size for inference.
-            model_parallel_size (Optional[int], optional): Number of model parallel processes.
+            world_size (Optional[int], optional): Number of model parallel processes.
                 If not provided, it's determined from the environment. Defaults to None.
             device (str, optional): Device to use, e.g. cuda (default), xpu, cpu, etc.
 
@@ -113,9 +112,9 @@ class Llama:
                 torch.distributed.init_process_group("gloo")
 
         if not model_parallel_is_initialized():
-            if model_parallel_size is None:
-                model_parallel_size = int(os.environ.get("WORLD_SIZE", 1))
-            initialize_model_parallel(model_parallel_size)
+            if world_size is None:
+                world_size = int(os.environ.get("WORLD_SIZE", 1))
+            initialize_model_parallel(world_size)
 
         local_rank = int(os.environ.get("LOCAL_RANK", 0))
         if device.type == "cuda":
@@ -132,8 +131,8 @@ class Llama:
 
         checkpoints = sorted(Path(ckpt_dir).glob("*.pth"))
         assert len(checkpoints) > 0, f"no checkpoint files found in {ckpt_dir}"
-        assert model_parallel_size == len(checkpoints), (
-            f"Loading a checkpoint for MP={len(checkpoints)} but world size is {model_parallel_size}"
+        assert world_size == len(checkpoints), (
+            f"Loading a checkpoint for MP={len(checkpoints)} but world size is {world_size}"
         )
         ckpt_path = checkpoints[get_model_parallel_rank()]
         checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=True)
@@ -194,6 +193,7 @@ class Llama:
         logprobs: bool = False,
         echo: bool = False,
         print_model_input: bool = False,
+        logits_processor: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
     ) -> Generator:
         params = self.model.params
 
@@ -263,6 +263,9 @@ class Llama:
                 )
             else:
                 logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+
+            if logits_processor is not None:
+                logits = logits_processor(tokens[:, :cur_pos], logits)
 
             if temperature > 0:
                 probs = torch.softmax(logits[:, -1] / temperature, dim=-1)

@@ -179,14 +179,14 @@ class ImageAttention(nn.Module):
         n_heads,
     ):
         super().__init__()
-        model_parallel_size = fs_init.get_model_parallel_world_size()
+        world_size = fs_init.get_model_parallel_world_size()
         qkvo_replication = 1
-        if model_parallel_size > 16:
-            qkvo_replication = model_parallel_size // 8
+        if world_size > 16:
+            qkvo_replication = world_size // 8
 
         self.n_kv_heads = n_heads
-        self.n_local_heads = n_heads * qkvo_replication // model_parallel_size
-        self.n_local_kv_heads = self.n_kv_heads * qkvo_replication // model_parallel_size
+        self.n_local_heads = n_heads * qkvo_replication // world_size
+        self.n_local_kv_heads = self.n_kv_heads * qkvo_replication // world_size
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
         self.head_dim = dim // n_heads
 
@@ -536,16 +536,16 @@ class Attention(nn.Module):
             cache_v (torch.Tensor): Cached values for attention.
         """
         super().__init__()
-        model_parallel_size = fs_init.get_model_parallel_world_size()
+        world_size = fs_init.get_model_parallel_world_size()
         replication_factor = 1
-        if model_parallel_size > 8:
-            replication_factor = model_parallel_size // MP_SCALE
+        if world_size > 8:
+            replication_factor = world_size // MP_SCALE
 
         self.n_kv_heads = args.n_heads if args.n_kv_heads is None else args.n_kv_heads
         self.n_kv_heads *= replication_factor
 
-        self.n_local_heads = args.n_heads // model_parallel_size
-        self.n_local_kv_heads = self.n_kv_heads // model_parallel_size
+        self.n_local_heads = args.n_heads // world_size
+        self.n_local_kv_heads = self.n_kv_heads // world_size
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
         self.head_dim = args.dim // args.n_heads
         self.max_seq_len = args.max_seq_len
@@ -832,10 +832,10 @@ class CrossAttention(torch.nn.Module):
         norm_eps: float,
     ):
         super().__init__()
-        self.model_parallel_size = fs_init.get_model_parallel_world_size()
+        self.world_size = fs_init.get_model_parallel_world_size()
         replication_factor = 1
-        if self.model_parallel_size > 8:
-            replication_factor = self.model_parallel_size // MP_SCALE
+        if self.world_size > 8:
+            replication_factor = self.world_size // MP_SCALE
         n_kv_heads *= replication_factor
 
         assert n_heads % n_kv_heads == 0
@@ -889,10 +889,10 @@ class CrossAttention(torch.nn.Module):
         # trunk LLM (i.e., group query attention) -- @dubeya
         # local heads
         assert self.n_heads % self.n_kv_heads == 0
-        assert self.n_heads % self.model_parallel_size == 0
-        assert self.n_kv_heads % self.model_parallel_size == 0
-        self.n_local_heads = self.n_heads // self.model_parallel_size
-        self.n_local_kv_heads = self.n_kv_heads // self.model_parallel_size
+        assert self.n_heads % self.world_size == 0
+        assert self.n_kv_heads % self.world_size == 0
+        self.n_local_heads = self.n_heads // self.world_size
+        self.n_local_kv_heads = self.n_kv_heads // self.world_size
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
 
     def _compute_xattn_kv_cache(self, xattn_tokens: torch.Tensor) -> torch.Tensor:
@@ -1076,15 +1076,15 @@ class CrossAttentionTransformerText(torch.nn.Module):
 
     def __init__(self, args: ModelArgs) -> None:
         super().__init__()
-        self.model_parallel_size = fs_init.get_model_parallel_world_size()
+        self.world_size = fs_init.get_model_parallel_world_size()
         assert args.vocab_size > 0
         self.vocab_size = args.vocab_size
         self.n_layers = args.n_layers
         self.dim = args.dim
         self.head_dim = args.dim // args.n_heads
         self.n_kv_heads = args.n_heads if args.n_kv_heads is None else args.n_kv_heads
-        self.n_local_kv_heads = self.n_kv_heads // self.model_parallel_size
-        assert self.vocab_size % self.model_parallel_size == 0
+        self.n_local_kv_heads = self.n_kv_heads // self.world_size
+        assert self.vocab_size % self.world_size == 0
         self.tok_embeddings = VocabParallelEmbedding(args.vocab_size, args.dim, init_method=lambda x: x)
         self.pos_embeddings = None
         # final norm layer (not necessary for post-norm)
