@@ -125,7 +125,7 @@ In this section, we report the results for Llama 4 relative to our previous mode
     <td> </td>
     <td>MMLU-Pro</td>
     <td>5</td>
-    <td>macro_avg/acc</td>
+    <td>macro_avg/em</td>
     <td>53.8</td>
     <td>61.6</td>
     <td>58.2</td>
@@ -259,7 +259,7 @@ In this section, we report the results for Llama 4 relative to our previous mode
     <td> Reasoning & Knowledge  </td>
     <td> MMLU Pro</td>
     <td>0</td>
-    <td>macro_avg/em</td>
+    <td>macro_avg/acc</td>
     <td> 68.9 </td>
     <td> 73.4 </td>
     <td>74.3</td>
