@@ -47,7 +47,7 @@ These Llama 4 models mark the beginning of a new era for the Llama ecosystem. We
 
 **Supported languages:** Arabic, English, French, German, Hindi, Indonesian, Italian, Portuguese, Spanish, Tagalog, Thai, and Vietnamese. 
 
-**Model Release Date:** April 7, 2025
+**Model Release Date:** April 5, 2025
 
 **Status:** This is a static model trained on an offline dataset. Future versions of the tuned models may be released as we improve model behavior with community feedback.
 
