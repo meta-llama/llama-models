@@ -125,7 +125,7 @@ In this section, we report the results for Llama 4 relative to our previous mode
     <td> </td>
     <td>MMLU-Pro</td>
     <td>5</td>
-    <td>macro_avg/em</td>
+    <td>macro_avg/acc</td>
     <td>53.8</td>
     <td>61.6</td>
     <td>58.2</td>
