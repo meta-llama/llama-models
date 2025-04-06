@@ -13,11 +13,11 @@ from typing import Optional
 
 import fire
 import torch
-from models.llama4.args import ModelArgs
 
+from models.llama4.args import ModelArgs
 from models.llama4.generation import QuantizationMode
 from models.llama4.model import MoE, Transformer, TransformerBlock
-from models.llama4.quantization.quantize_impls import int4_row_quantize, pack_int4
+from models.quantize_impls import int4_row_quantize, pack_int4
 
 try:
     import fbgemm_gpu.experimental.gen_ai  # noqa: F401
@@ -170,12 +170,6 @@ def ffn_quantize(
                     int4_scales[f"{prefix}.experts.{key}"] = w_scale
                     print(f"Quantized {prefix}.experts.{state_dict_key_map[key]} {wq.shape=} {w_scale.shape=}")
 
-                new_keys = set(new_state_dict.keys())
-                assert old_keys == new_keys, f"old_keys != new_keys: {old_keys - new_keys}"
-
-                print("Saving int4 scales")
-                int4_scales_path = os.path.join(output_dir, f"int4_scales_{ckpt_idx}.pt")
-                torch.save(int4_scales, int4_scales_path)
             else:
                 for key in ("w1", "w3", "w2"):
                     param = getattr(moe.experts, key)
@@ -195,12 +189,17 @@ def ffn_quantize(
                     fp8_scales[f"{prefix}.experts.{key}"] = w_scale
                     print(f"Quantized {prefix}.experts.{state_dict_key_map[key]} {wq.shape=} {w_scale.shape=}")
 
-                new_keys = set(new_state_dict.keys())
-                assert old_keys == new_keys, f"old_keys != new_keys: {old_keys - new_keys}"
+    new_keys = set(new_state_dict.keys())
+    assert old_keys == new_keys, f"old_keys != new_keys: {old_keys - new_keys}"
 
-                print("Saving fp8 scales")
-                fp8_scales_path = os.path.join(output_dir, f"fp8_scales_{ckpt_idx}.pt")
-                torch.save(fp8_scales, fp8_scales_path)
+    if quantization_mode == QuantizationMode.int4_mixed:
+        print("Saving int4 scales")
+        int4_scales_path = os.path.join(output_dir, f"int4_scales_{ckpt_idx}.pt")
+        torch.save(int4_scales, int4_scales_path)
+    else:
+        print("Saving fp8 scales")
+        fp8_scales_path = os.path.join(output_dir, f"fp8_scales_{ckpt_idx}.pt")
+        torch.save(fp8_scales, fp8_scales_path)
 
     ckpt_path = os.path.join(
         output_dir,
