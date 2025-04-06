@@ -126,8 +126,8 @@ def resize_global_position_embedding(pos_and_cls_embed, grid_size, x_scale, y_sc
 
 
 def build_encoder_attention_mask(
-    x: torch.Tensor,
-    ar: torch.Tensor,
+    x: Array | KVTensor,
+    ar: Array | KVTensor,
     ntok: int,
     num_chunks: int,
     n_heads: int,

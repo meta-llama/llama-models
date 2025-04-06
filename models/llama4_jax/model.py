@@ -11,25 +11,21 @@
 import math
 from typing import Any, Dict, List, Optional, Tuple
 
-import fairscale.nn.model_parallel.initialize as fs_init
-import torch
-import torch.nn.functional as F
-from fairscale.nn.model_parallel.layers import (
-    ColumnParallelLinear,
-    RowParallelLinear,
-    VocabParallelEmbedding,
-)
-from torch import nn
+import jax.numpy as jnp
+import jax.lax
 
 from .args import ModelArgs
+from .common_types import Array, KVTensor
 from .datatypes import TransformerInput, TransformerOutput
 from .ffn import FeedForward
 from .moe import MoE
 
-from flax.nnx import RMSNorm
-import jax.lax
 
-class L2Norm(torch.nn.Module):
+from flax.nnx import RMSNorm
+from flax import nnx
+
+
+class L2Norm(nnx.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
         super().__init__()
         self.eps = eps
@@ -37,7 +33,7 @@ class L2Norm(torch.nn.Module):
     def _norm(self, x):
         return x * jax.lax.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
 
-    def forward(self, x):
+    def __call__(self, x):
         return self._norm(x.float()).type_as(x)
 
 
@@ -65,12 +61,12 @@ def apply_scaling(freqs: Array | KVTensor):
 
 
 def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0, use_scaled: bool = False):
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
-    t = torch.arange(end, device=freqs.device, dtype=torch.float32)
+    freqs = 1.0 / (theta ** (jnp.arange(0, dim, 2)[: (dim // 2)].float() / dim))
+    t = jnp.arange(end, device=freqs.device, dtype=jnp.float32)
     if use_scaled:
         freqs = apply_scaling(freqs)
-    freqs = torch.outer(t, freqs)
-    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
+    freqs = jnp.outer(t, freqs)
+    freqs_cis = jax.lax.linalg.qdwh(jnp.ones_like(freqs), freqs)  # complex64
     return freqs_cis
 
 
@@ -95,7 +91,7 @@ def apply_rotary_emb(
     return xq_out.type_as(xq), xk_out.type_as(xk)
 
 
-class Attention(nn.Module):
+class Attention(nnx.Module):
     # TODO: this module needs to be moved into a separate file since it can be used by
     # the vision encoder as well.
     def __init__(
@@ -194,7 +190,7 @@ class Attention(nn.Module):
             state_dict[prefix + "wk.weight"] = wk
             state_dict[prefix + "wv.weight"] = wv
 
-    def forward(
+    def __call__(
         self,
         x: Array | KVTensor,
         start_pos: int,
@@ -219,8 +215,8 @@ class Attention(nn.Module):
         # the inference-time temperature tuning function is customized to not affect short context
         # while working at very long context
         if self.attn_temperature_tuning and not self.use_rope:
-            seq_positions = torch.arange(start_pos, start_pos + seqlen, device=xq.device, dtype=torch.float32)
-            attn_scales = torch.log(torch.floor((seq_positions + 1.0) / self.floor_scale) + 1.0) * self.attn_scale + 1.0
+            seq_positions = jnp.arange(start_pos, start_pos + seqlen, device=xq.device, dtype=jnp.float32)
+            attn_scales = jnp.log(jnp.floor((seq_positions + 1.0) / self.floor_scale) + 1.0) * self.attn_scale + 1.0
 
             # reshape for broadcasting [seqlen] -> [1, seqlen, 1, 1]
             attn_scales = attn_scales.view(1, seqlen, 1, 1)
@@ -246,7 +242,7 @@ class Attention(nn.Module):
         return output
 
 
-class TransformerBlock(nn.Module):
+class TransformerBlock(nnx.Module):
     def __init__(self, layer_id: int, args: ModelArgs):
         super().__init__()
         self.n_heads = args.n_heads
@@ -312,7 +308,7 @@ class TransformerBlock(nn.Module):
             if prefix + k + "._extra_state" in state_dict:
                 state_dict.pop(prefix + k + "._extra_state")
 
-    def forward(
+    def __call__(
         self,
         x: Array | KVTensor,
         start_pos: int,
@@ -332,7 +328,7 @@ class TransformerBlock(nn.Module):
         return out
 
 
-class Transformer(nn.Module):
+class Transformer(nnx.Module):
     def __init__(self, args: ModelArgs, **kwargs) -> None:
         super().__init__()
         self.args = args
@@ -383,7 +379,7 @@ class Transformer(nn.Module):
             state_dict.pop(prefix + "rope.freqs")
 
     @torch.inference_mode()
-    def forward(self, model_input: TransformerInput) -> TransformerOutput:
+    def __call__(self, model_input: TransformerInput) -> TransformerOutput:
         tokens = model_input.tokens
         start_pos = model_input.tokens_position
         assert isinstance(start_pos, int), (
@@ -402,14 +398,14 @@ class Transformer(nn.Module):
 
         global_attn_mask, local_attn_mask = None, None
         if seqlen > 1:
-            global_attn_mask = torch.full((seqlen, seqlen), float("-inf"), device=tokens.device)
-            global_attn_mask = torch.triu(global_attn_mask, diagonal=1).type_as(h)
+            global_attn_mask = jnp.full((seqlen, seqlen), float("-inf"), device=tokens.device)
+            global_attn_mask = jnp.triu(global_attn_mask, diagonal=1).type_as(h)
 
             # https://github.com/pytorch/pytorch/issues/100005
             # torch.triu is buggy when the device is mps: filled values are
             # nan instead of 0.
             if global_attn_mask.device.type == torch.device("mps").type:
-                global_attn_mask = torch.nan_to_num(global_attn_mask, nan=0.0)
+                global_attn_mask = jnp.nan_to_num(global_attn_mask, nan=0.0)
 
             if chunk_size := self.args.attention_chunk_size:
                 local_attn_mask = create_chunked_attention_mask(seqlen, chunk_size, tokens.device)
@@ -424,11 +420,11 @@ class Transformer(nn.Module):
 
 # tokens (0, K), (K, 2K), (2K, 3K) attend to each other when doing local chunked attention
 # in the iRoPE architecture
-def create_chunked_attention_mask(seq_len: int, attention_chunk_size: int, device: torch.device) -> Array | KVTensor:
-    block_pos = torch.abs(
-        (torch.arange(seq_len).unsqueeze(0) // attention_chunk_size)
-        - (torch.arange(seq_len).unsqueeze(1) // attention_chunk_size)
+def create_chunked_attention_mask(seq_len: int, attention_chunk_size: int, device: jax.Device) -> Array | KVTensor:
+    block_pos = jnp.abs(
+        (jnp.arange(seq_len).unsqueeze(0) // attention_chunk_size)
+        - (jnp.arange(seq_len).unsqueeze(1) // attention_chunk_size)
     )
-    token_pos = torch.arange(seq_len).unsqueeze(0) - torch.arange(seq_len).unsqueeze(1)
+    token_pos = jnp.arange(seq_len).unsqueeze(0) - jnp.arange(seq_len).unsqueeze(1)
     mask = (block_pos == 0) & (token_pos <= 0)
     return mask.to(device)

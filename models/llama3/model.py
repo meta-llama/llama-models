@@ -42,7 +42,7 @@ class RMSNorm(torch.nn.Module):
         return output * self.weight
 
 
-def apply_scaling(freqs: torch.Tensor) -> torch.Tensor:
+def apply_scaling(freqs: Array | KVTensor) -> Array | KVTensor:
     # Values obtained from grid search
     scale_factor = 8
     low_freq_factor = 1
@@ -72,7 +72,7 @@ def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0, use_scaled:
     return freqs_cis
 
 
-def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
+def reshape_for_broadcast(freqs_cis: Array | KVTensor, x: Array | KVTensor):
     ndim = x.ndim
     assert 0 <= 1 < ndim
     assert freqs_cis.shape == (x.shape[1], x.shape[-1])
@@ -81,10 +81,10 @@ def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
 
 
 def apply_rotary_emb(
-    xq: torch.Tensor,
-    xk: torch.Tensor,
-    freqs_cis: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    xq: Array | KVTensor,
+    xk: Array | KVTensor,
+    freqs_cis: Array | KVTensor,
+) -> Tuple[Array | KVTensor, Array | KVTensor]:
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
     xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
@@ -93,7 +93,7 @@ def apply_rotary_emb(
     return xq_out.type_as(xq), xk_out.type_as(xk)
 
 
-def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
+def repeat_kv(x: Array | KVTensor, n_rep: int) -> Array | KVTensor:
     """torch.repeat_interleave(x, dim=2, repeats=n_rep)"""
     bs, slen, n_kv_heads, head_dim = x.shape
     if n_rep == 1:
@@ -163,10 +163,10 @@ class Attention(nn.Module):
 
     def forward(
         self,
-        x: torch.Tensor,
+        x: Array | KVTensor,
         start_pos: int,
-        freqs_cis: torch.Tensor,
-        mask: Optional[torch.Tensor],
+        freqs_cis: Array | KVTensor,
+        mask: Optional[Array | KVTensor],
     ):
         bsz, seqlen, _ = x.shape
         xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)
@@ -244,10 +244,10 @@ class TransformerBlock(nn.Module):
 
     def forward(
         self,
-        x: torch.Tensor,
+        x: Array | KVTensor,
         start_pos: int,
-        freqs_cis: torch.Tensor,
-        mask: Optional[torch.Tensor],
+        freqs_cis: Array | KVTensor,
+        mask: Optional[Array | KVTensor],
     ):
         h = x + self.attention(self.attention_norm(x), start_pos, freqs_cis, mask)
         out = h + self.feed_forward(self.ffn_norm(h))
@@ -278,7 +278,7 @@ class Transformer(nn.Module):
         )
 
     @torch.inference_mode()
-    def forward(self, tokens: torch.Tensor, start_pos: int):
+    def forward(self, tokens: Array | KVTensor, start_pos: int):
         _bsz, seqlen = tokens.shape
         h = self.tok_embeddings(tokens)
         self.freqs_cis = self.freqs_cis.to(h.device)

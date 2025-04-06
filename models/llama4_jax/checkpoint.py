@@ -11,10 +11,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 import numpy as np
-import torch
-from fairscale.nn.model_parallel.initialize import get_model_parallel_rank, get_model_parallel_world_size
+from jaxlib import xla_client
+import jax.numpy as jnp
 
+from . import common_types
 from .args import ModelArgs
+from .common_types import Array, KVTensor
 
 
 def map_mp_rank(old_mp_size: int, new_mp_size: int, new_mp_rank: int) -> List[int]:
@@ -32,17 +34,13 @@ def map_mp_rank(old_mp_size: int, new_mp_size: int, new_mp_rank: int) -> List[in
             f"{old_mp_size} % {new_mp_size} != 0 and {new_mp_size} % {old_mp_size} != 0"
         )
 
-
 def load_state_dict(
     ckpt_paths: List[Path],
     model_args: ModelArgs,
-    map_location: Union[str, torch.device] = "cpu",
+    map_location: Union[str, xla_client.Device] = "cpu",
     mmap: bool = True,
 ) -> Dict[str, Array | KVTensor]:
-    if str(map_location) == "cpu":
-        torch.set_default_tensor_type(torch.BFloat16Tensor)
-    else:
-        torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
+    common_types.set_floatx("bfloat16")
 
     ckpt_paths = np.array(sorted(ckpt_paths))
 
@@ -113,7 +111,7 @@ def reshard_mp(
 
     def concat_or_chunk(tensors: List[Array | KVTensor], dim: int) -> Array | KVTensor:
         if len(tensors) > 1:
-            return torch.cat(tensors, dim=dim)
+            return jnp.concat(tensors, axis=dim)
         return tensors[0].chunk(size, dim=dim)[rank].clone()
 
     def process_key(key: str) -> Array | KVTensor:
@@ -128,7 +126,7 @@ def reshard_mp(
                 q_dim = state_dicts[0][key.replace("qkv", "o")].size(1)
                 kv_dim = (state_dicts[0][key].size(0) - q_dim) // 2
                 values = [s[key].split((q_dim, kv_dim, kv_dim)) for s in state_dicts]
-                return torch.cat([concat_or_chunk(x, dim=0) for x in zip(*values)])  # type: ignore
+                return jnp.concat([concat_or_chunk(x, dim=0) for x in zip(*values)])  # type: ignore
             elif "wk.weight" in key or "wv.weight" in key:
                 # Support MP > #kv_head
                 return concat_or_chunk([s[key].repeat(repeat_qk_qv, 1) for s in state_dicts], dim=0)

@@ -25,18 +25,15 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Generator, List, Literal, Optional
 
-import torch
-import torch.nn.functional as F
-from fairscale.nn.model_parallel.initialize import (
-    get_model_parallel_rank,
-    initialize_model_parallel,
-    model_parallel_is_initialized,
-)
+import jax
+import jax.numpy as jnp
 from termcolor import cprint
 
+from . import common_types
 from .args import ModelArgs
 from .chat_format import ChatFormat, RawContent, RawMessage
 from .checkpoint import load_state_dict
+from .common_types import Array, KVTensor
 from .datatypes import LLMInput, MaskedEmbedding, TransformerInput
 from .model import Transformer
 from .tokenizer import Tokenizer
@@ -120,21 +117,16 @@ class Llama4:
 
         state_dict = load_state_dict(ckpt_paths, model_args)
         print("Loaded checkpoint")
+        common_types.set_floatx("bfloat16")
         if quantization_mode == QuantizationMode.fp8_mixed or quantization_mode == QuantizationMode.int4_mixed:
             from .quantization.loader import convert_to_quantized_model
 
-            torch.set_default_tensor_type(torch.BFloat16Tensor)
             model = Transformer(model_args)
             print("Loading state dict...")
             model.load_state_dict(state_dict, strict=False)
             print("Done...")
             model = convert_to_quantized_model(model, ckpt_dir, quantization_mode)
         else:
-            if torch.cuda.is_bf16_supported():
-                torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
-            else:
-                torch.set_default_tensor_type(torch.cuda.HalfTensor)
-
             model = Transformer(model_args)
             print("Loading state dict...")
             model.load_state_dict(state_dict, strict=False)
@@ -187,11 +179,11 @@ class Llama4:
         total_len = min(max_gen_len + max_prompt_len, params.max_seq_len)
 
         pad_id = self.tokenizer.pad_id
-        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device="cuda")
+        tokens = jnp.full((bsz, total_len), pad_id, dtype=jnp.int64, device="cuda")
         for k, t in enumerate(prompt_tokens):
-            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
+            tokens[k, : len(t)] = torch.tensor(t, dtype=jnp.int64, device="cuda")
         if logprobs:
-            token_logprobs = torch.zeros_like(tokens, dtype=torch.float)
+            token_logprobs = jnp.zeros_like(tokens, dtype=common_types.floatx())
 
         eos_reached = torch.tensor([False] * bsz, device="cuda")
         input_text_mask = tokens != pad_id
@@ -234,20 +226,20 @@ class Llama4:
                 tokens_position=prev_pos,
                 image_embedding=image_embedding,
             )
-            xformer_output = self.model.forward(xformer_input)
+            xformer_output = self.model.__call__(xformer_input)
             logits = xformer_output.logits
             if logits_processor is not None:
                 logits = logits_processor(tokens[:, :cur_pos], logits)
 
             if temperature > 0:
-                probs = torch.softmax(logits[:, -1] / temperature, dim=-1)
+                probs = jax.nn.softmax(logits[:, -1] / temperature, axis=-1)
                 next_token = sample_top_p(probs, top_p)
             else:
-                next_token = torch.argmax(logits[:, -1], dim=-1)
+                next_token = jax.lax.argmax(logits[:, -1], axis=-1)
 
             next_token = next_token.reshape(-1)
             # only replace token if prompt has already been generated
-            next_token = torch.where(input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token)
+            next_token = jnp.where(input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token)
             tokens[:, cur_pos] = next_token
 
             target = tokens[:, prev_pos + 1 : cur_pos + 1]
@@ -258,7 +250,7 @@ class Llama4:
                     reduction="none",
                     ignore_index=pad_id,
                 )
-            eos_reached |= (~input_text_mask[:, cur_pos]) & (torch.isin(next_token, stop_tokens))
+            eos_reached |= (~input_text_mask[:, cur_pos]) & (jax.numpy.isin(next_token, stop_tokens))
 
             results = []
             for idx, t in enumerate(next_token):
@@ -339,11 +331,11 @@ def sample_top_p(probs, p):
         Top-p sampling selects the smallest set of tokens whose cumulative probability mass
         exceeds the threshold p. The distribution is renormalized based on the selected tokens.
     """
-    probs_sort, probs_idx = torch.sort(probs, dim=-1, descending=True)
-    probs_sum = torch.cumsum(probs_sort, dim=-1)
+    probs_sort, probs_idx = jax.lax.rev(jax.lax.sort(probs, dimesion=-1), dimesion=-1)
+    probs_sum = jax.lax.cumsum(probs_sort, axis=-1)
     mask = probs_sum - probs_sort > p
     probs_sort[mask] = 0.0
     probs_sort.div_(probs_sort.sum(dim=-1, keepdim=True))
-    next_token = torch.multinomial(probs_sort, num_samples=1)
-    next_token = torch.gather(probs_idx, -1, next_token)
+    next_token = jax.random.multinomial(probs_sort, n=1)
+    next_token = jax.lax.gather(probs_idx, -1, next_token)
     return next_token

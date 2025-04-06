@@ -9,26 +9,23 @@
 
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import fairscale.nn.model_parallel.initialize as fs_init
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from fairscale.nn.model_parallel.layers import ColumnParallelLinear, RowParallelLinear
-from torch import einsum
+import jax.numpy as jnp
+from flax import nnx
 
 from ..args import ModelArgs
+from ..common_types import Array, KVTensor
 from ..model import Attention
 
 
 class LayerNorm(nn.LayerNorm):
     """Subclass torch's LayerNorm to handle fp16."""
 
-    def forward(self, x: Array | KVTensor):
+    def __call__(self, x: Array | KVTensor):
         x = F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
         return x
 
 
-class ColumnParallelConv2dPatch(torch.nn.Module):
+class ColumnParallelConv2dPatch(nnx.Module):
     """Conv2D Patching layer with model parallelism.
     Column parallel over unfolded input.
     Arguments:
@@ -59,14 +56,14 @@ class ColumnParallelConv2dPatch(torch.nn.Module):
             bias=bias,
         )
 
-    def forward(self, x: Array | KVTensor) -> Array | KVTensor:
+    def __call__(self, x: Array | KVTensor) -> Array | KVTensor:
         x = self._unfold(x)
         x = x.permute(0, 2, 1)
         x = self._linear(x)
         return x
 
 
-class _FeedForward(torch.nn.Module):
+class _FeedForward(nnx.Module):
     def __init__(
         self,
         dim: int,
@@ -93,14 +90,14 @@ class _FeedForward(torch.nn.Module):
         self.non_linearity = act_layer()
         self.dropout = dropout
 
-    def forward(self, x):
+    def __call__(self, x):
         hidden = self.c_fc(x)
         hidden = self.non_linearity(hidden)
         hidden = F.dropout(hidden, p=self.dropout, training=self.training)
         return self.c_proj(hidden)
 
 
-class _TransformerBlock(nn.Module):
+class _TransformerBlock(nnx.Module):
     def __init__(
         self,
         d_model: int,
@@ -145,7 +142,7 @@ class _TransformerBlock(nn.Module):
     ):
         return self.attn(x=x, start_pos=0, freqs_cis=freq_cis)
 
-    def forward(
+    def __call__(
         self,
         x: Array | KVTensor,
         mask: Optional[Array | KVTensor] = None,
@@ -159,7 +156,7 @@ class _TransformerBlock(nn.Module):
         return x
 
 
-class _Transformer(nn.Module):
+class _Transformer(nnx.Module):
     def __init__(
         self,
         dim: int,
@@ -187,14 +184,14 @@ class _Transformer(nn.Module):
             ]
         )
 
-    def forward(self, x: Array | KVTensor, return_intermediate=None, mask=None, freq_cis=None):
+    def __call__(self, x: Array | KVTensor, return_intermediate=None, mask=None, freq_cis=None):
         out = []
         for idx, r in enumerate(self.resblocks):
             if return_intermediate is not None and idx in return_intermediate:
                 out.append(x)
             x = r(x, mask=mask, freq_cis=freq_cis)
         if return_intermediate is not None:
-            return x, torch.stack(out, dim=-1)
+            return x, jnp.stack(out, axis=-1)
         return x
 
 
@@ -221,8 +218,90 @@ class PackingIndex:
 ENCODER_MAX_BATCH_SIZE = 32
 ENCODER_MAX_SEQ_LEN = 1024
 
+# function from https://github.com/jax-ml/jax/discussions/20538#discussioncomment-11156356
+def grid_sample(
+        image: jnp.ndarray,
+        coords: jnp.ndarray,
+        mode: str = 'linear',
+        index='ij',
+) -> jnp.ndarray:
+    """
+    Sample an image at arbitrary coordinates.
 
-class VisionEncoder(nn.Module):
+    Args:
+        image: Array of shape [B, H, W, C] or [B, H, W, D, C]
+        coords: Array of shape [B, h, w, 2] or [B, h, w, d, 3] containing coordinates in [-1, 1] range
+        mode: Interpolation mode ('linear'/'bilinear'/'trilinear' or 'nearest')
+    Returns:
+        Interpolated values of shape [B, h, w, C] or [B, h, w, d, C]
+    """
+
+    B, *spatial_dims, C = image.shape
+    if index == 'xy':  # Careful about how coordinates are swapped in 3D array
+        coords = jnp.concatenate((coords[..., 1:2], coords[..., 0:1], coords[..., 2:]), -1)
+    elif index != 'ij':
+        raise ValueError(f'Unsuported indexing type: {index}')
+
+    # Scale coordinates from [-1, 1] to [0, H/W]
+    coords = (coords + 1) * (jnp.array(spatial_dims) - 1) / 2
+    b_idx = jnp.arange(0, B).reshape(B, *[1]*len(spatial_dims))
+
+    if mode in {'linear', 'bilinear', 'trilinear'}:
+        # Get corner coordinates
+        i0 = jnp.floor(coords[..., 0]).astype(jnp.int32)
+        j0 = jnp.floor(coords[..., 1]).astype(jnp.int32)
+        i1 = i0 + 1
+        j1 = j0 + 1
+        # Clip coordinates to valid range
+        i0 = jnp.clip(i0, 0, spatial_dims[0] - 1)
+        i1 = jnp.clip(i1, 0, spatial_dims[0] - 1)
+        j0 = jnp.clip(j0, 0, spatial_dims[1] - 1)
+        j1 = jnp.clip(j1, 0, spatial_dims[1] - 1)
+
+        # Calculate interpolation weights
+        wi = coords[..., 0] - i0
+        wi = wi[..., None]
+        wj = coords[..., 1] - j0
+        wj = wj[..., None]
+        if len(spatial_dims) == 2:
+            output = (
+                    image[b_idx, i0, j0] * (1-wi) * (1-wj) +
+                    image[b_idx, i1, j0] * wi * (1 - wj) +
+                    image[b_idx, i0, j1] * (1 - wi) * wj +
+                    image[b_idx, i1, j1] * wi * wj
+            )
+        else:
+            k0 = jnp.floor(coords[..., 2]).astype(jnp.int32)
+            k1 = k0 + 1
+            k0 = jnp.clip(k0, 0, spatial_dims[2] - 1)
+            k1 = jnp.clip(k1, 0, spatial_dims[2] - 1)
+            wk = coords[..., 2] - k0
+            wk = wk[..., None]
+            output = (
+                    image[b_idx, i0, j0, k0] * (1 - wi) * (1 - wj) * (1 - wk) +
+                    image[b_idx, i1, j0, k0] * wi * (1 - wj) * (1 - wk) +
+                    image[b_idx, i0, j1, k0] * (1 - wi) * wj * (1 - wk) +
+                    image[b_idx, i0, j0, k1] * (1 - wi) * (1 - wj) * wk +
+                    image[b_idx, i1, j0, k1] * wi * (1 - wj) * wk +
+                    image[b_idx, i0, j1, k1] * (1 - wi) * wj * wk +
+                    image[b_idx, i1, j1, k0] * wi * wj * (1 - wk) +
+                    image[b_idx, i1, j1, k1] * wi * wj * wk
+            )
+    elif mode == 'nearest':
+        # Round coordinates to nearest integer
+        y = jnp.clip(jnp.round(coords[..., 0]).astype(jnp.int32), 0, spatial_dims[0] - 1)
+        x = jnp.clip(jnp.round(coords[..., 1]).astype(jnp.int32), 0, spatial_dims[1] - 1)
+        if len(spatial_dims) == 2:
+            output = image[b_idx, y, x]
+        else:
+            z = jnp.clip(jnp.round(coords[..., 2]).astype(jnp.int32), 0, spatial_dims[2] - 1)
+            output = image[b_idx, y, x, z]
+    else:
+        raise ValueError(f"Unsupported interpolation mode: {mode}")
+    return output
+
+
+class VisionEncoder(nnx.Module):
     def __init__(
         self,
         image_size: Tuple[int, int],
@@ -270,16 +349,15 @@ class VisionEncoder(nn.Module):
         image_h, image_w = self.image_size
         patch_h, patch_w = self.patch_size
         idx_h, idx_w = image_h // patch_h, image_w // patch_w
-        img_idx = torch.arange(image_h * image_w // (patch_h * patch_w), dtype=torch.int32)
+        img_idx = jnp.arange(image_h * image_w // (patch_h * patch_w), dtype=jnp.int32)
         img_idx = img_idx.reshape(idx_h * idx_w, 1)
-        img_idx = torch.cat([img_idx, img_idx[:1]], dim=0)
+        img_idx = jnp.concat([img_idx, img_idx[:1]], axis=0)
         img_idx[-1, -1] = PackingIndex.ID_CLS_TOKEN
 
-        packed_img_idx = torch.empty(
-            img_idx.shape[0],
-            img_idx.shape[1],
-            PackingIndex.NUM_METADATA - 1,
-            dtype=torch.int32,
+        packed_img_idx = jnp.empty(
+            (img_idx.shape[0], img_idx.shape[1]),
+            # TODO: Determine what to do with this original arg: `PackingIndex.NUM_METADATA - 1,`
+            dtype=jnp.int32,
         )
         packed_img_idx[:, :, PackingIndex.Y] = img_idx // idx_w
         packed_img_idx[:, :, PackingIndex.X] = img_idx % idx_w
@@ -293,11 +371,11 @@ class VisionEncoder(nn.Module):
         rope_freq = self.get_rope_freqs(dim // heads // 2)
         freqs_x = self.compute_rope_freqs(rope_freq, packed_img_idx[:, :, PackingIndex.X] + 1)
         freqs_y = self.compute_rope_freqs(rope_freq, packed_img_idx[:, :, PackingIndex.Y] + 1)
-        freqs = torch.cat([freqs_x, freqs_y], dim=-1).float().contiguous()[..., ::2]
+        freqs = jnp.concat([freqs_x, freqs_y], axis=-1).float().contiguous()[..., ::2]
         # disable RoPE for padding and cls tokens
         freqs = freqs.masked_fill(packed_img_idx[:, :, PackingIndex.IDX, None] < 0, 0)
         # compute complex freqs
-        self.freq_cis = torch.view_as_complex(torch.stack([torch.cos(freqs), torch.sin(freqs)], dim=-1))
+        self.freq_cis = torch.view_as_complex(jnp.stack([jnp.cos(freqs), jnp.sin(freqs)], dim=-1))
         # xlf automatically broadcasts
         self.freq_cis = self.freq_cis.squeeze(0)
         self.n_heads = heads // fs_init.get_model_parallel_world_size()
@@ -305,13 +383,13 @@ class VisionEncoder(nn.Module):
         self._register_load_state_dict_pre_hook(self.load_hook)
 
     def get_rope_freqs(self, dim, theta=10000):
-        freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
+        freqs = 1.0 / (theta ** (jnp.arange(0, dim, 2)[: (dim // 2)].float() / dim))
         return freqs
 
     @torch.amp.autocast("cuda", enabled=False)
     def compute_rope_freqs(self, freqs, t):
-        freqs = einsum("..., f -> ... f", t.type(freqs.dtype), freqs)
-        freqs = freqs.repeat_interleave(2, dim=-1)
+        freqs = jnp.einsum("..., f -> ... f", t.type(freqs.dtype), freqs)
+        freqs = jnp.repeat(freqs, 2, axis=-1)
         return freqs
 
     def load_hook(
@@ -347,11 +425,11 @@ class VisionEncoder(nn.Module):
                 orig_pos_embed[1:].view(1, self.grid_size[0], self.grid_size[1], -1).permute(0, 3, 1, 2).contiguous()
             )
             posemb = posemb.to(device=grid.device, dtype=grid.dtype)
-            sample = F.grid_sample(
+            sample = grid_sample(
                 posemb, grid, padding_mode="zeros"
             )  # padding tokens / class token will get zero for posemb
             sample = sample.view(-1, total_windows, window_size).permute(1, 2, 0).contiguous()
-            sample = torch.where(
+            sample = jnp.where(
                 idx[:, :, PackingIndex.IDX, None] == PackingIndex.ID_CLS_TOKEN,
                 orig_pos_embed[0].view(1, 1, -1).to(device=sample.device, dtype=sample.dtype),
                 sample,
@@ -365,17 +443,17 @@ class VisionEncoder(nn.Module):
             return state_dict
 
     def apply_class_embedding(self, x):
-        x = torch.cat(
+        x = jnp.concat(
             [
                 x,
                 self.class_embedding.to(x.dtype)
-                + torch.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device),
+                + jnp.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device),
             ],
             dim=1,
         )  # shape = [*, grid ** 2 + 1, width]
         return x
 
-    def forward(self, images: Array | KVTensor) -> Array | KVTensor:
+    def __call__(self, images: Array | KVTensor) -> Array | KVTensor:
         # NOTE: in Llama4 bsz=bsz*num_tiles, num_chunks=1
         if images.ndim == 5:
             num_concurrent_media = 1
@@ -423,6 +501,6 @@ class VisionEncoder(nn.Module):
         if int_x is not None:
             int_x = int_x[:, :-1, :, :]
             int_x = int_x.reshape(bsz * num_concurrent_media, ntok - 1, -1)
-            x = torch.cat([x, int_x], dim=-1)
+            x = jnp.concat([x, int_x], axis=-1)
 
         return x
