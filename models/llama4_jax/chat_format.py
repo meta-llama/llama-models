@@ -10,9 +10,10 @@ import uuid
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-import torch
+import jax.numpy as jnp
 from PIL import Image as PIL_Image
 
+from .common_types import Array, KVTensor
 # TODO: either fork these or move them to the common package
 from ..datatypes import (
     BuiltinTool,
@@ -172,7 +173,7 @@ class ChatFormat:
                 if image_tiles.shape[0] > 1:
                     image_global = self.image_transform(image)
                     image_global = image_global.unsqueeze(0)
-                    image_combine = torch.cat((image_tiles, image_global), dim=0)
+                    image_combine = jnp.concat((image_tiles, image_global), axis=0)
                     image_tiles = image_combine
 
                 transformed_image = TransformedImage(image_tiles=image_tiles, aspect_ratio=ar)

@@ -72,9 +72,9 @@ class Int4Weights(
 
 
 def int4_row_quantize(
-    x: torch.Tensor,
+    x: Array | KVTensor,
     group_size: int = 128,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> Tuple[Array | KVTensor, Array | KVTensor]:
     """
     Helper function to quantize a tensor to int4 with groupwise scales.
 
@@ -104,7 +104,7 @@ def int4_row_quantize(
     return out, scales
 
 
-def pack_int4(x: torch.Tensor) -> torch.Tensor:
+def pack_int4(x: Array | KVTensor) -> Array | KVTensor:
     # Given int8 x, pack adjacent int4 values into a single int8.
     low_x = x[:, ::2]
     high_x = x[:, 1::2]

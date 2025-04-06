@@ -91,7 +91,7 @@ class VariableSizeImageTransform(object):
                 factors_set.add(n // i)
         return factors_set
 
-    def find_supported_resolutions(self, max_num_chunks: int, patch_size: int) -> torch.Tensor:
+    def find_supported_resolutions(self, max_num_chunks: int, patch_size: int) -> Array | KVTensor:
         """
         Computes all of the allowed resoltuions for a fixed number of chunks
         and patch_size. Useful for when dividing an image into chunks.
@@ -101,7 +101,7 @@ class VariableSizeImageTransform(object):
             patch_size (int): Size of the side of the patch.
 
         Returns:
-            torch.Tensor: List of possible resolutions as tuples (height, width).
+            Array | KVTensor: List of possible resolutions as tuples (height, width).
 
         Example:
             >>> max_num_chunks = 5
@@ -182,7 +182,7 @@ class VariableSizeImageTransform(object):
         new_im.paste(image)
         return new_im
 
-    def _split(self, image: torch.Tensor, ncw: int, nch: int) -> torch.Tensor:
+    def _split(self, image: Array | KVTensor, ncw: int, nch: int) -> Array | KVTensor:
         # Split image into number of required tiles (width x height)
         num_channels, height, width = image.size()
         image = image.view(num_channels, nch, height // nch, ncw, width // ncw)
@@ -194,10 +194,10 @@ class VariableSizeImageTransform(object):
 
     def resize_without_distortion(
         self,
-        image: torch.Tensor,
+        image: Array | KVTensor,
         target_size: Tuple[int, int],
         max_upscaling_size: Optional[int],
-    ) -> torch.Tensor:
+    ) -> Array | KVTensor:
         """
         Used to resize an image to target_resolution, without distortion.
 
@@ -259,7 +259,7 @@ class VariableSizeImageTransform(object):
     def get_best_fit(
         self,
         image_size: Tuple[int, int],
-        possible_resolutions: torch.Tensor,
+        possible_resolutions: Array | KVTensor,
         resize_to_max_canvas: bool = False,
     ) -> Tuple[int, int]:
         """
@@ -283,7 +283,7 @@ class VariableSizeImageTransform(object):
 
         Args:
             image_size (Tuple[int, int]): A tuple containing the height and width of the image.
-            possible_resolutions (torch.Tensor): A tensor of shape (N, 2) where each
+            possible_resolutions (Array | KVTensor): A tensor of shape (N, 2) where each
                 row represents a possible resolution (height, width).
             use_max_upscaling (bool): If True, will return the largest upscaling resolution.
 

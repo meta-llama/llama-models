@@ -193,7 +193,7 @@ class Llama:
         logprobs: bool = False,
         echo: bool = False,
         print_model_input: bool = False,
-        logits_processor: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
+        logits_processor: Optional[Callable[[Array | KVTensor, Array | KVTensor], Array | KVTensor]] = None,
     ) -> Generator:
         params = self.model.params
 
@@ -455,11 +455,11 @@ def sample_top_p(probs, p):
     Perform top-p (nucleus) sampling on a probability distribution.
 
     Args:
-        probs (torch.Tensor): Probability distribution tensor.
+        probs (Array | KVTensor): Probability distribution tensor.
         p (float): Probability threshold for top-p sampling.
 
     Returns:
-        torch.Tensor: Sampled token indices.
+        Array | KVTensor: Sampled token indices.
 
     Note:
         Top-p sampling selects the smallest set of tokens whose cumulative probability mass

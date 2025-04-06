@@ -9,10 +9,12 @@ import math
 from collections import defaultdict
 from typing import Optional, Set, Tuple
 
-import torch
-import torchvision.transforms as tv
 from PIL import Image, ImageFile
-from torchvision.transforms import functional as F
+import jax.lax
+import jax.numpy as jnp
+
+from llama_models.llama4_jax.common_types import Array, KVTensor
+
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -350,20 +352,20 @@ class VariableSizeImageTransform(object):
         scale_h = target_heights / original_height
 
         # get the min scale between width and height (limiting side -> no distortion)
-        scales = torch.where(scale_w > scale_h, scale_h, scale_w)
+        scales = jnp.where(scale_w > scale_h, scale_h, scale_w)
 
         # filter only scales that allow upscaling
         upscaling_options = scales[scales >= 1]
         if len(upscaling_options) > 0:
             if resize_to_max_canvas:
-                selected_scale = torch.max(upscaling_options)
+                selected_scale = jnp.max(upscaling_options)
             else:
-                selected_scale = torch.min(upscaling_options)
+                selected_scale = jnp.min(upscaling_options)
         else:
             # no upscaling possible,
             # get the minimum downscaling (max scale for scales<1)
             downscaling_options = scales[scales < 1]
-            selected_scale = torch.max(downscaling_options)
+            selected_scale = jnp.max(downscaling_options)
 
         # get all resolutions that support this scaling factor,
         # e.g. you can upscale to 224x224, 224x448, 224x672 without distortion
@@ -373,7 +375,7 @@ class VariableSizeImageTransform(object):
         # get the one with minimum area to reduce padding
         if len(chosen_canvas) > 1:
             areas = chosen_canvas[:, 0] * chosen_canvas[:, 1]
-            optimal_idx = torch.argmin(areas)
+            optimal_idx = jax.lax.argmin(areas)
             optimal_canvas = chosen_canvas[optimal_idx]
         else:
             optimal_canvas = chosen_canvas[0]

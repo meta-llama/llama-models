@@ -8,8 +8,6 @@
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
-import torch
-
 
 @dataclass
 class MaskedEmbedding:

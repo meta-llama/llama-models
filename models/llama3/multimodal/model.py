@@ -91,7 +91,7 @@ def _get_full_row_masked_out_mask(
 class LayerNorm(nn.LayerNorm):
     """Subclass torch's LayerNorm to handle fp16."""
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: Array | KVTensor):
         x = F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
         return x
 
@@ -127,7 +127,7 @@ class ColumnParallelConv2dPatch(torch.nn.Module):
             bias=bias,
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Array | KVTensor) -> Array | KVTensor:
         x = self._unfold(x)
         x = x.permute(0, 2, 1)
         x = F.linear(x, self._linear.weight)
@@ -222,8 +222,8 @@ class ImageAttention(nn.Module):
 
     def forward(
         self,
-        x: torch.Tensor,
-        mask: torch.Tensor = None,
+        x: Array | KVTensor,
+        mask: Array | KVTensor = None,
     ):
         xq, xk, xv = [F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]]
 
@@ -281,8 +281,8 @@ class ImageTransformerBlock(nn.Module):
 
     def forward(
         self,
-        x: torch.Tensor,
-        mask: torch.Tensor = None,
+        x: Array | KVTensor,
+        mask: Array | KVTensor = None,
     ):
         _gate_attn = 1 if not self.gated else self.gate_attn.tanh()
         _gate_ffn = 1 if not self.gated else self.gate_ffn.tanh()
@@ -317,7 +317,7 @@ class ImageTransformer(nn.Module):
             ]
         )
 
-    def forward(self, x: torch.Tensor, return_intermediate=None, mask=None):
+    def forward(self, x: Array | KVTensor, return_intermediate=None, mask=None):
         out = []
         for idx, r in enumerate(self.resblocks):
             if return_intermediate is not None and idx in return_intermediate:
@@ -462,7 +462,7 @@ class VisionEncoder(nn.Module):
         )  # shape = [*, grid ** 2 + 1, width]
         return x
 
-    def forward(self, images: torch.Tensor, ar: torch.Tensor) -> torch.Tensor:
+    def forward(self, images: Array | KVTensor, ar: Array | KVTensor) -> Array | KVTensor:
         if images.ndim == 5:
             num_concurrent_media = 1
             bsz, num_chunks, nch, w, h = images.shape
@@ -532,8 +532,8 @@ class Attention(nn.Module):
             wk (ColumnParallelLinear): Linear transformation for keys.
             wv (ColumnParallelLinear): Linear transformation for values.
             wo (RowParallelLinear): Linear transformation for output.
-            cache_k (torch.Tensor): Cached keys for attention.
-            cache_v (torch.Tensor): Cached values for attention.
+            cache_k (Array | KVTensor): Cached keys for attention.
+            cache_v (Array | KVTensor): Cached values for attention.
         """
         super().__init__()
         world_size = fs_init.get_model_parallel_world_size()
@@ -609,9 +609,9 @@ class Attention(nn.Module):
 
     def forward(
         self,
-        x: torch.Tensor,
-        mask: torch.Tensor,
-        freqs_cis: torch.Tensor,
+        x: Array | KVTensor,
+        mask: Array | KVTensor,
+        freqs_cis: Array | KVTensor,
         position_ids: torch.LongTensor,
     ):
         xq, xk, xv = [F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]]
@@ -722,20 +722,20 @@ class TransformerBlock(nn.Module):
 
     def forward(
         self,
-        x: torch.Tensor,
-        freqs_cis: torch.Tensor,
-        mask: torch.Tensor,
+        x: Array | KVTensor,
+        freqs_cis: Array | KVTensor,
+        mask: Array | KVTensor,
         position_ids: torch.LongTensor,
-    ) -> torch.Tensor:
+    ) -> Array | KVTensor:
         """
         Perform a forward pass through the TransformerBlock.
         Args:
-            x (torch.Tensor): Input tensor.
+            x (Array | KVTensor): Input tensor.
             start_pos (int): Starting position for attention caching.
-            freqs_cis (torch.Tensor): Precomputed cosine and sine frequencies.
-            mask (torch.Tensor, optional): Masking tensor for attention. Defaults to None.
+            freqs_cis (Array | KVTensor): Precomputed cosine and sine frequencies.
+            mask (Array | KVTensor, optional): Masking tensor for attention. Defaults to None.
         Returns:
-            torch.Tensor: Output tensor after applying attention and feedforward layers.
+            Array | KVTensor: Output tensor after applying attention and feedforward layers.
         """
         h = self.attention.forward(
             x=self.attention_norm(x),
@@ -786,7 +786,7 @@ class TilePositionEmbedding(nn.Module):
             state_dict[prefix + "embedding"] = embed_new
 
     @staticmethod
-    def _dynamic_resize(embed: torch.Tensor, num_tiles: int):
+    def _dynamic_resize(embed: Array | KVTensor, num_tiles: int):
         nt_old, nt_old, _, w = embed.shape
         embed = embed.permute(2, 3, 0, 1)
 
@@ -800,7 +800,7 @@ class TilePositionEmbedding(nn.Module):
         embed_new = embed_new.permute(2, 3, 0, 1)
         return embed_new
 
-    def forward(self, x: torch.Tensor, ar: torch.Tensor, num_tiles: int = None):
+    def forward(self, x: Array | KVTensor, ar: Array | KVTensor, num_tiles: int = None):
         embed = self.embedding
         if num_tiles is None:
             num_tiles = self.num_tiles
@@ -895,7 +895,7 @@ class CrossAttention(torch.nn.Module):
         self.n_local_kv_heads = self.n_kv_heads // self.world_size
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
 
-    def _compute_xattn_kv_cache(self, xattn_tokens: torch.Tensor) -> torch.Tensor:
+    def _compute_xattn_kv_cache(self, xattn_tokens: Array | KVTensor) -> Array | KVTensor:
         bsz = xattn_tokens.shape[0]
         xk = self.wk(xattn_tokens)
         xv = self.wv(xattn_tokens)
@@ -915,16 +915,16 @@ class CrossAttention(torch.nn.Module):
 
         return torch.stack([xk, xv])
 
-    def compute_xattn_kv_cache(self, xattn_tokens: torch.Tensor) -> torch.Tensor:
+    def compute_xattn_kv_cache(self, xattn_tokens: Array | KVTensor) -> Array | KVTensor:
         return self._compute_xattn_kv_cache(xattn_tokens)
 
     def forward(
         self,
-        x: torch.Tensor,
-        xattn_mask: torch.Tensor,
-        full_text_row_masked_out_mask: torch.Tensor,
-        xattn_cache: torch.Tensor,
-    ) -> torch.Tensor:
+        x: Array | KVTensor,
+        xattn_mask: Array | KVTensor,
+        full_text_row_masked_out_mask: Array | KVTensor,
+        xattn_cache: Array | KVTensor,
+    ) -> Array | KVTensor:
         xq = F.linear(x, self.wq.weight)
         bsz, seqlen, _ = x.shape
 
@@ -986,16 +986,16 @@ class CrossAttentionTransformerBlock(torch.nn.Module):
 
         self.no_ffn = no_ffn
 
-    def compute_xattn_kv_cache(self, xattn_tokens: torch.Tensor) -> torch.Tensor:
+    def compute_xattn_kv_cache(self, xattn_tokens: Array | KVTensor) -> Array | KVTensor:
         return self.attention.compute_xattn_kv_cache(xattn_tokens)
 
     def forward(
         self,
-        x: torch.Tensor,
-        xattn_mask: torch.Tensor,
-        full_text_row_masked_out_mask: Tuple[torch.Tensor, torch.Tensor],
-        xattn_cache: torch.Tensor,
-    ) -> torch.Tensor:
+        x: Array | KVTensor,
+        xattn_mask: Array | KVTensor,
+        full_text_row_masked_out_mask: Tuple[Array | KVTensor, Array | KVTensor],
+        xattn_cache: Array | KVTensor,
+    ) -> Array | KVTensor:
         _attn_out = self.attention(
             x=self.attention_norm(x),
             xattn_mask=xattn_mask,
@@ -1014,10 +1014,10 @@ class DummyCrossAttentionTransformerBlock:
 
     def __call__(
         self,
-        x: torch.Tensor,
+        x: Array | KVTensor,
         *args,
         **kwargs,
-    ) -> torch.Tensor:
+    ) -> Array | KVTensor:
         return x
 
 
@@ -1026,10 +1026,10 @@ class DummySelfAttentionTransformerBlock:
 
     def __call__(
         self,
-        x: torch.Tensor,
+        x: Array | KVTensor,
         *args,
         **kwargs,
-    ) -> torch.Tensor:
+    ) -> Array | KVTensor:
         return x
 
 
@@ -1060,7 +1060,7 @@ class CrossAttentionTransformerVision(torch.nn.Module):
             init_method=lambda x: x,
         )
 
-    def forward(self, images: torch.Tensor, aspect_ratios: torch.Tensor) -> torch.Tensor:
+    def forward(self, images: Array | KVTensor, aspect_ratios: Array | KVTensor) -> Array | KVTensor:
         # vision_tokens: (B, T, D)
         # aspect_ratios: (B, T)
         # h: (B, T, D)
@@ -1177,10 +1177,10 @@ class CrossAttentionTransformerText(torch.nn.Module):
     def forward(
         self,
         position_ids: torch.LongTensor,
-        h: torch.Tensor,
-        xattn_mask: torch.Tensor,
-        full_text_row_masked_out_mask: torch.Tensor,
-        xattn_caches: torch.Tensor,
+        h: Array | KVTensor,
+        xattn_mask: Array | KVTensor,
+        full_text_row_masked_out_mask: Array | KVTensor,
+        xattn_caches: Array | KVTensor,
         text_only_inference: bool = False,
     ):
         assert self.cache_is_setup, "Please set up cache before calling forward"
@@ -1292,7 +1292,7 @@ class CrossAttentionTransformer(torch.nn.Module):
         batch_images: List[List[PIL_Image.Image]],
         batch_masks: List[List[List[int]]],
         total_len: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> Tuple[Array | KVTensor, Array | KVTensor, Array | KVTensor]:
         skip_vision_encoder = False
 
         assert len(batch_images) == len(batch_masks), "Images and masks must have the same length"
@@ -1358,13 +1358,13 @@ class CrossAttentionTransformer(torch.nn.Module):
 
     def forward(
         self,
-        position_ids: torch.Tensor,
-        tokens: torch.Tensor,
-        cross_attention_masks: torch.Tensor,
-        full_text_row_masked_out_mask: torch.Tensor,
-        xattn_caches: torch.Tensor,
+        position_ids: Array | KVTensor,
+        tokens: Array | KVTensor,
+        cross_attention_masks: Array | KVTensor,
+        full_text_row_masked_out_mask: Array | KVTensor,
+        xattn_caches: Array | KVTensor,
         text_only_inference: bool = False,
-    ) -> torch.Tensor:
+    ) -> Array | KVTensor:
         h = self.text_model.get_partially_trainable_embedding(tokens[:, position_ids])
         logits = self.text_model.forward(
             position_ids=position_ids,
@@ -1382,7 +1382,7 @@ def _stack_images(
     max_num_chunks: int,
     image_res: int,
     max_num_images: int,
-) -> Tuple[torch.Tensor, List[int]]:
+) -> Tuple[Array | KVTensor, List[int]]:
     """
     Takes a list of list of images and stacks them into a tensor.
     This function is needed since images can be of completely
@@ -1411,7 +1411,7 @@ def _pad_masks(
     all_num_chunks: List[List[int]],
     total_len: int,
     max_num_chunks: int,
-) -> torch.Tensor:
+) -> Array | KVTensor:
     dtype = torch.get_default_dtype()
     inf_value = get_negative_inf_value(dtype)
 

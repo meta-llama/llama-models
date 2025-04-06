@@ -8,21 +8,21 @@
 import math
 from typing import Any, Callable, Dict, List
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from fairscale.nn.model_parallel.layers import ColumnParallelLinear, RowParallelLinear
+import jax
+import jax.numpy as jnp
+from flax import nnx
 
 from ..args import VisionArgs
 from .encoder import VisionEncoder
+from ..common_types import KVTensor, Array
 
 
-class PixelShuffle(nn.Module):
+class PixelShuffle(nnx.Module):
     def __init__(self, ps_ratio):
         super().__init__()
         self.ps_ratio = ps_ratio
 
-    def forward(self, x):
+    def __call__(self, x):
         # x: [B, N, C], N = number of patches
         assert self.ps_ratio is not None, "ps_ratio is required for pixel shuffle"
         assert x.dim() == 3, "pixel shuffle requires encoded patches [B, N, C]"
@@ -47,7 +47,7 @@ def pixel_shuffle_op(input_x, ps_ratio):
     return input_x
 
 
-class SimpleMLP(torch.nn.Module):
+class SimpleMLP(nnx.Module):
     def __init__(
         self,
         dim: int,
@@ -73,14 +73,14 @@ class SimpleMLP(torch.nn.Module):
         self.non_linearity = act_layer()
         self.dropout = dropout
 
-    def forward(self, x):
+    def __call__(self, x):
         hidden = self.c_fc(x)
         hidden = self.non_linearity(hidden)
         hidden = F.dropout(hidden, p=self.dropout, training=self.training)
         return self.non_linearity(self.c_proj(hidden))
 
 
-class PixelShuffleMLP(torch.nn.Module):
+class PixelShuffleMLP(nnx.Module):
     def __init__(
         self,
         ps_ratio: float,
@@ -105,12 +105,12 @@ class PixelShuffleMLP(torch.nn.Module):
                 bias=False,
             )
 
-    def forward(self, encoded_patches: Array | KVTensor) -> Array | KVTensor:
+    def __call__(self, encoded_patches: Array | KVTensor) -> Array | KVTensor:
         encoded_patches = self.pixel_shuffle(encoded_patches)
         return self.fc(self.mlp(encoded_patches))
 
 
-class VisionEmbeddings(torch.nn.Module):
+class VisionEmbeddings(nnx.Module):
     def __init__(self, args: VisionArgs):
         super().__init__()
         self.args = args
@@ -125,7 +125,7 @@ class VisionEmbeddings(torch.nn.Module):
             heads=args.n_heads,
             mlp_ratio=args.mlp_ratio,
         )
-        self.vision_encoder = self.vision_encoder.to(torch.bfloat16)
+        self.vision_encoder = self.vision_encoder.to(jnp.bfloat16)
         self.vision_adapter = PixelShuffleMLP(
             ps_ratio=args.pixel_shuffle_ratio,
             input_dim=args.dim,
@@ -162,14 +162,14 @@ class VisionEmbeddings(torch.nn.Module):
 
     # x_images is batched; each batch sample contains a list of images. so this is List[List[Array | KVTensor]]
     # each image is a tensor of shape [num_tiles, C, H, W]
-    def forward(
+    def __call__(
         self,
         image_batch: List[List[Array | KVTensor]],
         image_mask: Array | KVTensor,
         h_ref: Array | KVTensor,
     ) -> Array | KVTensor:
         images_flattened = [image for sample in image_batch for image in sample]
-        images_flattened = torch.vstack(images_flattened).unsqueeze(1).to(h_ref.dtype).to(h_ref.device)
+        images_flattened = jax.device_put(jnp.vstack(images_flattened).transpose(1).to(h_ref.dtype), h_ref.device)
         embedding = self.vision_encoder(images_flattened)
         projected_embedding = self.vision_adapter(embedding)
 
@@ -183,7 +183,7 @@ def scatter_embeddings(image_batch, image_mask, h_image, encoded_patches_proj):
     # `encoded_patches_proj.split` will then split the image chunks into 2 groups: `[image_1_chunks, image_2_chunks]`.
     num_images_per_sequence = [sum(image.size(0) for image in sample_images) for sample_images in image_batch]
 
-    assert not torch.isnan(encoded_patches_proj).any()
+    assert not jnp.isnan(encoded_patches_proj).any()
     assert sum(num_images_per_sequence) == encoded_patches_proj.size(0), (
         f"{sum(num_images_per_sequence)=} != {encoded_patches_proj.shape=}"
     )

@@ -9,10 +9,9 @@ import logging
 import os
 from typing import Callable, Optional
 
-import torch
-from fairscale.nn.model_parallel.initialize import get_model_parallel_rank
-from torch import Tensor, nn
-from torch.nn import functional as F
+import jax
+from jax import Tensor, nn
+from flax import nnx
 
 from ..generation import QuantizationMode
 from ..model import Transformer, TransformerBlock
@@ -23,7 +22,7 @@ log = logging.getLogger(__name__)
 
 def swiglu_wrapper_no_reduce(
     self,
-    x: Tensor,
+    x: Array | KVTensor,
 ):
     from ...quantize_impls import ffn_swiglu
 
@@ -32,10 +31,10 @@ def swiglu_wrapper_no_reduce(
 
 def experts_batched_swiglu_wrapper(
     self,
-    x: Tensor,  # (e, g, D)
-    w1: Tensor,  # (e, D, F)
-    w3: Tensor,  # (e, D, F)
-    w2: Tensor,  # (e, F, D)
+    x: Array | KVTensor,  # (e, g, D)
+    w1: Array | KVTensor,  # (e, D, F)
+    w3: Array | KVTensor,  # (e, D, F)
+    w2: Array | KVTensor,  # (e, F, D)
 ) -> Array | KVTensor:
     from ...quantize_impls import bmm_nt
 
@@ -61,16 +60,16 @@ def convert_to_quantized_model(
 
     rank = get_model_parallel_rank()
 
-    def should_quantize_block(block: nn.Module) -> bool:
+    def should_quantize_block(block: nnx.Module) -> bool:
         if not isinstance(block, TransformerBlock):
             return False
 
-        is_moe = isinstance(block.feed_forward, MoE)
         if quantization_mode == QuantizationMode.fp8_mixed:
             # skip quantization on first and last layers
-            return is_moe and not (block.layer_id == 0 or block.layer_id == (model.n_layers - 1))
+            return not (block.layer_id == 0 or block.layer_id == (model.n_layers - 1))
 
-        return is_moe
+        # always skip quantization on dense layers
+        return isinstance(block.feed_forward, MoE)
 
     use_rich_progress = use_rich_progress and rank == 0
     progress, log_status, update_status = logging_callbacks(use_rich_progress, rank, model, should_quantize_block)
@@ -175,7 +174,7 @@ def logging_callbacks(
     use_rich_progress: bool,
     rank: int,
     model: Transformer,
-    should_quantize_block: Callable[[nn.Module], bool],
+    should_quantize_block: Callable[[nnx.Module], bool],
 ):
     console = None
     if use_rich_progress:
