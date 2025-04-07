@@ -23,7 +23,6 @@ from ...quantize_impls import (
     load_fp8,
     quantize_fp8,
 )
-from ..args import ModelArgs
 from ..model import Transformer, TransformerBlock
 from ..multimodal.model import CrossAttentionTransformer
 
@@ -287,11 +286,11 @@ def _prepare_model_int4_weight_int8_dynamic_activation(
 
 def convert_to_int4_quantized_model(
     model: Transformer | CrossAttentionTransformer,
-    model_args: ModelArgs,
+    checkpoint_dir: str,
     device: Optional[torch.device] = None,
 ) -> Transformer | CrossAttentionTransformer:
     """Convert the model to int4 quantized model."""
-
+    model_args = model.params
     assert model_args.quantization_args is not None, "Quantization args must be specified."
     quantization_args = model_args.quantization_args
     if quantization_args.scheme is None:
