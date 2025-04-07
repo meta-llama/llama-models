@@ -97,6 +97,7 @@ class Llama3:
                 from .multimodal.model import CrossAttentionTransformer
 
                 model = CrossAttentionTransformer(model_args)
+                print(f"default dtype: {torch.get_default_dtype()}")
                 model.setup_cache(model_args.max_batch_size, torch.get_default_dtype())
             else:
                 model = Transformer(model_args)
@@ -110,7 +111,7 @@ class Llama3:
             print("Loading state dict...")
             model.load_state_dict(state_dict, strict=False)
             print("Done...")
-            model = convert_to_quantized_model(model, ckpt_dir, quantization_mode, device)
+            model = convert_to_quantized_model(model, ckpt_dir, quantization_mode, device=device)
         else:
             torch.set_default_device(device)
             if device.type == "cuda":
