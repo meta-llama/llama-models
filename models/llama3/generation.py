@@ -167,13 +167,13 @@ class Llama3:
             )
 
         pad_id = self.tokenizer.pad_id
-        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long)
+        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device="cuda")
         for k, t in enumerate(prompt_tokens):
-            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long)
+            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
         if logprobs:
-            token_logprobs = torch.zeros_like(tokens, dtype=torch.float)
+            token_logprobs = torch.zeros_like(tokens, dtype=torch.float, device="cuda")
 
-        eos_reached = torch.tensor([False] * bsz)
+        eos_reached = torch.tensor([False] * bsz, device="cuda")
         input_text_mask = tokens != pad_id
 
         if echo:
@@ -193,12 +193,12 @@ class Llama3:
                     )
                 yield results
 
-        stop_tokens = torch.tensor(self.tokenizer.stop_tokens)
+        stop_tokens = torch.tensor(self.tokenizer.stop_tokens, device="cuda")
 
         prev_pos = 0
         for cur_pos in range(min_prompt_len, total_len):
             if is_vision:
-                position_ids = torch.arange(prev_pos, cur_pos, dtype=torch.long)
+                position_ids = torch.arange(prev_pos, cur_pos, dtype=torch.long, device="cuda")
                 text_only_inference = all(inp.vision is None for inp in model_inputs)
                 logits = self.model.forward(
                     position_ids,
