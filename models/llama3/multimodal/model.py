@@ -5,16 +5,12 @@
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
 
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed according to the terms of the Llama 2 Community License Agreement.
-
 import logging
 import math
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import fairscale.nn.model_parallel.initialize as fs_init
-
 import torch
 import torch.nn.functional as F
 from fairscale.nn.model_parallel.layers import (
@@ -22,14 +18,11 @@ from fairscale.nn.model_parallel.layers import (
     RowParallelLinear,
     VocabParallelEmbedding,
 )
-
 from PIL import Image as PIL_Image
-
-from torch import nn, Tensor
+from torch import Tensor, nn
 from torch.distributed import _functional_collectives as funcol
 
-from ..model import apply_rotary_emb, ModelArgs, precompute_freqs_cis, RMSNorm
-
+from ..model import ModelArgs, RMSNorm, apply_rotary_emb, precompute_freqs_cis
 from .encoder_utils import (
     build_encoder_attention_mask,
     contract_num_tokens_from_mult8,
@@ -40,7 +33,6 @@ from .encoder_utils import (
 )
 from .image_transform import VariableSizeImageTransform
 from .utils import get_negative_inf_value, to_2tuple
-
 
 logger = logging.getLogger(__name__)
 MP_SCALE = 8

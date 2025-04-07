@@ -68,25 +68,24 @@ These are just a few of the many attractions that Paris has to offer. With so mu
         #     RawMessage(role="user", content="How to go from Beijing to NY?"),
         # ],
     ]
-    if generator.args.vision_args:
-        with open(THIS_DIR / "../../resources/dog.jpg", "rb") as f:
-            img1 = f.read()
+    with open(THIS_DIR / "../../resources/dog.jpg", "rb") as f:
+        img1 = f.read()
 
-        with open(THIS_DIR / "../../resources/pasta.jpeg", "rb") as f:
-            img2 = f.read()
+    with open(THIS_DIR / "../../resources/pasta.jpeg", "rb") as f:
+        img2 = f.read()
 
-        dialogs.append(
-            [
-                RawMessage(
-                    role="user",
-                    content=[
-                        RawMediaItem(data=BytesIO(img1)),
-                        RawMediaItem(data=BytesIO(img2)),
-                        RawTextItem(text="Write a haiku that brings both images together"),
-                    ],
-                ),
-            ]
-        )
+    dialogs.append(
+        [
+            RawMessage(
+                role="user",
+                content=[
+                    RawMediaItem(data=BytesIO(img1)),
+                    RawMediaItem(data=BytesIO(img2)),
+                    RawTextItem(text="Write a haiku that brings both images together"),
+                ],
+            ),
+        ]
+    )
 
     for dialog in dialogs:
         for msg in dialog:
