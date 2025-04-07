@@ -8,13 +8,11 @@
 import concurrent.futures
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
 from fairscale.nn.model_parallel.initialize import get_model_parallel_rank, get_model_parallel_world_size
-
-from .args import ModelArgs
 
 
 def map_mp_rank(old_mp_size: int, new_mp_size: int, new_mp_rank: int) -> List[int]:
@@ -33,9 +31,10 @@ def map_mp_rank(old_mp_size: int, new_mp_size: int, new_mp_rank: int) -> List[in
         )
 
 
-def load_state_dict(
+def maybe_reshard_state_dict(
     ckpt_paths: List[Path],
-    model_args: ModelArgs,
+    n_kv_heads: int,
+    moe_num_experts: Optional[int] = None,
     map_location: Union[str, torch.device] = "cpu",
     mmap: bool = True,
 ) -> Dict[str, torch.Tensor]:
@@ -57,10 +56,9 @@ def load_state_dict(
     if new_mp_size == old_mp_size:
         return state_dicts[0]
 
-    num_experts = model_args.moe_args.num_experts
-    state_dicts = [convert_moe_weights(d, num_experts=num_experts) for d in state_dicts]
+    if moe_num_experts is not None:
+        state_dicts = [convert_moe_weights(d, moe_num_experts) for d in state_dicts]
 
-    n_kv_heads: int = model_args.n_kv_heads if model_args.n_kv_heads is not None else model_args.n_heads
     print(f"Resharding {len(state_dicts)} state dicts from MP size {old_mp_size} to MP size {new_mp_size}")
     return reshard_mp(
         state_dicts,
