@@ -45,7 +45,7 @@ def convert_to_quantized_model(
 ) -> Transformer | CrossAttentionTransformer:
     if quantization_mode == QuantizationMode.fp8_mixed:
         return convert_to_fp8_quantized_model(model, checkpoint_dir, fp8_activation_scale_ub, device)
-    elif quantization_mode == QuantizationMode.int4_weight_int8_dynamic_activation:
+    elif quantization_mode == QuantizationMode.int4_mixed:
         return convert_to_int4_quantized_model(model, checkpoint_dir, device)
     else:
         raise ValueError(f"Unsupported quantization mode: {quantization_mode}")
