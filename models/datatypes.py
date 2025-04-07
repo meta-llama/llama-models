@@ -8,7 +8,7 @@
 import base64
 from enum import Enum
 from io import BytesIO
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 from typing_extensions import Annotated
@@ -39,7 +39,14 @@ RecursiveType = Union[Primitive, List[Primitive], Dict[str, Primitive]]
 class ToolCall(BaseModel):
     call_id: str
     tool_name: Union[BuiltinTool, str]
-    arguments: Dict[str, RecursiveType]
+    # Plan is to deprecate the Dict in favor of a JSON string
+    # that is parsed on the client side instead of trying to manage
+    # the recursive type here.
+    # Making this a union so that client side can start prepping for this change.
+    # Eventually, we will remove both the Dict and arguments_json field,
+    # and arguments will just be a str
+    arguments: Union[str, Dict[str, RecursiveType]]
+    arguments_json: Optional[str] = None
 
     @field_validator("tool_name", mode="before")
     @classmethod
@@ -81,6 +88,29 @@ class StopReason(Enum):
     end_of_turn = "end_of_turn"
     end_of_message = "end_of_message"
     out_of_tokens = "out_of_tokens"
+
+
+class ToolParamDefinition(BaseModel):
+    param_type: str
+    description: Optional[str] = None
+    required: Optional[bool] = True
+    default: Optional[Any] = None
+
+
+class ToolDefinition(BaseModel):
+    tool_name: Union[BuiltinTool, str]
+    description: Optional[str] = None
+    parameters: Optional[Dict[str, ToolParamDefinition]] = None
+
+    @field_validator("tool_name", mode="before")
+    @classmethod
+    def validate_field(cls, v):
+        if isinstance(v, str):
+            try:
+                return BuiltinTool(v)
+            except ValueError:
+                return v
+        return v
 
 
 class RawMediaItem(BaseModel):

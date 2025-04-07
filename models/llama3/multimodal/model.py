@@ -431,7 +431,6 @@ class VisionEncoder(nn.Module):
             return state_dict
 
     def apply_positional_embedding(self, x, ar):
-        out = []
         # apply regular position embedding
         bsz, num_chunks, num_tokens, dim = x.shape
         x = x.view(bsz * num_chunks, num_tokens, dim)
@@ -1033,7 +1032,7 @@ class CrossAttentionTransformerVision(torch.nn.Module):
         self.image_res = args.vision_chunk_size
         self.max_num_chunks = args.vision_max_num_chunks
         if return_intermediate is not None:
-            return_intermediate = [int(l) for l in return_intermediate.split(",")]
+            return_intermediate = [int(layer) for layer in return_intermediate.split(",")]
             self.vision_input_dim = (len(return_intermediate) + 1) * self.vision_input_dim
         self.patch_size = 14
         self.vision_encoder = VisionEncoder(

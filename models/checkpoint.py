@@ -49,12 +49,12 @@ def maybe_reshard_state_dict(
     old_mp_size = len(ckpt_paths)
     old_mp_ranks = map_mp_rank(old_mp_size, new_mp_size, new_mp_rank)
 
-    print(f"Loading checkpoint shards:\n{str(ckpt_paths[old_mp_ranks])}")
-    paths = ckpt_paths[old_mp_ranks]
+    print(f"Loading checkpoint shards:\n{str(ckpt_paths[old_mp_ranks])}")  # type: ignore
+    paths = ckpt_paths[old_mp_ranks]  # type: ignore
     state_dicts = [torch.load(str(p), map_location=map_location, mmap=mmap) for p in paths]
 
     if new_mp_size == old_mp_size:
-        return state_dicts[0]
+        return state_dicts[0]  # type: ignore
 
     if moe_num_experts is not None:
         state_dicts = [convert_moe_weights(d, moe_num_experts) for d in state_dicts]
