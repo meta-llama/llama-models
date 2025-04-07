@@ -14,7 +14,7 @@ from fairscale.nn.model_parallel.initialize import get_model_parallel_rank
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from ..generation import QuantizationMode
+from ...datatypes import QuantizationMode
 from ..model import Transformer, TransformerBlock
 from ..moe import MoE
 

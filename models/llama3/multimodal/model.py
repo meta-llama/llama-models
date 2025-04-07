@@ -5,16 +5,12 @@
 # top-level folder for each specific model found within the models/ directory at
 # the top-level of this source tree.
 
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed according to the terms of the Llama 2 Community License Agreement.
-
 import logging
 import math
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import fairscale.nn.model_parallel.initialize as fs_init
-
 import torch
 import torch.nn.functional as F
 from fairscale.nn.model_parallel.layers import (
@@ -22,14 +18,11 @@ from fairscale.nn.model_parallel.layers import (
     RowParallelLinear,
     VocabParallelEmbedding,
 )
-
 from PIL import Image as PIL_Image
-
-from torch import nn, Tensor
+from torch import Tensor, nn
 from torch.distributed import _functional_collectives as funcol
 
-from ..model import apply_rotary_emb, ModelArgs, precompute_freqs_cis, RMSNorm
-
+from ..model import ModelArgs, RMSNorm, apply_rotary_emb, precompute_freqs_cis
 from .encoder_utils import (
     build_encoder_attention_mask,
     contract_num_tokens_from_mult8,
@@ -40,7 +33,6 @@ from .encoder_utils import (
 )
 from .image_transform import VariableSizeImageTransform
 from .utils import get_negative_inf_value, to_2tuple
-
 
 logger = logging.getLogger(__name__)
 MP_SCALE = 8
@@ -587,13 +579,11 @@ class Attention(nn.Module):
             self.n_local_kv_heads,
             self.head_dim,
         )
-        device = next(self.parameters()).device
         self.register_buffer(
             "key_cache",
             torch.zeros(
                 cache_shape,
                 dtype=dtype,
-                device=device,
             ),
             persistent=False,
         )
@@ -602,7 +592,6 @@ class Attention(nn.Module):
             torch.zeros(
                 cache_shape,
                 dtype=dtype,
-                device=device,
             ),
             persistent=False,
         )
@@ -614,6 +603,9 @@ class Attention(nn.Module):
         freqs_cis: torch.Tensor,
         position_ids: torch.LongTensor,
     ):
+        self.key_cache = self.key_cache.to(x.device)
+        self.value_cache = self.value_cache.to(x.device)
+
         xq, xk, xv = [F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]]
 
         bs, slen, _ = xq.shape
@@ -1184,14 +1176,16 @@ class CrossAttentionTransformerText(torch.nn.Module):
         text_only_inference: bool = False,
     ):
         assert self.cache_is_setup, "Please set up cache before calling forward"
+        self.mask_cache = self.mask_cache.to(h.device)
+        self.freqs_cis = self.freqs_cis.to(h.device)
         mask = self.mask_cache.index_select(2, position_ids)
         freqs_cis = self.freqs_cis.index_select(0, position_ids)
 
-        for idx, (
+        for (
             layer,
             xattn_layer,
             xattn_layer_idx,
-        ) in enumerate(self.text_and_xattn_layers):
+        ) in self.text_and_xattn_layers:
             if not text_only_inference:
                 h = xattn_layer(
                     x=h,
@@ -1212,9 +1206,8 @@ class CrossAttentionTransformerText(torch.nn.Module):
         output = gather_from_tensor_model_parallel_region(output)
         return output.float()
 
-    def setup_cache(self, max_batch_size: int, dtype=torch.bfloat16):
+    def setup_cache(self, max_batch_size: int, device: torch.device, dtype=torch.bfloat16):
         # Set up the text kv caches
-        device = next(self.parameters()).device
         ones = torch.ones(
             (self.max_seq_len, self.max_seq_len),
             dtype=torch.bool,
@@ -1265,7 +1258,7 @@ class CrossAttentionTransformerText(torch.nn.Module):
 
         return (
             cross_attention_masks.to(device=text_device, dtype=text_dtype),
-            full_text_row_masked_out_mask,
+            full_text_row_masked_out_mask.to(device=text_device),
         )
 
 
@@ -1284,14 +1277,15 @@ class CrossAttentionTransformer(torch.nn.Module):
             max_num_chunks=args.vision_max_num_chunks,
         )
 
-    def setup_cache(self, max_batch_size: int, dtype: torch.dtype):
-        self.text_model.setup_cache(max_batch_size, dtype)
+    def setup_cache(self, max_batch_size: int, device: torch.device, dtype: torch.dtype):
+        self.text_model.setup_cache(max_batch_size, device, dtype)
 
     def compute_vision_tokens_masks(
         self,
         batch_images: List[List[PIL_Image.Image]],
         batch_masks: List[List[List[int]]],
         total_len: int,
+        device: torch.device,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         skip_vision_encoder = False
 
@@ -1318,6 +1312,7 @@ class CrossAttentionTransformer(torch.nn.Module):
                 image_res=self.params.vision_chunk_size,
                 max_num_images=max_num_images,
             )
+            stacked_images = stacked_images.to(device=device)
 
         if skip_vision_encoder:
             vision_tokens = torch.zeros(
@@ -1330,7 +1325,7 @@ class CrossAttentionTransformer(torch.nn.Module):
                 ),
             )
         else:
-            vision_tokens = self.vision_model(stacked_images, aspect_ratios)
+            vision_tokens = self.vision_model(stacked_images, aspect_ratios).to(device=device)
 
         bsz, nimg, nchunk, ntok, image_token_dim = tuple(vision_tokens.shape)
         xattn_caches = torch.stack(

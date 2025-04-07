@@ -20,55 +20,26 @@ import json
 import os
 import sys
 import time
-from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
-from typing import Callable, Generator, List, Literal, Optional
+from typing import Callable, Generator, List, Optional
 
 import torch
 import torch.nn.functional as F
 from fairscale.nn.model_parallel.initialize import (
-    get_model_parallel_rank,
     initialize_model_parallel,
     model_parallel_is_initialized,
 )
 from termcolor import cprint
 
+from ..checkpoint import maybe_reshard_state_dict
+from ..datatypes import GenerationResult, QuantizationMode
 from .args import ModelArgs
 from .chat_format import ChatFormat, RawContent, RawMessage
-from .checkpoint import load_state_dict
 from .datatypes import LLMInput, MaskedEmbedding, TransformerInput
 from .model import Transformer
 from .tokenizer import Tokenizer
 
-
-@dataclass
-class GenerationResult:
-    token: int
-    text: str
-
-    source: Literal["input", "output"]
-
-    # index within the batch
-    batch_idx: int
-    # whether generation for this item is already finished. note that tokens can
-    # get returned even afterwards since other items in the batch can still be generating tokens
-    finished: bool
-    # because a batch is parallel processed, useful decoding for one item can correspond to processing
-    # pad tokens or tokens beyond EOS for other items. we could have decided to return None for this case
-    # but it's more convenient to return a list of GenerationResult and filter out the ignored tokens
-    ignore_token: bool
-
-    logprobs: Optional[List[float]] = None
-
-
 torch.serialization.add_safe_globals([io.BytesIO, codecs.encode])
-
-
-class QuantizationMode(str, Enum):
-    none = "none"
-    fp8_mixed = "fp8_mixed"
-    int4_mixed = "int4_mixed"
 
 
 class Llama4:
@@ -78,7 +49,7 @@ class Llama4:
         max_seq_len: int,
         max_batch_size: int,
         world_size: Optional[int] = None,
-        quantization_mode: Optional[str] = None,
+        quantization_mode: Optional[QuantizationMode] = None,
         seed: int = 1,
     ):
         if not torch.distributed.is_initialized():
@@ -118,7 +89,11 @@ class Llama4:
         assert model_args.vocab_size == tokenizer.n_words, f"{model_args.vocab_size=} vs. {tokenizer.n_words=} mismatch"
         print("Model args:\n", model_args.model_dump_json(indent=2))
 
-        state_dict = load_state_dict(ckpt_paths, model_args)
+        state_dict = maybe_reshard_state_dict(
+            ckpt_paths,
+            n_kv_heads=model_args.n_kv_heads if model_args.n_kv_heads else model_args.n_heads,
+            moe_num_experts=model_args.moe_args.num_experts,
+        )
         print("Loaded checkpoint")
         if quantization_mode == QuantizationMode.fp8_mixed or quantization_mode == QuantizationMode.int4_mixed:
             from .quantization.loader import convert_to_quantized_model
@@ -167,7 +142,7 @@ class Llama4:
         params = self.model.args
 
         print_model_input = print_model_input or os.environ.get("LLAMA_MODELS_DEBUG", "0") == "1"
-        if print_model_input and get_model_parallel_rank() == 0:
+        if print_model_input:
             cprint("Input to model:\n", "yellow")
             for inp in llm_inputs:
                 tokens_to_print = [t for t in inp.tokens]
@@ -288,7 +263,7 @@ class Llama4:
         logprobs: bool = False,
         echo: bool = False,
     ) -> Generator[List[GenerationResult], None, None]:
-        llm_inputs = [self.formatter.encode_contents(c) for c in contents]
+        llm_inputs = [self.formatter.encode_content(c) for c in contents]
         for result in self.generate(
             llm_inputs=llm_inputs,
             temperature=temperature,
@@ -297,9 +272,9 @@ class Llama4:
             logprobs=logprobs,
             echo=echo,
         ):
+            yield result
             if all(r.finished for r in result):
                 break
-            yield result
 
     def chat_completion(
         self,
@@ -319,9 +294,9 @@ class Llama4:
             logprobs=logprobs,
             echo=echo,
         ):
+            yield result
             if all(r.finished for r in result):
                 break
-            yield result
 
 
 def sample_top_p(probs, p):
