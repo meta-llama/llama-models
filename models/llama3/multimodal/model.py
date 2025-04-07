@@ -579,13 +579,11 @@ class Attention(nn.Module):
             self.n_local_kv_heads,
             self.head_dim,
         )
-        device = next(self.parameters()).device
         self.register_buffer(
             "key_cache",
             torch.zeros(
                 cache_shape,
                 dtype=dtype,
-                device=device,
             ),
             persistent=False,
         )
@@ -594,7 +592,6 @@ class Attention(nn.Module):
             torch.zeros(
                 cache_shape,
                 dtype=dtype,
-                device=device,
             ),
             persistent=False,
         )
@@ -606,6 +603,9 @@ class Attention(nn.Module):
         freqs_cis: torch.Tensor,
         position_ids: torch.LongTensor,
     ):
+        self.key_cache = self.key_cache.to(x.device)
+        self.value_cache = self.value_cache.to(x.device)
+
         xq, xk, xv = [F.linear(x, w) for w in [self.wq.weight, self.wk.weight, self.wv.weight]]
 
         bs, slen, _ = xq.shape
@@ -1176,14 +1176,16 @@ class CrossAttentionTransformerText(torch.nn.Module):
         text_only_inference: bool = False,
     ):
         assert self.cache_is_setup, "Please set up cache before calling forward"
+        self.mask_cache = self.mask_cache.to(h.device)
+        self.freqs_cis = self.freqs_cis.to(h.device)
         mask = self.mask_cache.index_select(2, position_ids)
         freqs_cis = self.freqs_cis.index_select(0, position_ids)
 
-        for idx, (
+        for (
             layer,
             xattn_layer,
             xattn_layer_idx,
-        ) in enumerate(self.text_and_xattn_layers):
+        ) in self.text_and_xattn_layers:
             if not text_only_inference:
                 h = xattn_layer(
                     x=h,
@@ -1204,9 +1206,8 @@ class CrossAttentionTransformerText(torch.nn.Module):
         output = gather_from_tensor_model_parallel_region(output)
         return output.float()
 
-    def setup_cache(self, max_batch_size: int, dtype=torch.bfloat16):
+    def setup_cache(self, max_batch_size: int, device: torch.device, dtype=torch.bfloat16):
         # Set up the text kv caches
-        device = next(self.parameters()).device
         ones = torch.ones(
             (self.max_seq_len, self.max_seq_len),
             dtype=torch.bool,
@@ -1276,8 +1277,8 @@ class CrossAttentionTransformer(torch.nn.Module):
             max_num_chunks=args.vision_max_num_chunks,
         )
 
-    def setup_cache(self, max_batch_size: int, dtype: torch.dtype):
-        self.text_model.setup_cache(max_batch_size, dtype)
+    def setup_cache(self, max_batch_size: int, device: torch.device, dtype: torch.dtype):
+        self.text_model.setup_cache(max_batch_size, device, dtype)
 
     def compute_vision_tokens_masks(
         self,
@@ -1311,6 +1312,7 @@ class CrossAttentionTransformer(torch.nn.Module):
                 image_res=self.params.vision_chunk_size,
                 max_num_images=max_num_images,
             )
+            stacked_images = stacked_images.to(device=device)
 
         if skip_vision_encoder:
             vision_tokens = torch.zeros(

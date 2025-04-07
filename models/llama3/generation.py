@@ -81,7 +81,7 @@ class Llama3:
             if model_args.vision_chunk_size > 0:
                 model = CrossAttentionTransformer(model_args)
                 print(f"default dtype: {torch.get_default_dtype()}")
-                model.setup_cache(model_args.max_batch_size, torch.get_default_dtype())
+                model.setup_cache(model_args.max_batch_size, device="cuda", dtype=torch.get_default_dtype())
             else:
                 model = Transformer(model_args)
             return model
