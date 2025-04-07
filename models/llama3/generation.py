@@ -25,6 +25,7 @@ from ..datatypes import GenerationResult, QuantizationMode, RawContent, RawMessa
 from .args import ModelArgs
 from .chat_format import ChatFormat, LLMInput
 from .model import Transformer
+from .multimodal.model import CrossAttentionTransformer
 from .tokenizer import Tokenizer
 
 
@@ -78,8 +79,6 @@ class Llama3:
 
         def build_model():
             if model_args.vision_chunk_size > 0:
-                from .multimodal.model import CrossAttentionTransformer
-
                 model = CrossAttentionTransformer(model_args)
                 print(f"default dtype: {torch.get_default_dtype()}")
                 model.setup_cache(model_args.max_batch_size, torch.get_default_dtype())
@@ -111,7 +110,7 @@ class Llama3:
 
         return Llama3(model, tokenizer, model_args)
 
-    def __init__(self, model: Transformer, tokenizer: Tokenizer, args: ModelArgs):
+    def __init__(self, model: Transformer | CrossAttentionTransformer, tokenizer: Tokenizer, args: ModelArgs):
         self.args = args
         self.model = model
         self.tokenizer = tokenizer
@@ -164,6 +163,7 @@ class Llama3:
                 batch_images=images,
                 batch_masks=mask,
                 total_len=total_len,
+                device="cuda",
             )
 
         pad_id = self.tokenizer.pad_id

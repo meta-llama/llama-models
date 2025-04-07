@@ -1284,6 +1284,7 @@ class CrossAttentionTransformer(torch.nn.Module):
         batch_images: List[List[PIL_Image.Image]],
         batch_masks: List[List[List[int]]],
         total_len: int,
+        device: torch.device,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         skip_vision_encoder = False
 
@@ -1320,9 +1321,10 @@ class CrossAttentionTransformer(torch.nn.Module):
                     int((self.vision_model.image_res / self.vision_model.patch_size) ** 2 + 1),
                     self.model_dim,
                 ),
+                device=device,
             )
         else:
-            vision_tokens = self.vision_model(stacked_images, aspect_ratios)
+            vision_tokens = self.vision_model(stacked_images, aspect_ratios).to(device=device)
 
         bsz, nimg, nchunk, ntok, image_token_dim = tuple(vision_tokens.shape)
         xattn_caches = torch.stack(
