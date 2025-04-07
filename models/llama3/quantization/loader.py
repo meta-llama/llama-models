@@ -44,9 +44,9 @@ def convert_to_quantized_model(
     device: Optional[torch.device] = None,
 ) -> Transformer | CrossAttentionTransformer:
     if quantization_mode == QuantizationMode.fp8_mixed:
-        return convert_to_fp8_quantized_model(model, checkpoint_dir, fp8_activation_scale_ub)
+        return convert_to_fp8_quantized_model(model, checkpoint_dir, fp8_activation_scale_ub, device)
     elif quantization_mode == QuantizationMode.int4_weight_int8_dynamic_activation:
-        return convert_to_int4_quantized_model(model, checkpoint_dir)
+        return convert_to_int4_quantized_model(model, checkpoint_dir, device)
     else:
         raise ValueError(f"Unsupported quantization mode: {quantization_mode}")
 
@@ -55,6 +55,7 @@ def convert_to_fp8_quantized_model(
     model: Transformer,
     checkpoint_dir: str,
     fp8_activation_scale_ub: Optional[float] = 1200.0,
+    device: Optional[torch.device] = None,
 ) -> Transformer:
     # Move weights to GPU with quantization
     fp8_scales_path = os.path.join(checkpoint_dir, f"fp8_scales_{get_model_parallel_rank()}.pt")
@@ -62,7 +63,7 @@ def convert_to_fp8_quantized_model(
         print("Loading fp8 scales...")
         fp8_scales = torch.load(fp8_scales_path, weights_only=True)
 
-        for block in model.layers:
+        for _, block in model.named_modules():
             if isinstance(block, TransformerBlock):
                 if block.layer_id == 0 or block.layer_id == (model.n_layers - 1):
                     continue
@@ -77,7 +78,7 @@ def convert_to_fp8_quantized_model(
                     )
     else:
         print("Quantizing fp8 weights from bf16...")
-        for block in model.layers:
+        for _, block in model.named_modules():
             if isinstance(block, TransformerBlock):
                 if block.layer_id == 0 or block.layer_id == (model.n_layers - 1):
                     continue
@@ -87,12 +88,12 @@ def convert_to_fp8_quantized_model(
                     param.weight = quantize_fp8(
                         param.weight,
                         fp8_activation_scale_ub,
-                        output_device=torch.device("cuda"),
+                        output_device=device,
                     )
 
     for _, parameter in model.named_parameters():
         if not isinstance(parameter, Fp8ScaledWeights):
-            parameter.data = parameter.to(device="cuda")
+            parameter.data = parameter.to(device=device)
     return model
 
 
@@ -287,6 +288,7 @@ def _prepare_model_int4_weight_int8_dynamic_activation(
 def convert_to_int4_quantized_model(
     model: Transformer | CrossAttentionTransformer,
     model_args: ModelArgs,
+    device: Optional[torch.device] = None,
 ) -> Transformer | CrossAttentionTransformer:
     """Convert the model to int4 quantized model."""
 
@@ -313,5 +315,4 @@ def convert_to_int4_quantized_model(
         lora_scale = model_args.lora_args.scale
 
     _prepare_model_int4_weight_int8_dynamic_activation(model, group_size, lora_rank, lora_scale)
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    return cast(Transformer | CrossAttentionTransformer, model.to(device))
+    return cast(Transformer | CrossAttentionTransformer, model.to(device=device))
