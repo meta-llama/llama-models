@@ -37,22 +37,9 @@ class Llama3:
         world_size: Optional[int] = None,
         quantization_mode: Optional[QuantizationMode] = None,
         seed: int = 1,
-        device: str = "cuda",
     ):
-        device = torch.device(device)
-        if (
-            device.type == "cuda"
-            and not torch.cuda.is_available()
-            or device.type == "xpu"
-            and not torch.xpu.is_available()
-        ):
-            raise RuntimeError(f"PyTorch backend for {device.type} device type is not available")
-
         if not torch.distributed.is_initialized():
-            if device.type == "cuda":
-                torch.distributed.init_process_group("nccl")
-            else:
-                torch.distributed.init_process_group("gloo")
+            torch.distributed.init_process_group("nccl")
 
         if not model_parallel_is_initialized():
             if world_size is None:
@@ -60,10 +47,7 @@ class Llama3:
             initialize_model_parallel(world_size)
 
         local_rank = int(os.environ.get("LOCAL_RANK", 0))
-        if device.type == "cuda":
-            torch.cuda.set_device(local_rank)
-        elif device.type == "xpu":
-            torch.xpu.set_device(local_rank)
+        torch.cuda.set_device(local_rank)
 
         torch.manual_seed(seed)
 
@@ -111,25 +95,17 @@ class Llama3:
             print("Loading state dict...")
             model.load_state_dict(state_dict, strict=False)
             print("Done...")
-            model = convert_to_quantized_model(model, ckpt_dir, quantization_mode, device=device)
+            model = convert_to_quantized_model(model, ckpt_dir, quantization_mode, device="cuda")
         else:
-            torch.set_default_device(device)
-            if device.type == "cuda":
-                if torch.cuda.is_bf16_supported():
-                    torch.set_default_dtype(torch.bfloat16)
-                else:
-                    torch.set_default_dtype(torch.half)
-            elif device.type == "xpu":
-                if torch.xpu.is_bf16_supported():
-                    torch.set_default_dtype(torch.bfloat16)
-                else:
-                    torch.set_default_dtype(torch.half)
+            if torch.cuda.is_bf16_supported():
+                torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
             else:
-                torch.set_default_dtype(torch.half)
+                torch.set_default_tensor_type(torch.cuda.HalfTensor)
 
             model = build_model()
+            print("Loading state dict...")
             model.load_state_dict(state_dict, strict=True)
-            model.to(device)
+            print("Done...")
 
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
