@@ -54,7 +54,7 @@ In order to run the models, you will need to install dependencies after checking
 
 ```bash
 # Run this within a suitable Python environment (uv, conda, or virtualenv)
-pip install -e .[torch]
+pip install .[torch]
 ```
 
 Example scripts are available in `models/{ llama3, llama4 }/scripts/` sub-directory. Note that the Llama4 series of models require at least 4 GPUs to run inference at full (bf16) precision.
@@ -115,7 +115,7 @@ huggingface-cli download meta-llama/Llama-4-Scout-17B-16E-Instruct-Original --lo
 - To use with transformers, the following snippet will download and cache the weights:
 
   ```python
-  #inference.py
+  # inference.py
   from transformers import AutoTokenizer, Llama4ForConditionalGeneration
   import torch
 
@@ -126,16 +126,16 @@ huggingface-cli download meta-llama/Llama-4-Scout-17B-16E-Instruct-Original --lo
   messages = [
       {"role": "user", "content": "Who are you?"},
   ]
-  inputs = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", return_dict=True)
+  inputs = tokenizer.apply_chat_template(
+      messages, add_generation_prompt=True, return_tensors="pt", return_dict=True
+  )
 
   model = Llama4ForConditionalGeneration.from_pretrained(
-      model_id,
-      device_map="auto",
-      torch_dtype=torch.bfloat16
+      model_id, device_map="auto", torch_dtype=torch.bfloat16
   )
 
   outputs = model.generate(**inputs.to(model.device), max_new_tokens=100)
-  outputs = tokenizer.batch_decode(outputs[:, inputs["input_ids"].shape[-1]:])
+  outputs = tokenizer.batch_decode(outputs[:, inputs["input_ids"].shape[-1] :])
   print(outputs[0])
   ```
   ```bash
