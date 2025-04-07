@@ -263,7 +263,7 @@ class Llama4:
         logprobs: bool = False,
         echo: bool = False,
     ) -> Generator[List[GenerationResult], None, None]:
-        llm_inputs = [self.formatter.encode_contents(c) for c in contents]
+        llm_inputs = [self.formatter.encode_content(c) for c in contents]
         for result in self.generate(
             llm_inputs=llm_inputs,
             temperature=temperature,

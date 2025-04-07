@@ -152,6 +152,8 @@ class Llama3:
         print_model_input: bool = False,
         logits_processor: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
     ) -> Generator[List[GenerationResult], None, None]:
+        if max_gen_len is None or max_gen_len == 0 or max_gen_len >= self.args.max_seq_len:
+            max_gen_len = self.args.max_seq_len - 1
         params = self.model.params
 
         print_model_input = print_model_input or os.environ.get("LLAMA_MODELS_DEBUG", "0") == "1"
