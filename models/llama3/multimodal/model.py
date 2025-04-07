@@ -1257,7 +1257,7 @@ class CrossAttentionTransformerText(torch.nn.Module):
 
         return (
             cross_attention_masks.to(device=text_device, dtype=text_dtype),
-            full_text_row_masked_out_mask,
+            full_text_row_masked_out_mask.to(device=text_device),
         )
 
 
