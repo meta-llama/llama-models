@@ -1323,7 +1323,6 @@ class CrossAttentionTransformer(torch.nn.Module):
                     int((self.vision_model.image_res / self.vision_model.patch_size) ** 2 + 1),
                     self.model_dim,
                 ),
-                device=device,
             )
         else:
             vision_tokens = self.vision_model(stacked_images, aspect_ratios).to(device=device)
