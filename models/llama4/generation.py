@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import time
+from packaging import version
 from pathlib import Path
 from typing import Callable, Generator, List, Optional
 
@@ -33,6 +34,12 @@ from .tokenizer import Tokenizer
 torch.serialization.add_safe_globals([io.BytesIO, codecs.encode])
 
 
+def is_xccl_available():
+    if version.parse(torch.__version__).release >= version.parse("2.7").release:
+        return torch.distributed.distributed_c10d.is_xccl_available()
+    return False
+
+
 class Llama4:
     @staticmethod
     def build(
@@ -42,9 +49,24 @@ class Llama4:
         world_size: Optional[int] = None,
         quantization_mode: Optional[QuantizationMode] = None,
         seed: int = 1,
+        device: str = "cuda",
     ):
+        device = torch.device(device)
+        if (
+            device.type == "cuda"
+            and not torch.cuda.is_available()
+            or device.type == "xpu"
+            and not torch.xpu.is_available()
+        ):
+            raise RuntimeError(f"PyTorch backend for {device.type} device type is not available")
+
         if not torch.distributed.is_initialized():
-            torch.distributed.init_process_group("nccl")
+            if device.type == "cuda":
+                torch.distributed.init_process_group("nccl")
+            elif device.type == "xpu" and is_xccl_available():
+                torch.distributed.init_process_group("xccl")
+            else:
+                torch.distributed.init_process_group("gloo")
 
         if not model_parallel_is_initialized():
             if world_size is None:
@@ -52,7 +74,10 @@ class Llama4:
             initialize_model_parallel(world_size)
 
         local_rank = int(os.environ.get("LOCAL_RANK", 0))
-        torch.cuda.set_device(local_rank)
+        if device.type == "cuda":
+            torch.cuda.set_device(local_rank)
+        elif device.type == "xpu":
+            torch.xpu.set_device(local_rank)
 
         torch.manual_seed(seed)
 
@@ -96,15 +121,24 @@ class Llama4:
             print("Done...")
             model = convert_to_quantized_model(model, ckpt_dir, quantization_mode)
         else:
-            if torch.cuda.is_bf16_supported():
-                torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
-            else:
-                torch.set_default_tensor_type(torch.cuda.HalfTensor)
+            print(f"Setting default device to {device}")
+            torch.set_default_device(device)
+            if device.type == "cuda":
+                if torch.cuda.is_bf16_supported():
+                    torch.set_default_dtype(torch.bfloat16)
+                else:
+                    torch.set_default_dtype(torch.half)
+            elif device.type == "xpu":
+                if torch.xpu.is_bf16_supported():
+                    torch.set_default_dtype(torch.bfloat16)
+                else:
+                    torch.set_default_dtype(torch.half)
 
             model = Transformer(model_args)
             print("Loading state dict...")
             model.load_state_dict(state_dict, strict=False)
             print("Done...")
+        model.to(device)
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
         return Llama4(model, tokenizer, model_args)
@@ -152,13 +186,13 @@ class Llama4:
         total_len = min(max_gen_len + max_prompt_len, params.max_seq_len)
 
         pad_id = self.tokenizer.pad_id
-        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device="cuda")
+        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long)
         for k, t in enumerate(prompt_tokens):
-            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
+            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long)
         if logprobs:
             token_logprobs = torch.zeros_like(tokens, dtype=torch.float)
 
-        eos_reached = torch.tensor([False] * bsz, device="cuda")
+        eos_reached = torch.tensor([False] * bsz)
         input_text_mask = tokens != pad_id
 
         if echo:
@@ -178,7 +212,7 @@ class Llama4:
                     )
                 yield results
 
-        stop_tokens = torch.tensor(self.tokenizer.stop_tokens, device="cuda")
+        stop_tokens = torch.tensor(self.tokenizer.stop_tokens)
 
         prev_pos = 0
         for cur_pos in range(min_prompt_len, total_len):

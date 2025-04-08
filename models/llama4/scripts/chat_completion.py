@@ -18,7 +18,20 @@ from termcolor import cprint
 from models.datatypes import RawMediaItem, RawMessage, RawTextItem, StopReason
 from models.llama4.generation import Llama4
 
+import os
+import torch
+
 THIS_DIR = Path(__file__).parent
+
+
+def get_device():
+    if "DEVICE" in os.environ:
+        return os.environ["DEVICE"]
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.xpu.is_available():
+        return "xpu"
+    return "cpu"
 
 
 def run_main(
@@ -36,6 +49,7 @@ def run_main(
         max_batch_size=max_batch_size,
         world_size=world_size,
         quantization_mode=quantization_mode,
+        device=get_device(),
     )
 
     dialogs = [
