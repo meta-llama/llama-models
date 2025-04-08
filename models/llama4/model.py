@@ -24,30 +24,21 @@ from .ffn import FeedForward
 from .moe import MoE
 
 
+def rmsnorm(x, eps):
+    def _norm(y):
+        return y * torch.rsqrt(y.pow(2).mean(-1, keepdim=True) + eps)
+
+    return _norm(x.float()).type_as(x)
+
+
 class RMSNorm(torch.nn.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
         super().__init__()
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
 
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
-
     def forward(self, x):
-        output = self._norm(x.float()).type_as(x)
-        return output * self.weight
-
-
-class L2Norm(torch.nn.Module):
-    def __init__(self, dim: int, eps: float = 1e-6):
-        super().__init__()
-        self.eps = eps
-
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
-
-    def forward(self, x):
-        return self._norm(x.float()).type_as(x)
+        return rmsnorm(x, self.eps) * self.weight
 
 
 def apply_scaling(freqs: torch.Tensor):
@@ -175,9 +166,7 @@ class Attention(nn.Module):
                 self.head_dim,
             )
         ).cuda()
-        self.qk_norm = None
-        if self.use_qk_norm:
-            self.qk_norm = L2Norm(args.norm_eps)
+        self.norm_eps = args.norm_eps
         self._register_load_state_dict_pre_hook(self.load_hook)
 
     def load_hook(
@@ -221,8 +210,8 @@ class Attention(nn.Module):
             xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)
 
         if self.use_qk_norm:
-            xq = self.qk_norm(xq)
-            xk = self.qk_norm(xk)
+            xq = rmsnorm(xq, self.norm_eps)
+            xk = rmsnorm(xk, self.norm_eps)
 
         # We are applying temperature tuning (https://arxiv.org/abs/2501.19399) to NoPE layers, where
         # the inference-time temperature tuning function is customized to not affect short context
