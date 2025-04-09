@@ -41,11 +41,8 @@ class RMSNorm(torch.nn.Module):
         return rmsnorm(x, self.eps) * self.weight
 
 
-def apply_scaling(freqs: torch.Tensor):
-    # Values obtained from grid search
-    scale_factor = 8
+def apply_scaling(freqs: torch.Tensor, scale_factor: float, high_freq_factor: float):
     low_freq_factor = 1
-    high_freq_factor = 4
     old_context_len = 8192  # original llama3 length
 
     low_freq_wavelen = old_context_len / low_freq_factor
@@ -64,11 +61,18 @@ def apply_scaling(freqs: torch.Tensor):
     return torch.tensor(new_freqs, dtype=freqs.dtype, device=freqs.device)
 
 
-def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0, use_scaled: bool = False):
+def precompute_freqs_cis(
+    dim: int,
+    end: int,
+    theta: float,
+    use_scaled: bool,
+    scale_factor: float,
+    high_freq_factor: float,
+):
     freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
     t = torch.arange(end, device=freqs.device, dtype=torch.float32)
     if use_scaled:
-        freqs = apply_scaling(freqs)
+        freqs = apply_scaling(freqs, scale_factor, high_freq_factor)
     freqs = torch.outer(t, freqs)
     freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
     return freqs_cis
@@ -352,6 +356,8 @@ class Transformer(nn.Module):
             args.max_seq_len * 2,
             args.rope_theta,
             args.use_scaled_rope,
+            args.rope_scaling_factor,
+            args.rope_high_freq_factor,
         )
         vision_args = self.args.vision_args
         if vision_args:
