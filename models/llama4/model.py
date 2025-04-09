@@ -64,10 +64,10 @@ def apply_scaling(freqs: torch.Tensor, scale_factor: float, high_freq_factor: fl
 def precompute_freqs_cis(
     dim: int,
     end: int,
-    theta: float = 10000.0,
-    use_scaled: bool = False,
-    scale_factor: float = 16,
-    high_freq_factor: float = 1,
+    theta: float,
+    use_scaled: bool,
+    scale_factor: float,
+    high_freq_factor: float,
 ):
     freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
     t = torch.arange(end, device=freqs.device, dtype=torch.float32)
