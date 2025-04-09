@@ -71,7 +71,7 @@ class ModelArgs(BaseModel):
     attention_chunk_size: Optional[int] = None
     rope_theta: float = 500000
     use_scaled_rope: bool = False
-    rope_scaling_factor: float = 16
+    rope_scaling_factor: float = 1
     rope_high_freq_factor: float = 1
 
     nope_layer_interval: Optional[int] = None  # No position encoding in every n layers
@@ -96,4 +96,12 @@ class ModelArgs(BaseModel):
             f"n_heads ({self.n_heads}) must be divisible by n_kv_heads ({self.n_kv_heads})"
         )
         assert self.dim % self.n_heads == 0, f"dim ({self.dim}) must be divisible by n_heads ({self.n_heads})"
+
+        if self.use_scaled_rope:
+            # NOTE: ideally these values should have come from params.json. However, we have
+            # shipped the models everywhere. Only Llama-4-Scout uses scaled rope and needs these
+            # specific values.
+            self.rope_scaling_factor = 16
+            self.rope_high_freq_factor = 1
+
         return self
