@@ -10,6 +10,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from packaging import version
 from typing import Callable, Generator, List, Optional
 
 import torch
@@ -27,6 +28,12 @@ from .chat_format import ChatFormat, LLMInput
 from .model import Transformer
 from .multimodal.model import CrossAttentionTransformer
 from .tokenizer import Tokenizer
+
+
+def is_xccl_available():
+    if version.parse(torch.__version__).release >= version.parse("2.7").release:
+        return torch.distributed.distributed_c10d.is_xccl_available()
+    return False
 
 
 class Llama3:
@@ -52,6 +59,8 @@ class Llama3:
         if not torch.distributed.is_initialized():
             if device.type == "cuda":
                 torch.distributed.init_process_group("nccl")
+            elif device.type == "xpu" and is_xccl_available():
+                torch.distributed.init_process_group("xccl")
             else:
                 torch.distributed.init_process_group("gloo")
 
