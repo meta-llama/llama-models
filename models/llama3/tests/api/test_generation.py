@@ -9,12 +9,11 @@ import os
 import unittest
 from pathlib import Path
 
-import numpy as np
 import pytest
 import torch
 
 from llama_models.datatypes import RawMediaItem, RawMessage, RawTextItem
-from llama_models.llama3.generation import Llama
+from llama_models.llama3.generation import Llama3
 
 THIS_DIR = Path(__file__).parent
 
@@ -38,7 +37,7 @@ def build_generator(env_var: str, device: str):
     os.environ["WORLD_SIZE"] = "1"
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "29501"
-    return Llama.build(ckpt_dir=os.environ[env_var], max_seq_len=128, max_batch_size=1, world_size=1, device=device)
+    return Llama3.build(ckpt_dir=os.environ[env_var], max_seq_len=128, max_batch_size=1, world_size=1, device=device)
 
 
 class TestTextModelInference(unittest.TestCase):
@@ -60,18 +59,20 @@ class TestTextModelInference(unittest.TestCase):
             ],
         ]
         for dialog in dialogs:
-            result = self.__class__.generator.chat_completion(
-                dialog,
+            batch = [dialog]
+            out_message = []
+            for token_results in self.__class__.generator.chat_completion(
+                batch,
                 temperature=0,
                 logprobs=True,
-            )
-
-            out_message = result.generation
-            self.assertTrue(len(out_message.content) > 0)
-            shape = np.array(result.logprobs).shape
+            ):
+                result = token_results[0]
+                if result.finished:
+                    break
+                out_message += [result]
+                self.assertTrue(len(result.text) > 0)
             # assert at least 10 tokens
-            self.assertTrue(shape[0] > 10)
-            self.assertEqual(shape[1], 1)
+            self.assertTrue(len(out_message) > 10)
 
 
 @pytest.mark.skipif(get_device() == "", reason="No device available and none specified")
@@ -89,7 +90,7 @@ class TestVisionModelInference(unittest.TestCase):
     @unittest.skip("Disabling vision model test")
     @pytest.mark.skip(reason="Disabling vision model test")
     def test_run_generation(self):
-        with open(THIS_DIR.parent.parent.parent / "scripts/resources/dog.jpg", "rb") as f:
+        with open(THIS_DIR.parent.parent.parent / "resources/dog.jpg", "rb") as f:
             img = f.read()
 
         dialogs = [
@@ -111,18 +112,20 @@ class TestVisionModelInference(unittest.TestCase):
         ]
 
         for dialog in dialogs:
-            result = self.__class__.generator.chat_completion(
-                dialog,
+            batch = [dialog]
+            out_message = []
+            for token_results in self.__class__.generator.chat_completion(
+                batch,
                 temperature=0,
                 logprobs=True,
-            )
-
-            out_message = result.generation
-            self.assertTrue(len(out_message.content) > 0)
-            shape = np.array(result.logprobs).shape
+            ):
+                result = token_results[0]
+                if result.finished:
+                    break
+                out_message += [result]
+                self.assertTrue(len(result.text) > 0)
             # assert at least 10 tokens
-            self.assertTrue(shape[0] > 10)
-            self.assertEqual(shape[1], 1)
+            self.assertTrue(len(out_message) > 10)
 
 
 @pytest.mark.skipif(get_device() == "", reason="No device available and none specified")
