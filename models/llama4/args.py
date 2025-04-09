@@ -71,8 +71,8 @@ class ModelArgs(BaseModel):
     attention_chunk_size: Optional[int] = None
     rope_theta: float = 500000
     use_scaled_rope: bool = False
-    rope_scaling_factor: float = 1
-    rope_high_freq_factor: float = 1
+    rope_scaling_factor: Optional[float] = None
+    rope_high_freq_factor: Optional[float] = None
 
     nope_layer_interval: Optional[int] = None  # No position encoding in every n layers
     use_qk_norm: bool = False
@@ -101,7 +101,9 @@ class ModelArgs(BaseModel):
             # NOTE: ideally these values should have come from params.json. However, we have
             # shipped the models everywhere. Only Llama-4-Scout uses scaled rope and needs these
             # specific values.
-            self.rope_scaling_factor = 16
-            self.rope_high_freq_factor = 1
+            if self.rope_scaling_factor is None:
+                self.rope_scaling_factor = 16
+            if self.rope_high_freq_factor is None:
+                self.rope_high_freq_factor = 1
 
         return self
