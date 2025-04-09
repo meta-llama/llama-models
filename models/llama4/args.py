@@ -71,6 +71,9 @@ class ModelArgs(BaseModel):
     attention_chunk_size: Optional[int] = None
     rope_theta: float = 500000
     use_scaled_rope: bool = False
+    rope_scaling_factor: float = 16
+    rope_high_freq_factor: float = 1
+
     nope_layer_interval: Optional[int] = None  # No position encoding in every n layers
     use_qk_norm: bool = False
     # Set to True to enable inference-time temperature tuning (useful for very long context)
