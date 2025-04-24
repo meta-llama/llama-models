@@ -16,6 +16,7 @@ from fairscale.nn.model_parallel.layers import (
     RowParallelLinear,
     VocabParallelEmbedding,
 )
+from models.quantize_impls import load_int4
 from torch import nn
 
 from .args import ModelArgs
@@ -269,6 +270,7 @@ class TransformerBlock(nn.Module):
                 ffn_dim_multiplier=args.ffn_dim_multiplier,
                 multiple_of=args.multiple_of,
                 moe_args=args.moe_args,
+                int4_weight=(args.quantization_args.int4_weight if args.quantization_args is not None else False),
             )
         else:
             hidden_dim = int(4 * args.dim)
@@ -280,6 +282,7 @@ class TransformerBlock(nn.Module):
             self.feed_forward = FeedForward(
                 dim=args.dim,
                 hidden_dim=hidden_dim,
+                int4_weight=(args.quantization_args.int4_weight if args.quantization_args is not None else False),
             )
         self.layer_id = layer_id
         self.attention_norm = RMSNorm(args.dim, eps=args.norm_eps)

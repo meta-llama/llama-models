@@ -19,6 +19,7 @@ class QuantizationArgs(BaseModel):
     scheme: Optional[QuantizationScheme] = None
     group_size: Optional[int] = None
     spinquant: bool = False
+    int4_weight: bool = False
 
 
 class LoRAArgs(BaseModel):
