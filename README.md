@@ -29,7 +29,7 @@ Our mission is to empower individuals and industry through this opportunity whil
 | Llama 3.1 | 7/23/2024 | 8B, 70B, 405B | 128K | TikToken-based | [Use Policy](models/llama3_1/USE_POLICY.md) | [License](models/llama3_1/LICENSE) | [Model Card](models/llama3_1/MODEL_CARD.md) |
 | Llama 3.2 | 9/25/2024 | 1B, 3B | 128K | TikToken-based | [Use Policy](models/llama3_2/USE_POLICY.md) | [License](models/llama3_2/LICENSE) | [Model Card](models/llama3_2/MODEL_CARD.md) |
 | Llama 3.2-Vision | 9/25/2024 | 11B, 90B | 128K | TikToken-based | [Use Policy](models/llama3_2/USE_POLICY.md) | [License](models/llama3_2/LICENSE) | [Model Card](models/llama3_2/MODEL_CARD_VISION.md) |
-| Llama 3.3 | 12/04/2024 | 11B, 90B | 128K | TikToken-based | [Use Policy](models/llama3_3/USE_POLICY.md) | [License](models/llama3_3/LICENSE) | [Model Card](models/llama3_3/MODEL_CARD.md) |
+| Llama 3.3 | 12/04/2024 | 70B | 128K | TikToken-based | [Use Policy](models/llama3_3/USE_POLICY.md) | [License](models/llama3_3/LICENSE) | [Model Card](models/llama3_3/MODEL_CARD.md) |
 | Llama 4 | 4/5/2025 | Scout-17B-16E, Maverick-17B-128E | 10M, 1M | TikToken-based | [Use Policy](models/llama4/USE_POLICY.md) | [License](models/llama4/LICENSE) | [Model Card](models/llama4/MODEL_CARD.md) |
 
 ## Download
