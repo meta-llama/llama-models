@@ -18,6 +18,7 @@ from models.llama4.args import ModelArgs
 from models.llama4.generation import QuantizationMode
 from models.llama4.model import MoE, Transformer, TransformerBlock
 from models.quantize_impls import int4_row_quantize, pack_int4
+from torch import nn
 
 try:
     import fbgemm_gpu.experimental.gen_ai  # noqa: F401
@@ -112,16 +113,24 @@ def ffn_quantize(
     model.load_state_dict(checkpoint, strict=False)
     print("Done...")
 
+    def should_quantize_block(block: nn.Module) -> bool:
+        if not isinstance(block, TransformerBlock):
+            return False
+
+        is_moe = isinstance(block.feed_forward, MoE)
+        if quantization_mode == QuantizationMode.fp8_mixed:
+            # skip quantization on first and last layers
+            return is_moe and not (block.layer_id == 0 or block.layer_id == (model.n_layers - 1))
+
+        return is_moe
+
     fp8_scales = {}
     int4_scales = {}
     old_keys = set(checkpoint.keys())
     new_state_dict = checkpoint
     for _, block in model.named_modules():
         if isinstance(block, TransformerBlock):
-            if block.layer_id == 0 or block.layer_id == (model.n_layers - 1):
-                continue
-
-            if not isinstance(block.feed_forward, MoE):
+            if not should_quantize_block(block):
                 continue
 
             # IMPORTANT NOTE:
@@ -147,12 +156,12 @@ def ffn_quantize(
                     weight = param.transpose(1, 2).contiguous()
 
                     if weight.ndim >= 3:
-                        wq, scale = zip(*[int4_row_quantize(i.cuda()) for i in weight])
-                        wq = torch.stack([pack_int4(i.cuda()) for i in wq], dim=0)
+                        wq, scale = zip(*[int4_row_quantize(i) for i in weight])
+                        wq = torch.stack([pack_int4(i) for i in wq], dim=0)
                         w_scale = torch.stack(scale, dim=0)
                     else:
-                        wq, w_scale = int4_row_quantize(weight.cuda())
-                        wq = pack_int4(wq.cuda())
+                        wq, w_scale = int4_row_quantize(weight)
+                        wq = pack_int4(wq)
 
                     state_dict_key_map = {
                         "w1": "moe_w_in_eD_F",
@@ -167,8 +176,29 @@ def ffn_quantize(
                     new_state_dict[f"{prefix}.experts.{state_dict_key_map[key]}"] = torch.nn.Parameter(
                         wq.view(torch.float8_e4m3fn)
                     )
-                    int4_scales[f"{prefix}.experts.{key}"] = w_scale
-                    print(f"Quantized {prefix}.experts.{state_dict_key_map[key]} {wq.shape=} {w_scale.shape=}")
+                    int4_scales[f"{prefix}.experts.{state_dict_key_map[key]}"] = w_scale
+                    print(f"Quantized {prefix}.experts.{key} {wq.shape=} {w_scale.shape=}")
+
+                    param = getattr(moe.shared_expert, key)
+                    weight = param.weight
+                    if weight.ndim >= 3:
+                        wq, scale = zip(*[int4_row_quantize(i) for i in weight])
+                        wq = torch.stack([pack_int4(i) for i in wq], dim=0)
+                        w_scale = torch.stack(scale, dim=0)
+                    else:
+                        wq, w_scale = int4_row_quantize(weight)
+                        wq = pack_int4(wq)
+
+                    state_dict_key_map = {
+                        "w1": "w_in_shared_FD.weight",
+                        "w2": "w_out_shared_DF.weight",
+                        "w3": "w_swiglu_FD.weight",
+                    }
+                    new_state_dict[f"{prefix}.{state_dict_key_map[key]}"] = torch.nn.Parameter(
+                        wq.view(torch.float8_e4m3fn)
+                    )
+                    int4_scales[f"{prefix}.{state_dict_key_map[key]}"] = w_scale
+                    print(f"Quantized {prefix}.{key} {wq.shape=} {w_scale.shape=}")
 
             else:
                 for key in ("w1", "w3", "w2"):
@@ -186,7 +216,7 @@ def ffn_quantize(
                     wq = wq.transpose(1, 2).reshape(*new_shape).contiguous()
 
                     new_state_dict[f"{prefix}.experts.{state_dict_key_map[key]}"] = torch.nn.Parameter(wq)
-                    fp8_scales[f"{prefix}.experts.{key}"] = w_scale
+                    fp8_scales[f"{prefix}.experts.{state_dict_key_map[key]}"] = w_scale
                     print(f"Quantized {prefix}.experts.{state_dict_key_map[key]} {wq.shape=} {w_scale.shape=}")
 
     new_keys = set(new_state_dict.keys())

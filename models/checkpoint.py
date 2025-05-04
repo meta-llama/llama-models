@@ -12,7 +12,10 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
-from fairscale.nn.model_parallel.initialize import get_model_parallel_rank, get_model_parallel_world_size
+from fairscale.nn.model_parallel.initialize import (
+    get_model_parallel_rank,
+    get_model_parallel_world_size,
+)
 
 
 def map_mp_rank(old_mp_size: int, new_mp_size: int, new_mp_rank: int) -> List[int]:
@@ -37,6 +40,7 @@ def maybe_reshard_state_dict(
     moe_num_experts: Optional[int] = None,
     map_location: Union[str, torch.device] = "cpu",
     mmap: bool = True,
+    is_scale: bool = False,
 ) -> Dict[str, torch.Tensor]:
     if str(map_location) == "cpu":
         torch.set_default_tensor_type(torch.BFloat16Tensor)
@@ -45,7 +49,10 @@ def maybe_reshard_state_dict(
 
     ckpt_paths = np.array(sorted(ckpt_paths))
 
-    new_mp_size, new_mp_rank = get_model_parallel_world_size(), get_model_parallel_rank()
+    new_mp_size, new_mp_rank = (
+        get_model_parallel_world_size(),
+        get_model_parallel_rank(),
+    )
     old_mp_size = len(ckpt_paths)
     old_mp_ranks = map_mp_rank(old_mp_size, new_mp_size, new_mp_rank)
 
@@ -65,6 +72,7 @@ def maybe_reshard_state_dict(
         size=max(new_mp_size // old_mp_size, 1),
         rank=new_mp_rank % max(new_mp_size // old_mp_size, 1),
         repeat_qk_qv=max(new_mp_size // n_kv_heads, 1),
+        is_scale=is_scale,
     )
 
 
@@ -102,6 +110,7 @@ def reshard_mp(
     size: int,
     rank: int,
     repeat_qk_qv: int = 1,
+    is_scale: bool = False,
 ) -> Dict[str, torch.Tensor]:
     """
     Reshard a list of state dicts into a single state dict given a change in MP size.
@@ -116,7 +125,10 @@ def reshard_mp(
 
     def process_key(key: str) -> torch.Tensor:
         if row_regex.search(key):
-            return concat_or_chunk([s[key] for s in state_dicts], dim=-1)
+            if is_scale and "shared_" in key:
+                return concat_or_chunk([s[key] for s in state_dicts], dim=0)
+            else:
+                return concat_or_chunk([s[key] for s in state_dicts], dim=-1)
         elif column_regex.search(key):
             if "w13" in key or "fc1_weight" in key:
                 dims = state_dicts[0][key].size()
@@ -133,7 +145,10 @@ def reshard_mp(
             elif key == "output.bias" or key == "fc.weight":
                 return concat_or_chunk([s[key] for s in state_dicts], dim=0)
             elif "w_" in key:
-                return concat_or_chunk([s[key] for s in state_dicts], dim=-2)
+                if is_scale and ("shared_" in key or "swiglu_" in key):
+                    return concat_or_chunk([s[key] for s in state_dicts], dim=-1)
+                else:
+                    return concat_or_chunk([s[key] for s in state_dicts], dim=-2)
             else:
                 return concat_or_chunk([s[key] for s in state_dicts], dim=0)
         else:
