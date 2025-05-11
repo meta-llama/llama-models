@@ -49,6 +49,7 @@ def convert_to_quantized_model(
     quantization_mode: Optional[str] = None,
     fp8_activation_scale_ub: Optional[float] = 1200.0,
     use_rich_progress: bool = True,
+    scale_state_dict: Optional[dict] = None,
 ) -> Transformer:
     from ...quantize_impls import (
         Fp8ScaledWeights,
@@ -75,13 +76,12 @@ def convert_to_quantized_model(
     use_rich_progress = use_rich_progress and rank == 0
     progress, log_status, update_status = logging_callbacks(use_rich_progress, rank, model, should_quantize_block)
     if quantization_mode == QuantizationMode.int4_mixed:
-        int4_scales_path = os.path.join(checkpoint_dir, f"int4_scales_{rank}.pt")
-        if os.path.isfile(int4_scales_path):
-            log_status(f"Rank {rank}: Loading int4 scales")
-            int4_scales = torch.load(int4_scales_path, weights_only=True)
+        if scale_state_dict is not None:
 
             def apply_quantization(key, weight):
-                scale = int4_scales[key]
+                scale = scale_state_dict[key]
+                if "experts" in key:
+                    scale = scale.squeeze(1)
                 return load_int4(
                     weight,
                     scale,
@@ -130,7 +130,11 @@ def convert_to_quantized_model(
             prefix = f"layers.{block.layer_id}.feed_forward"
             moe = block.feed_forward
             moe.experts.batched_swiglu = experts_batched_swiglu_wrapper.__get__(moe.experts)
-
+            state_dict_key_map = {
+                "w1": "moe_w_in_eD_F",
+                "w2": "moe_w_out_eF_D",
+                "w3": "moe_w_swiglu_eD_F",
+            }
             for key in ("w1", "w3", "w2"):
                 param = getattr(moe.experts, key)
                 update_status(f"Rank {rank} - Layer {block.layer_id} - MoE {key}")
@@ -138,7 +142,7 @@ def convert_to_quantized_model(
                     moe.experts,
                     key,
                     apply_quantization(
-                        f"{prefix}.experts.{key}",
+                        f"{prefix}.experts.{state_dict_key_map[key]}",
                         param.transpose(1, 2).contiguous(),
                     ),
                 )
@@ -146,10 +150,15 @@ def convert_to_quantized_model(
             if quantization_mode == QuantizationMode.int4_mixed:
                 # Quantize shared experts
                 moe.shared_expert.forward = swiglu_wrapper_no_reduce.__get__(moe.shared_expert)
+                state_dict_key_map = {
+                    "w1": "w_in_shared_FD.weight",
+                    "w2": "w_out_shared_DF.weight",
+                    "w3": "w_swiglu_FD.weight",
+                }
                 for key in ("w1", "w3", "w2"):
                     param = getattr(moe.shared_expert, key)
                     update_status(f"Rank {rank} - Layer {block.layer_id} - MoE shared expert {key}")
-                    param.weight = apply_quantization(f"{prefix}.shared_expert.{key}", param.weight)
+                    param.weight = apply_quantization(f"{prefix}.{state_dict_key_map[key]}", param.weight)
 
             processed_blocks += 1
             update_status(message=None, completed=processed_blocks)
