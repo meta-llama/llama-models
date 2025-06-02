@@ -24,7 +24,7 @@ from termcolor import cprint
 
 from ..checkpoint import maybe_reshard_state_dict
 from ..datatypes import GenerationResult, QuantizationMode
-from .args import ModelArgs
+from .args import ModelArgs, QuantizationArgs
 from .chat_format import ChatFormat, RawContent, RawMessage
 from .datatypes import LLMInput, MaskedEmbedding, TransformerInput
 from .model import Transformer
@@ -82,19 +82,39 @@ class Llama4:
 
         state_dict = maybe_reshard_state_dict(
             ckpt_paths,
-            n_kv_heads=model_args.n_kv_heads if model_args.n_kv_heads else model_args.n_heads,
+            n_kv_heads=(model_args.n_kv_heads if model_args.n_kv_heads else model_args.n_heads),
             moe_num_experts=model_args.moe_args.num_experts,
         )
         print("Loaded checkpoint")
         if quantization_mode == QuantizationMode.fp8_mixed or quantization_mode == QuantizationMode.int4_mixed:
             from .quantization.loader import convert_to_quantized_model
 
+            scale_state_dict = None
+            if quantization_mode == QuantizationMode.int4_mixed:
+                scale_ckpt_paths = sorted(Path(ckpt_dir).glob("*.pt"))
+
+                if len(scale_ckpt_paths) > 0:
+                    print(f"Loading a scale checkpoint (shards={len(scale_ckpt_paths)}, current-mp-size={world_size})")
+                    scale_state_dict = maybe_reshard_state_dict(
+                        scale_ckpt_paths,
+                        n_kv_heads=(model_args.n_kv_heads if model_args.n_kv_heads else model_args.n_heads),
+                        moe_num_experts=model_args.moe_args.num_experts,
+                        is_scale=True,
+                    )
+                    model_args.quantization_args = QuantizationArgs()
+                    model_args.quantization_args.int4_weight = True
+                    print("Loaded scale checkpoint")
             torch.set_default_tensor_type(torch.BFloat16Tensor)
             model = Transformer(model_args)
             print("Loading state dict...")
             model.load_state_dict(state_dict, strict=False)
             print("Done...")
-            model = convert_to_quantized_model(model, ckpt_dir, quantization_mode)
+            model = convert_to_quantized_model(
+                model,
+                ckpt_dir,
+                quantization_mode=quantization_mode,
+                scale_state_dict=scale_state_dict,
+            )
         else:
             if torch.cuda.is_bf16_supported():
                 torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)

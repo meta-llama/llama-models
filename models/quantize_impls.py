@@ -250,7 +250,7 @@ def load_int4(
         w_scale (Tensor): [n, k/2] input INT4 scale.
     """
     return Int4Weights(
-        weight=w.to(torch.int8).to(device=output_device),
+        weight=w.view(torch.int8).to(device=output_device),
         scale=scale.to(device=output_device),
         shape=w.shape,
     )
