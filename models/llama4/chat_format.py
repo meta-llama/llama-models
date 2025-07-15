@@ -6,6 +6,7 @@
 # the top-level of this source tree.
 
 import io
+import json
 import uuid
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
@@ -298,6 +299,7 @@ class ChatFormat:
                     call_id=call_id,
                     tool_name=tool_name,
                     arguments=tool_arguments,
+                    arguments_json=json.dumps(tool_arguments),
                 )
             )
             content = ""
