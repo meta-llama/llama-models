@@ -60,6 +60,12 @@ def convert_image_to_rgb(image: PIL_Image.Image, bg: Tuple[int, int, int] = (255
 
 
 class ChatFormat:
+    """
+    Encodes and decodes chat messages (with optional vision support) into token sequences.
+
+    This class helps prepare chat messages (text + images) to be sent into the model,
+    and it can also decode model responses back into readable messages.
+    """
     possible_headers: Dict[Role, str]
 
     def __init__(
@@ -68,6 +74,14 @@ class ChatFormat:
         vision_args: Optional[VisionArgs] = None,
         max_num_chunks: int = 16,
     ):
+        """
+        Create a new ChatFormat instance.
+
+        Args:
+            tokenizer: A tokenizer used to turn text into tokens.
+            vision_args: Settings for image handling (optional).
+            max_num_chunks: Max number of image tiles allowed.
+        """
         self.tokenizer = tokenizer
         self.vision_args = vision_args
         self.max_num_chunks = max_num_chunks
