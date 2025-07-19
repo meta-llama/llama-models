@@ -154,7 +154,7 @@ class Attention(nn.Module):
             init_method=lambda x: x,
         )
 
-        self.cache_k = torch.zeros(
+        cache_k = torch.zeros(
             (
                 args.max_batch_size,
                 args.max_seq_len,
@@ -162,7 +162,7 @@ class Attention(nn.Module):
                 self.head_dim,
             )
         ).cuda()
-        self.cache_v = torch.zeros(
+        cache_v = torch.zeros(
             (
                 args.max_batch_size,
                 args.max_seq_len,
@@ -170,6 +170,8 @@ class Attention(nn.Module):
                 self.head_dim,
             )
         ).cuda()
+        self.register_buffer("cache_k", cache_k, persistent=False)
+        self.register_buffer("cache_v", cache_v, persistent=False)
         self.norm_eps = args.norm_eps
         self._register_load_state_dict_pre_hook(self.load_hook)
 
