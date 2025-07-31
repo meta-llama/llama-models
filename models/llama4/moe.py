@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 import fairscale.nn.model_parallel.initialize as fs_init
 import torch
 from fairscale.nn.model_parallel.mappings import reduce_from_model_parallel_region
-from torch import Tensor, nn
+from torch import nn, Tensor
 from torch.nn import functional as F
 
 from .args import MoEArgs
@@ -25,10 +25,16 @@ class Experts(nn.Module):
         num_local_experts: int,
         dim: int,
         hidden_dim: int,
+        int4_weight: bool = False,
     ) -> None:
         super().__init__()
 
+        self.int4_weight = int4_weight
         dtype = torch.get_default_dtype()
+        if int4_weight:
+            # Since we pack 2*int4 into 1*int8 and leverage float8_e4m3fn to bypass gradient check in nn.Parameter, we use torch.float8_e4m3fn here
+            dtype = torch.float8_e4m3fn
+
         self.num_local_experts = num_local_experts
         self.dim = dim
         divide_factor = fs_init.get_model_parallel_world_size()
@@ -36,7 +42,7 @@ class Experts(nn.Module):
         self.w1: nn.Parameter = nn.Parameter(
             torch.empty(
                 num_local_experts,
-                dim,
+                dim // 2 if int4_weight else dim,
                 divide_exact(hidden_dim, divide_factor),
                 dtype=dtype,
             )
@@ -45,7 +51,11 @@ class Experts(nn.Module):
         self.w2: nn.Parameter = nn.Parameter(
             torch.empty(
                 num_local_experts,
-                divide_exact(hidden_dim, divide_factor),
+                (
+                    divide_exact(hidden_dim, divide_factor) // 2
+                    if int4_weight
+                    else divide_exact(hidden_dim, divide_factor)
+                ),
                 dim,
                 dtype=dtype,
             )
@@ -54,7 +64,7 @@ class Experts(nn.Module):
         self.w3: nn.Parameter = nn.Parameter(
             torch.empty(
                 num_local_experts,
-                dim,
+                dim // 2 if int4_weight else dim,
                 divide_exact(hidden_dim, divide_factor),
                 dtype=dtype,
             )
@@ -76,9 +86,13 @@ class Experts(nn.Module):
         if prefix + "moe_w_in_eD_F" in state_dict:
             e = self.num_local_experts
             D = self.dim
-            state_dict[prefix + "w1"] = state_dict.pop(prefix + "moe_w_in_eD_F").view(e, D, -1)
+            state_dict[prefix + "w1"] = state_dict.pop(prefix + "moe_w_in_eD_F").view(
+                e, D // 2 if self.int4_weight else D, -1
+            )
             state_dict[prefix + "w2"] = state_dict.pop(prefix + "moe_w_out_eF_D").view(e, -1, D)
-            state_dict[prefix + "w3"] = state_dict.pop(prefix + "moe_w_swiglu_eD_F").view(e, D, -1)
+            state_dict[prefix + "w3"] = state_dict.pop(prefix + "moe_w_swiglu_eD_F").view(
+                e, D // 2 if self.int4_weight else D, -1
+            )
 
     def forward(
         self,
@@ -125,6 +139,7 @@ class MoE(torch.nn.Module):
         ffn_dim_multiplier: float,
         multiple_of: int,
         moe_args: MoEArgs,
+        int4_weight: bool = False,
     ) -> None:
         super().__init__()
 
@@ -150,10 +165,11 @@ class MoE(torch.nn.Module):
             num_local_experts,
             dim,
             hidden_dim,
+            int4_weight=int4_weight,
         )
 
         self.router_DE: nn.Parameter = nn.Parameter(torch.empty(dim, moe_args.num_experts, dtype=dtype))
-        self.shared_expert = FeedForward(dim, hidden_dim, do_reduce=False)
+        self.shared_expert = FeedForward(dim, hidden_dim, do_reduce=False, int4_weight=int4_weight)
 
         self._register_load_state_dict_pre_hook(self.load_hook)
 
