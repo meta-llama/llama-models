@@ -3,6 +3,10 @@
 </p>
 
 <p align="center">
+  <b>English</b> · <a href="README.zh.md">简体中文</a>
+</p>
+
+<p align="center">
         🤗 <a href="https://huggingface.co/meta-Llama"> Models on Hugging Face</a>&nbsp | <a href="https://ai.meta.com/blog/"> Blog</a>&nbsp |  <a href="https://llama.meta.com/">Website</a>&nbsp | <a href="https://llama.meta.com/get-started/">Get Started</a>&nbsp | <a href="https://github.com/meta-llama/llama-cookbook">Llama Cookbook</a>&nbsp
 <br>
 
