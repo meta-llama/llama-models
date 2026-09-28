@@ -199,18 +199,33 @@ class ParallelDownloader:
 
     async def download_chunk(self, client: httpx.AsyncClient, task: DownloadTask, start: int, end: int) -> None:
         async def _download_chunk():
-            headers = {"Range": f"bytes={start}-{end}"}
-            async with client.stream("GET", task.url, headers=headers, **self.client_options) as response:
-                response.raise_for_status()
+            # A failed stream may have written part of this range. Start every
+            # attempt at the same offset, rather than appending to the partial data.
+            task.downloaded_size = start
+            with open(task.output_file, "r+b" if os.path.exists(task.output_file) else "w+b") as file:
+                file.truncate(start)
+                file.seek(start)
+                headers = {"Range": f"bytes={start}-{end}", "Accept-Encoding": "identity"}
+                async with client.stream("GET", task.url, headers=headers, **self.client_options) as response:
+                    response.raise_for_status()
+                    expected_range = f"bytes {start}-{end}/{task.total_size}"
+                    if response.status_code != 206 or response.headers.get("Content-Range") != expected_range:
+                        raise DownloadError(
+                            f"Server did not return the requested range {expected_range} "
+                            f"(status {response.status_code}, Content-Range {response.headers.get('Content-Range')!r})"
+                        )
 
-                with open(task.output_file, "ab") as file:
-                    file.seek(start)
+                    received = 0
                     async for chunk in response.aiter_bytes(self.buffer_size):
+                        received += len(chunk)
+                        if received > end - start + 1:
+                            raise DownloadError(f"Range {start}-{end} exceeded its expected size")
                         file.write(chunk)
-                        task.downloaded_size += len(chunk)
-                        self.progress.update(
-                            task.task_id,
-                            completed=task.downloaded_size,
+                        task.downloaded_size = start + received
+                        self.progress.update(task.task_id, completed=task.downloaded_size)
+                    if received != end - start + 1:
+                        raise DownloadError(
+                            f"Range {start}-{end} was incomplete: received {received} bytes"
                         )
 
         try:
@@ -226,6 +241,11 @@ class ParallelDownloader:
 
         if os.path.exists(task.output_file):
             task.downloaded_size = os.path.getsize(task.output_file)
+            if task.downloaded_size > task.total_size:
+                # An oversized file cannot be resumed from a valid byte range.
+                with open(task.output_file, "wb"):
+                    pass
+                task.downloaded_size = 0
 
     async def download_file(self, task: DownloadTask) -> None:
         try:
@@ -255,6 +275,8 @@ class ParallelDownloader:
                     # Download chunks in sequence
                     for chunk_start, chunk_end in chunks:
                         await self.download_chunk(client, task, chunk_start, chunk_end)
+                    if not self.verify_file_integrity(task):
+                        raise DownloadError(f"Downloaded file has the wrong size: {task.output_file}")
 
                 except Exception as e:
                     raise DownloadError(f"Download failed: {str(e)}") from e
