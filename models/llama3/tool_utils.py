@@ -53,9 +53,18 @@ def is_valid_python_list(input_string):
             if not isinstance(element.func, ast.Name):
                 return False
 
-            # Check if all arguments are keyword arguments
+            # Check if all arguments are keyword arguments with literal values.
+            # `ast.literal_eval` below cannot evaluate a bare name such as `UTC`
+            # and `**kwargs` produces a None argument name that ToolCall rejects.
             if element.args or not all(isinstance(arg, ast.keyword) for arg in element.keywords):
                 return False
+            for keyword in element.keywords:
+                if keyword.arg is None:
+                    return False
+                try:
+                    ast.literal_eval(keyword.value)
+                except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+                    return False
 
         return True
 
@@ -133,11 +142,16 @@ class ToolUtils:
         elif is_json(message_body):
             response = json.loads(message_body)
             if ("type" in response and response["type"] == "function") or ("name" in response):
-                function_name = response["name"]
-                args = response["parameters"]
-                return function_name, args
-            else:
-                return None
+                function_name = response.get("name")
+                # Both spellings occur in the wild; neither is guaranteed to be
+                # present. A JSON object with just a `name` field is an ordinary
+                # answer, not a tool call.
+                args = response.get("parameters")
+                if args is None:
+                    args = response.get("arguments")
+                if function_name is not None and args is not None:
+                    return function_name, args
+            return None
         elif is_valid_python_list(message_body):
             res = parse_python_list_for_function_calls(message_body)
             # FIXME: Enable multiple tool calls

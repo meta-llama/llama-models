@@ -128,3 +128,23 @@ class TestParsePythonList(unittest.TestCase):
             ),
         ]
         assert parse_python_list_for_function_calls(input_string) == expected
+
+class TestMalformedToolCalls(unittest.TestCase):
+    def test_plain_json_with_name_is_not_a_tool_call(self):
+        assert ToolUtils.maybe_extract_custom_tool_call('{"name": "Alice", "age": 30}') is None
+
+    def test_json_tool_call_accepts_arguments_alias(self):
+        result = ToolUtils.maybe_extract_custom_tool_call(
+            '{"type": "function", "name": "f", "arguments": {"a": 1}}'
+        )
+        assert result == ("f", {"a": 1})
+
+    def test_pythonic_call_with_non_literal_argument_is_ignored(self):
+        text = "[get_time(timezone=UTC)]"
+        assert is_valid_python_list(text) is False
+        assert ToolUtils.maybe_extract_custom_tool_call(text) is None
+
+    def test_pythonic_call_with_kwargs_unpacking_is_ignored(self):
+        text = '[f(**{"city": "Paris"})]'
+        assert is_valid_python_list(text) is False
+        assert ToolUtils.maybe_extract_custom_tool_call(text) is None
